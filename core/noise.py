@@ -16,6 +16,7 @@ class Actions:
         https://noise.talonvoice.com/static/previews/pop.mp3 for an
         example.
         """
+        actions.skip()
 
 
     def noise_trigger_hiss(active: bool):
@@ -24,6 +25,7 @@ class Actions:
         https://noise.talonvoice.com/static/previews/hiss.mp3 for an
         example.
         """
+        actions.skip()
 
 
 def noise_trigger_hiss_debounce(active: bool):

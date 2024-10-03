@@ -40,6 +40,7 @@ parrot(cluck):
     user.mouse_wake()
     user.history_enable()
     user.talon_mode()
+<<<<<<< HEAD
 
 ^(talon wake)+$: speech.enable()
 
@@ -51,3 +52,5 @@ parrot(cluck):
     user.mouse_sleep()
     speech.disable()
     user.engine_sleep()
+=======
+>>>>>>> upstream/main
