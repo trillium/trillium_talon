@@ -8,9 +8,9 @@ tag(): user.code_comment_line
 tag(): user.code_functions
 tag(): user.code_functions_common
 tag(): user.code_libraries
-tag(): user.code_libraries_gui
 tag(): user.code_operators_array
 tag(): user.code_operators_assignment
+tag(): user.code_operators_math
 
 settings():
     user.code_private_function_formatter = "SNAKE_CASE"

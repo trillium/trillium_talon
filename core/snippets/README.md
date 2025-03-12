@@ -7,15 +7,7 @@ Custom format to represent snippets.
 - Custom file ending `.snippet`.
 - Supports syntax highlighting in VSCode via an [extension](https://marketplace.visualstudio.com/items?itemName=AndreasArvidsson.andreas-talon)
 - Supports auto-formatting in VSCode via an [extension](https://marketplace.visualstudio.com/items?itemName=AndreasArvidsson.andreas-talon)
-- Support for insertion and wrapper snippets. Note that while the snippet file syntax here supports wrapper snippets, you will need to install [Cursorless](https://www.cursorless.org/) for wrapper snippets to work. You'll also need to add the following line to your `settings.talon` file:
-
-  ```talon
-  tag(): user.cursorless_use_community_snippets
-  ```
-
-  Note that this line will also disable any Cursorless snippets defined in your
-  Cursorless customization CSVs. You will need to migrate your Cursorless snippets to the new community snippet format described here. If you'd be interested in a tool to help with this migration, please leave a comment on [cursorless-dev/cursorless#2149](https://github.com/cursorless-dev/cursorless/issues/2149), ideally with a link to your custom snippets for us to look at.
-
+- Support for insertion and wrapper snippets. Note that while the snippet file syntax here supports wrapper snippets, you will need to install [Cursorless](https://www.cursorless.org/) for wrapper snippets to work.
 - Support for phrase formatters.
 
 ## Format
@@ -32,6 +24,7 @@ Custom format to represent snippets.
 | Key            | Required | Multiple values | Example                        |
 | -------------- | -------- | --------------- | ------------------------------ |
 | name           | Yes      | No              | `name: ifStatement`            |
+| description    | No       | No              | `description: My snippet`      |
 | language       | No       | Yes             | `language: javascript \| java` |
 | phrase         | No       | Yes             | `phrase: if \| if state`       |
 | insertionScope | No       | Yes             | `insertionScope: statement`    |
@@ -48,7 +41,7 @@ It's also possible to set configuration that applies to a specific tab stop (`$0
 
 ## Formatting and syntax highlighting
 
-To get formatting and syntax highlighting for `.snippet` files install [andreas-talon](https://marketplace.visualstudio.com/items?itemName=AndreasArvidsson.andreas-talon)
+To get formatting, code completion and syntax highlighting for `.snippet` files: install [andreas-talon](https://marketplace.visualstudio.com/items?itemName=AndreasArvidsson.andreas-talon)
 
 ## Examples
 

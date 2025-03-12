@@ -9,7 +9,6 @@ tag(): user.code_data_null
 tag(): user.code_functions
 tag(): user.code_functions_common
 tag(): user.code_libraries
-tag(): user.code_libraries_gui
 tag(): user.code_operators_assignment
 tag(): user.code_operators_bitwise
 tag(): user.code_operators_math
@@ -21,9 +20,6 @@ settings():
     user.code_private_variable_formatter = "SNAKE_CASE"
     user.code_protected_variable_formatter = "SNAKE_CASE"
     user.code_public_variable_formatter = "SNAKE_CASE"
-
-# NOTE: migrated from generic as it is only use here
-(op | is) in: " %in% "
 
 toggle library: user.code_toggle_libraries()
 library <user.code_libraries>:

@@ -6,7 +6,7 @@ from typing import Sequence, Union
 from talon import Context, Module, actions
 from talon.grammar import Phrase
 
-from ..user_settings import append_to_csv, get_list_from_csv
+from ..user_settings import append_to_csv, track_csv_list
 
 mod = Module()
 ctx = Context()
@@ -43,22 +43,7 @@ _word_map_defaults = {
     # This is the opposite ordering to words_to_replace.csv (the latter has the target word first)
 }
 _word_map_defaults.update({word.lower(): word for word in _capitalize_defaults})
-
-
-# phrases_to_replace is a spoken form -> written form map, used by our
-# implementation of `dictate.replace_words` (at bottom of file) to rewrite words
-# and phrases Talon recognized. This does not change the priority with which
-# Talon recognizes particular phrases over others.
-phrases_to_replace = get_list_from_csv(
-    "words_to_replace.csv",
-    headers=("Replacement", "Original"),
-    default=_word_map_defaults,
-)
-
-# "dictate.word_map" is used by Talon's built-in default implementation of
-# `dictate.replace_words`, but supports only single-word replacements.
-# Multi-word phrases are ignored.
-ctx.settings["dictate.word_map"] = phrases_to_replace
+phrases_to_replace = {}
 
 
 class PhraseReplacer:
@@ -70,7 +55,10 @@ class PhraseReplacer:
       - phrase_dict: dictionary mapping recognized/spoken forms to written forms
     """
 
-    def __init__(self, phrase_dict: dict[str, str]):
+    def __init__(self):
+        self.phrase_index = {}
+
+    def update(self, phrase_dict: dict[str, str]):
         # Index phrases by first word, then number of subsequent words n_next
         phrase_index = dict()
         for spoken_form, written_form in phrase_dict.items():
@@ -120,7 +108,8 @@ class PhraseReplacer:
 
 
 # Unit tests for PhraseReplacer
-rep = PhraseReplacer(
+rep = PhraseReplacer()
+rep.update(
     {
         "this": "foo",
         "that": "bar",
@@ -136,7 +125,27 @@ assert rep.replace_string("well this is a test really") == "well it worked! real
 assert rep.replace_string("try this is too") == "try stopping early too"
 assert rep.replace_string("this is a tricky one") == "stopping early a tricky one"
 
-phrase_replacer = PhraseReplacer(phrases_to_replace)
+phrase_replacer = PhraseReplacer()
+
+
+# phrases_to_replace is a spoken form -> written form map, used by our
+# implementation of `dictate.replace_words` (at bottom of file) to rewrite words
+# and phrases Talon recognized. This does not change the priority with which
+# Talon recognizes particular phrases over others.
+@track_csv_list(
+    "words_to_replace.csv",
+    headers=("Replacement", "Original"),
+    default=_word_map_defaults,
+)
+def on_word_map(values):
+    global phrases_to_replace
+    phrases_to_replace = values
+    phrase_replacer.update(values)
+
+    # "dictate.word_map" is used by Talon's built-in default implementation of
+    # `dictate.replace_words`, but supports only single-word replacements.
+    # Multi-word phrases are ignored.
+    ctx.settings["dictate.word_map"] = values
 
 
 @ctx.action_class("dictate")
@@ -187,24 +196,15 @@ def _add_selection_to_file(
     entries = _create_vocabulary_entries(spoken_form, written_form, type)
     added_some_phrases = False
 
-    # until we add support for parsing or otherwise getting the active
-    # vocabulary.talon-list, skip the logic for checking for duplicates etc
-    if file_contents:
-        # clear the new entries dictionary
-        new_entries = {}
-        for spoken_form, written_form in entries.items():
-            if skip_identical_replacement and spoken_form == written_form:
-                actions.app.notify(f'Skipping identical replacement: "{spoken_form}"')
-            elif spoken_form in file_contents:
-                actions.app.notify(
-                    f'Spoken form "{spoken_form}" is already in {file_name}'
-                )
-            else:
-                new_entries[spoken_form] = written_form
-                added_some_phrases = True
-    else:
-        new_entries = entries
-        added_some_phrases = True
+    new_entries = {}
+    for spoken_form, written_form in entries.items():
+        if skip_identical_replacement and spoken_form == written_form:
+            actions.app.notify(f'Skipping identical replacement: "{spoken_form}"')
+        elif spoken_form in file_contents:
+            actions.app.notify(f'Spoken form "{spoken_form}" is already in {file_name}')
+        else:
+            new_entries[spoken_form] = written_form
+            added_some_phrases = True
 
     if file_name.endswith(".csv"):
         append_to_csv(file_name, new_entries)
@@ -230,7 +230,8 @@ def append_to_vocabulary(rows: dict[str, str]):
             if key == value:
                 file.write(f"{key}\n")
             else:
-                value = repr(value)
+                if not str.isprintable(value) or "'" in value or '"' in value:
+                    value = repr(value)
                 file.write(f"{key}: {value}\n")
 
 
@@ -253,7 +254,7 @@ class Actions:
             phrase,
             type,
             "vocabulary.talon-list",
-            None,
+            actions.user.talon_get_active_registry_list("user.vocabulary"),
             False,
         )
 
@@ -268,3 +269,21 @@ class Actions:
             phrases_to_replace,
             True,
         )
+
+    def check_vocabulary_for_selection():
+        """Checks if the currently selected text is in the vocabulary."""
+        text = actions.edit.selected_text().strip()
+        spoken_forms = [
+            spoken
+            for spoken, written in actions.user.talon_get_active_registry_list(
+                "user.vocabulary"
+            ).items()
+            if text == written
+        ]
+        if spoken_forms:
+            if len(spoken_forms) == 1:
+                actions.app.notify(f'"{text}" is spoken as "{spoken_forms[0]}"')
+            else:
+                actions.app.notify(f'"{text}" is spoken as any of {spoken_forms}')
+        else:
+            actions.app.notify(f'"{text}" is not in the vocabulary')
