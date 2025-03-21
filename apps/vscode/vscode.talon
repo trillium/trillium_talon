@@ -298,3 +298,7 @@ save (this | that):
 
 (linty | lint (this | that)):
     key(alt-shift-f)
+
+# Splits
+
+pop sesh: user.vscode("workbench.action.focusNextGroup")
