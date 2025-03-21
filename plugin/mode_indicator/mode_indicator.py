@@ -116,14 +116,37 @@ def on_draw(c: SkiaCanvas):
     # c.paint.color = "EE0000"
     c.draw_circle(x, y, radius)
 
-    # red_border = True
-    # # Create a red border if red_border is True
-    # if red_border:
-    #     redx, redy = x, y
-    #     red_radius = c.rect.height / 2.2
-    #     c.paint.style = c.paint.Style.STROKE
-    #     c.paint.color = "EE0000"
-    #     c.draw_circle(redx,redy, red_radius)
+def on_draw_text(c: SkiaCanvas):
+    x, y = c.rect.center.x, c.rect.center.y
+    radius = c.rect.height / 2 - 2
+    text = actions.sound.active_microphone()[:2]
+    color = "#EEE"
+    stroke = True
+    draw_text(
+        c,
+        x,
+        y,
+        text,
+        color,
+        stroke,)
+    
+
+def draw_text(
+    c: SkiaCanvas,
+    x: float,
+    y: float,
+    text: str,
+    color: str = "#EEE",
+    stroke: bool = True,
+):
+    c.paint.style = c.paint.Style.FILL
+    c.paint.color = color
+    text_rect = c.paint.measure_text(text)[1]
+    c.draw_text(
+        text,
+        x - text_rect.x - text_rect.width / 2,
+        y - text_rect.y - text_rect.height / 2,
+    )
 
 def on_draw_red(c: SkiaCanvas):
     color_mode, color_gradient = get_colors()
@@ -180,13 +203,14 @@ def show_indicator():
     canvas = Canvas.from_rect(Rect(0, 0, 0, 0))
     canvas = Canvas.from_rect(Rect(0, 0, 0, 0))
     canvas.register("draw", on_draw)
-    canvas.register("draw", on_draw_red)
+    canvas.register("draw", on_draw_text)
+    # canvas.register("draw", on_draw_red)
 
 
 def hide_indicator():
     global canvas
     canvas.unregister("draw", on_draw)
-    canvas.unregister("draw", on_draw_red)
+    # canvas.unregister("draw", on_draw_red)
     canvas.close()
     canvas = None
 
