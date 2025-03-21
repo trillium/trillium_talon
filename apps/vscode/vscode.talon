@@ -293,8 +293,8 @@ cell run: user.vscode("notebook.cell.execute")
 install local: user.vscode("workbench.extensions.action.installVSIX")
 preview markdown: user.vscode("markdown.showPreview")
 
-save (this|that):
-    user.hud_add_log("warning","use 'file save")
+save (this | that):
+    user.hud_add_log("warning", "use 'file save")
 
-(linty | lint (this|that)):
+(linty | lint (this | that)):
     key(alt-shift-f)
