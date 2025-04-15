@@ -1,5 +1,6 @@
-from talon import Module, Context, cron, actions
 import time
+
+from talon import Context, Module, actions, cron
 
 mod = Module()
 state = {}
@@ -18,7 +19,7 @@ mode: dictation
 class UserActions:
     def noise_pop():
         actions.user.hud_add_log("event", "pop")
-        
+
     def noise_ssss():
         actions.user.hud_add_log("event", "ssss")
 
@@ -26,7 +27,7 @@ class UserActions:
         if not last_command_is_sleep():
             actions.core.repeat_phrase()
             actions.user.hud_add_log("event", "alviolar-click")
-    
+
     def noise_lateral_click():
         # actions.user.cancel_in_flight_phrase
         actions.user.hud_add_log("event", "lateral-click")
@@ -68,7 +69,6 @@ class Actions:
     def noise_ssss():
         """Noise ssss"""
         actions.user.hud_add_log("event", "ssss")
-
 
     def noise_cluck():
         """Noise cluck"""

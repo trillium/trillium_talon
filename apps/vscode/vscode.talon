@@ -22,7 +22,7 @@ bar extensions: user.vscode("workbench.view.extensions")
 bar outline: user.vscode("outline.focus")
 bar run: user.vscode("workbench.view.debug")
 bar search: user.vscode("workbench.view.search")
-(super find it | find in (file|files)): key(cmd-shift-f)
+(super find it | find in (file | files)): key(cmd-shift-f)
 bar source: user.vscode("workbench.view.scm")
 bar test: user.vscode("workbench.view.testing.focus")
 bar switch: user.vscode("workbench.action.toggleSidebarVisibility")
@@ -290,8 +290,6 @@ cell run: user.vscode("notebook.cell.execute")
 install local: user.vscode("workbench.extensions.action.installVSIX")
 preview markdown: user.vscode("markdown.showPreview")
 
-save (this|that):
-    user.hud_add_log("warning","use 'file save")
+save (this | that): user.hud_add_log("warning", "use 'file save")
 
-(linty | lint (this|that)):
-    key(alt-shift-f)
+(linty | lint (this | that)): key(alt-shift-f)

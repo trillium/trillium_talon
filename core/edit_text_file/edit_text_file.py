@@ -2,8 +2,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from talon import Context, Module, app
 from security import safe_command
+from talon import Context, Module, app
 
 # Path to community root directory
 REPO_DIR = Path(__file__).parent.parent.parent

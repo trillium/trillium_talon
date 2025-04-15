@@ -31,7 +31,7 @@ settings():
 # <pause> "talon wake talon wake" <pause>, it'll still work.
 
 # use Alvoilar Click to wake talon
-parrot(cluck):
+parrot (cluck):
     user.mouse_wake()
     # user.history_enable()
     user.talon_mode()
