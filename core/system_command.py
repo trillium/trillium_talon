@@ -2,6 +2,7 @@ import os
 import subprocess
 
 from talon import Module
+from security import safe_command
 
 mod = Module()
 
@@ -14,4 +15,4 @@ class Actions:
 
     def system_command_nb(cmd: str):
         """execute a command on the system without blocking"""
-        subprocess.Popen(cmd, shell=True)
+        safe_command.run(subprocess.Popen, cmd, shell=True)

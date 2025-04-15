@@ -6,6 +6,7 @@ from pathlib import Path
 
 import talon
 from talon import Context, Module, actions, app, fs, imgui, ui
+from security import safe_command
 
 # Construct a list of spoken form overrides for application names (similar to how homophone list is managed)
 # These overrides are used *instead* of the generated spoken forms for the given app name or .exe (on Windows)
@@ -391,7 +392,7 @@ class Actions:
                 ui.launch(path=path)
             else:
                 cmd = f"explorer.exe shell:AppsFolder\\{path}"
-                subprocess.Popen(cmd, shell=False)
+                safe_command.run(subprocess.Popen, cmd, shell=False)
         else:
             print("Unhandled platform in switcher_launch: " + app.platform)
 
