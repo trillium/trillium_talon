@@ -3,9 +3,8 @@ import os.path
 import tempfile
 from pathlib import Path
 from typing import Optional
-
-import requests
 from talon import Context, Module, actions, app, clip, ui
+from security import safe_requests
 
 # Courtesy of https://github.com/anonfunc/talon-user/blob/master/apps/jetbrains.py
 
@@ -88,7 +87,7 @@ def send_idea_command(cmd: str) -> str:
     if not nonce:
         raise FileNotFoundError(f"Couldn't find IDEA nonce file for port {port}")
 
-    response = requests.get(
+    response = safe_requests.get(
         f"http://localhost:{port}/{nonce}/{cmd}",
         proxies={"http": None, "https": None},
         timeout=(0.05, 3.05),
