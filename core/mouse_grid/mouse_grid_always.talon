@@ -13,7 +13,7 @@ reset <user.letter>+:
 grid <user.letter>+:
     user.grid_activate()
     user.grid_narrow_list(letter_list)
-    
+
 grid screen [<number>]:
     user.grid_select_screen(number or 1)
     user.grid_activate()
