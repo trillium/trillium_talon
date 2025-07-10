@@ -3,6 +3,7 @@ from talon.canvas import Canvas
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.skia.imagefilter import ImageFilter
+from talon.types.point import Point2d
 from talon.ui import Rect
 
 canvas: Canvas = None
@@ -15,6 +16,12 @@ mod.setting(
     type=bool,
     default=False,
     desc="If true the mode indicator is shown",
+)
+mod.setting(
+    "mode_indicator_show_mic_name",
+    type=bool,
+    default=False,
+    desc="Show first two letters of microphone name if true",
 )
 mod.setting(
     "mode_indicator_size",
@@ -41,6 +48,7 @@ mod.setting(
     type=float,
     desc="Mode indicator gradient brightness in percentages(0-1). 0=darkest, 1=brightest",
 )
+mod.setting("mode_indicator_color_text", type=str)
 mod.setting("mode_indicator_color_mute", type=str)
 mod.setting("mode_indicator_color_sleep", type=str)
 mod.setting("mode_indicator_color_dictation", type=str)
@@ -97,84 +105,40 @@ def get_colors():
     color_mode = get_mode_color()
     color_gradient = get_gradient_color(color_mode)
     color_alpha = get_alpha_color()
-    return f"{color_mode}{color_alpha}", f"{color_gradient}"
+    color_text = settings.get("user.mode_indicator_color_text")
+    return f"{color_mode}{color_alpha}", f"{color_gradient}", f"{color_text}"
 
 
 def on_draw(c: SkiaCanvas):
-    color_mode, color_gradient = get_colors()
+    color_mode, color_gradient, color_text = get_colors()
     x, y = c.rect.center.x, c.rect.center.y
     radius = c.rect.height / 2 - 2
 
     c.paint.shader = skia.Shader.radial_gradient(
-        (x, y), radius, [color_mode, color_gradient]
+        Point2d(x, y), radius, [color_mode, color_gradient]
     )
 
     c.paint.imagefilter = ImageFilter.drop_shadow(1, 1, 1, 1, color_gradient)
 
     c.paint.style = c.paint.Style.FILL
     c.paint.color = color_mode
-    # c.paint.color = "EE0000"
     c.draw_circle(x, y, radius)
 
-def on_draw_text(c: SkiaCanvas):
-    x, y = c.rect.center.x, c.rect.center.y
-    radius = c.rect.height / 2 - 2
-    text = actions.sound.active_microphone()[:2]
-    color = "#EEE"
-    stroke = True
-    draw_text(
-        c,
-        x,
-        y,
-        text,
-        color,
-        stroke,)
-    
+    if settings.get("user.mode_indicator_show_mic_name"):
+        # Remove c.paint.shader gradient before drawing again
+        c.paint.shader = skia.Shader.radial_gradient(
+            Point2d(x, y), radius, [color_text, color_text]
+        )
 
-def draw_text(
-    c: SkiaCanvas,
-    x: float,
-    y: float,
-    text: str,
-    color: str = "#EEE",
-    stroke: bool = True,
-):
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = color
-    text_rect = c.paint.measure_text(text)[1]
-    c.draw_text(
-        text,
-        x - text_rect.x - text_rect.width / 2,
-        y - text_rect.y - text_rect.height / 2,
-    )
-
-def on_draw_red(c: SkiaCanvas):
-    color_mode, color_gradient = get_colors()
-    x, y = c.rect.center.x, c.rect.center.y
-    radius = c.rect.height / 2 - 2
-
-    c.paint.shader = skia.Shader.radial_gradient(
-        (x, y), radius, ["330000", color_gradient]
-    )
-
-    c.paint.imagefilter = ImageFilter.drop_shadow(1, 1, 1, 1, color_gradient)
-
-    c.paint.style = c.paint.Style.STROKE
-    # c.paint.color = color_mode
-    c.paint.color = "EE0000"
-    # c.draw_circle(x, y, radius)
-
-    active_mic = actions.sound.active_microphone()
-    render_red_border = active_mic == "None"
-    actions.user.hud_add_log("warning",f"mic: {active_mic}")
-
-    # Create a red border if red_border is True
-    if render_red_border:
-        redx, redy = x, y
-        red_radius = c.rect.height / 7
+        text = current_microphone[:2]        
         c.paint.style = c.paint.Style.FILL
-        c.paint.color = "EE0000"
-        c.draw_circle(redx,redy, red_radius)
+        c.paint.color = color_text
+        text_rect = c.paint.measure_text(text)[1]
+        c.draw_text(
+            text,
+            x - text_rect.center.x,
+            y - text_rect.center.y,
+        )
 
 
 def move_indicator():
@@ -201,16 +165,12 @@ def move_indicator():
 def show_indicator():
     global canvas
     canvas = Canvas.from_rect(Rect(0, 0, 0, 0))
-    canvas = Canvas.from_rect(Rect(0, 0, 0, 0))
     canvas.register("draw", on_draw)
-    canvas.register("draw", on_draw_text)
-    # canvas.register("draw", on_draw_red)
 
 
 def hide_indicator():
     global canvas
     canvas.unregister("draw", on_draw)
-    # canvas.unregister("draw", on_draw_red)
     canvas.close()
     canvas = None
 
