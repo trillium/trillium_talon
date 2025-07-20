@@ -97,7 +97,7 @@ settings():
     # Mouse grid border setting
     user.grid_narrow_expansion = 25
 <<<<<<< HEAD
-    
+
 =======
 
 >>>>>>> origin

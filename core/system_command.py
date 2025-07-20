@@ -1,8 +1,8 @@
 import os
 import subprocess
 
-from talon import Module
 from security import safe_command
+from talon import Module
 
 mod = Module()
 

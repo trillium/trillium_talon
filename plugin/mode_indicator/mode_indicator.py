@@ -116,6 +116,7 @@ def on_draw(c: SkiaCanvas):
     # c.paint.color = "EE0000"
     c.draw_circle(x, y, radius)
 
+
 def on_draw_text(c: SkiaCanvas):
     x, y = c.rect.center.x, c.rect.center.y
     radius = c.rect.height / 2 - 2
@@ -128,8 +129,9 @@ def on_draw_text(c: SkiaCanvas):
         y,
         text,
         color,
-        stroke,)
-    
+        stroke,
+    )
+
 
 def draw_text(
     c: SkiaCanvas,
@@ -147,6 +149,7 @@ def draw_text(
         x - text_rect.x - text_rect.width / 2,
         y - text_rect.y - text_rect.height / 2,
     )
+
 
 def on_draw_red(c: SkiaCanvas):
     color_mode, color_gradient = get_colors()
@@ -166,7 +169,7 @@ def on_draw_red(c: SkiaCanvas):
 
     active_mic = actions.sound.active_microphone()
     render_red_border = active_mic == "None"
-    actions.user.hud_add_log("warning",f"mic: {active_mic}")
+    actions.user.hud_add_log("warning", f"mic: {active_mic}")
 
     # Create a red border if red_border is True
     if render_red_border:
@@ -174,7 +177,7 @@ def on_draw_red(c: SkiaCanvas):
         red_radius = c.rect.height / 7
         c.paint.style = c.paint.Style.FILL
         c.paint.color = "EE0000"
-        c.draw_circle(redx,redy, red_radius)
+        c.draw_circle(redx, redy, red_radius)
 
 
 def move_indicator():

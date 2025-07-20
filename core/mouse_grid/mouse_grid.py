@@ -1,4 +1,4 @@
-# TODO 
+# TODO
 # - Add north east south west for easier clicking on edges
 # - Add applying grid to current mouse position
 # - Add Click history
@@ -54,8 +54,8 @@ class MouseSnapNine:
         self.chars = "abcdefghijklmnopqrstuvwxyz"
         self.crosses = False
         self.max_zoom = 3
-        self.chars_map = { key: val for val, key in enumerate(self.chars, start=1)}
-                
+        self.chars_map = {key: val for val, key in enumerate(self.chars, start=1)}
+
     def setup(self, *, rect: Rect = None, screen_num: int = None):
         screens = ui.screens()
         # each if block here might set the rect to None to indicate failure
@@ -124,7 +124,7 @@ class MouseSnapNine:
         paint = canvas.paint
 
         def draw_grid(offset_x, offset_y, width, height):
-            for line_vert in range(1, self.rows ):
+            for line_vert in range(1, self.rows):
                 canvas.draw_line(
                     offset_x + line_vert * width // self.rows,
                     offset_y,
@@ -139,7 +139,7 @@ class MouseSnapNine:
                     offset_x + width,
                     offset_y + line_horz * height // self.cols,
                 )
-            
+
         def draw_crosses(offset_x, offset_y, width, height):
             for row in range(0, 2):
                 for col in range(0, 2):
@@ -154,7 +154,7 @@ class MouseSnapNine:
             i = 0
             for row in range(self.rows):
                 for col in range(self.cols):
-                    text_string = f'{self.chars[i].upper()}'
+                    text_string = f"{self.chars[i].upper()}"
                     text_rect = canvas.paint.measure_text(text_string)[1]
                     background_rect = text_rect.copy()
                     background_rect.center = Point2d(
@@ -169,7 +169,10 @@ class MouseSnapNine:
                     canvas.draw_text(
                         text_string,
                         offset_x + width / (self.rows * 2) + col * width / self.rows,
-                        offset_y + height / (self.cols * 2) + row * height / self.cols + text_rect.height / 2,
+                        offset_y
+                        + height / (self.cols * 2)
+                        + row * height / self.cols
+                        + text_rect.height / 2,
                     )
                     i = i + 1
 
@@ -206,14 +209,14 @@ class MouseSnapNine:
             paint.textsize += 12 - self.count * 3
             draw_text(self.rect.x, self.rect.y, self.rect.width, self.rect.height)
 
-    def calc_narrow(self, boxes, rect):  
+    def calc_narrow(self, boxes, rect):
         rect = rect.copy()
         # bdr = narrow_expansion.get()
-        bdr = settings.get('user.grid_narrow_expansion')
+        bdr = settings.get("user.grid_narrow_expansion")
 
         x_list = []
         y_list = []
-        
+
         for coord in boxes:
             row = int(coord - 1) // self.rows
             col = int(coord - 1) % self.cols
@@ -221,13 +224,13 @@ class MouseSnapNine:
             y = int(row * rect.height // self.rows) - bdr
             x_list.append(x)
             y_list.append(y)
-        
+
         rect.x += sum(x_list) // len(x_list)
         rect.y += sum(y_list) // len(y_list)
-        
+
         rect.width = (rect.width // self.cols) + bdr * 2
         rect.height = (rect.height // self.rows) + bdr * 2
-        
+
         return rect
 
     def narrow(self, boxes, move=True):
@@ -306,7 +309,6 @@ class GridActions:
         for d in digit_list:
             out.append(mg.chars_map[d])
         mg.narrow(out)
-    
 
     def grid_narrow(digit: Union[int, str]):
         """Choose a field of the grid and narrow the selection down"""
