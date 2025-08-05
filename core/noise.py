@@ -25,7 +25,6 @@ class Actions:
         """
         actions.skip()
 
-
     def noise_trigger_hiss(active: bool):
         """
         Called when the user makes a 'hiss' noise. Listen to
@@ -46,6 +45,7 @@ def noise_trigger_hiss_debounce(active: bool):
     else:
         cron.cancel(hiss_cron)
         actions.user.noise_trigger_hiss(active)
+
 
 noise.register("pop", lambda _: actions.user.noise_trigger_pop())
 # noise.register("hiss", noise_trigger_hiss_debounce)

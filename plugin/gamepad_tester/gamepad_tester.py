@@ -1,8 +1,8 @@
-from talon import Module, Context, ui
-from talon.screen import Screen
+from talon import Context, Module, ui
 from talon.canvas import Canvas, MouseEvent
+from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
-from talon.types import Rect, Point2d
+from talon.types import Point2d, Rect
 
 mod = Module()
 ctx = Context()
@@ -130,18 +130,12 @@ def render_trigger(c: SkiaCanvas, x: float, y: float, value: float):
 
 
 def render_stick(
-    c: SkiaCanvas,
-    x: float,
-    y: float,
-    is_pressed: bool,
-    value_x: float,
-    value_y: float
+    c: SkiaCanvas, x: float, y: float, is_pressed: bool, value_x: float, value_y: float
 ):
     # Stick click
     if is_pressed:
         c.paint.style = c.paint.Style.FILL
-        c.draw_circle(x,
-        y, CIRCLE_RADIUS)
+        c.draw_circle(x, y, CIRCLE_RADIUS)
         return
 
     c.paint.style = c.paint.Style.STROKE
@@ -255,9 +249,11 @@ def hide():
     canvas = None
     ctx.tags = []
 
+
 ###
 # Command is "gamepad tester"
 ######
+
 
 @mod.action_class
 class Actions:

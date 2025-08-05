@@ -3,8 +3,9 @@ import os.path
 import tempfile
 from pathlib import Path
 from typing import Optional
-from talon import Context, Module, actions, app, clip, ui
+
 from security import safe_requests
+from talon import Context, Module, actions, app, clip, ui
 
 # Courtesy of https://github.com/anonfunc/talon-user/blob/master/apps/jetbrains.py
 

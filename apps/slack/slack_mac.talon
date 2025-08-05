@@ -52,7 +52,6 @@ toggle right sidebar: key(cmd-.)
 bar up: key(alt-up)
 bar down: key(alt-down)
 
-
 # DEPRECATED
 (move | next) focus:
     app.notify("please use the voice command 'focus next' instead of 'next focus'")
