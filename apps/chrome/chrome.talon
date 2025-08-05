@@ -12,9 +12,8 @@ tab search <user.text>$:
     browser.focus_address()
     sleep(200ms)
     user.chrome_mod("shift-a")
-    
+
     sleep(200ms)
     insert("{text}")
 
-toggle dark [mode]:
-    key(alt-shift-d)
+toggle dark [mode]: key(alt-shift-d)

@@ -1,58 +1,52 @@
 {
-	"alviolar_click": {	
-		"sounds": ["alviolar_3mic"],
-		"threshold": {
-			">power": 10,
-			">probability": 0.98
-		},
-		"throttle": {
-			"alviolar-click": 0.12
-		}
-	},
-	"lateral-click": {	
-		"sounds": ["click_3mics"],
-		"threshold": {
-			">power": 10,
-			">probability": 0.999
-
-			
-		},
-		"throttle": {
-			"click": 0.2
-		}
-	},
-	"popp": {	
-		"sounds": ["pop_3mics"],
-		"threshold": {
-			">power": 10,
-			">probability": 0.95
-			
-		},
-		"throttle": {
-			"popp": 0.12
-		}
-	},
-	"shhh": {	
-		"sounds": ["shh_3mics"],
-		"threshold": {
-			">power": 10,
-			">probability": 0.98
-			
-		},
-		"throttle": {
-			"shh": 0.12
-		}
-	},
-	"ssss": {	
-		"sounds": ["ssss_3mics"],
-		"threshold": {
-			">power": 10,
-			">probability": 0.95
-			
-		},
-		"throttle": {
-			"ssss": 0.33
-		}
-	}
-	
+    "alviolar_click": {
+        "sounds": ["alviolar_3mic"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.98
+        },
+        "throttle": {
+            "alviolar-click": 0.12
+        }
+    },
+    "lateral-click": {
+        "sounds": ["click_3mics"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.999
+        },
+        "throttle": {
+            "click": 0.2
+        }
+    },
+    "popp": {
+        "sounds": ["pop_3mics"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.95
+        },
+        "throttle": {
+            "popp": 0.12
+        }
+    },
+    "shhh": {
+        "sounds": ["shh_3mics"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.98
+        },
+        "throttle": {
+            "shh": 0.12
+        }
+    },
+    "ssss": {
+        "sounds": ["ssss_3mics"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.95
+        },
+        "throttle": {
+            "ssss": 0.33
+        }
+    }
 }
