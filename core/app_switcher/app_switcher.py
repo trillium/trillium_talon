@@ -6,6 +6,7 @@ from pathlib import Path
 
 import talon
 from talon import Context, Module, actions, app, fs, imgui, ui
+from ....trillium_obs.config import SAFE_APPS
 
 # Construct a list of spoken form overrides for application names (similar to how homophone list is managed)
 # These overrides are used *instead* of the generated spoken forms for the given app name or .exe (on Windows)
@@ -297,7 +298,6 @@ def update_overrides(name, flags):
         overrides = {}
         excludes = set()
 
-        # print("update_overrides")
         with open(override_file_path) as f:
             for line in f:
                 line = line.rstrip().lower()
@@ -342,10 +342,50 @@ class Actions:
         """Focus a new application by name"""
         app = actions.user.get_running_app(name)
 
-        # Focus next window on same app
+        # Switch scene to blurred
+
+        actions.user.obs_get_blurry()
         if app == ui.active_app():
             actions.app.window_next()
         # Focus new app
+        else:
+            actions.user.switcher_focus_app(app)
+        
+        # Switch to safe scene if SAFE_APP
+        if ui.active_app().name in SAFE_APPS:
+            actions.user.obs_get_clear()
+            rect = ui.active_app().windows()[0].rect
+            print(rect)
+            actions.user.draw_mask_on_image_inplace(rect)
+        else:
+            print(ui.active_app().name, "not safe")
+            
+
+    def switcher_focus_print_backup(name: str):
+        """Focus a new application by name"""
+        app = actions.user.get_running_app(name)
+
+        # Focus next window on same app
+        if app == ui.active_app():
+            print()
+            print("========================================")
+            print()
+            print("[switcher_focus]", app)
+            print("[next app guess] -> ", app.windows()[1].title)
+            # Which app is going to be next?
+            # Pretty sure it's suppose to be app.windows()[1]
+            for num, item in enumerate(app.windows()):
+                print(num, item.title)
+                
+            # Focus new app
+            actions.app.window_next()
+
+            time.sleep(.5)
+            ui.active_app()
+            print("[actual        ] -> ", app.windows()[0].title)
+            for num, item in enumerate(app.windows()):
+                print(num, item.title)
+
         else:
             actions.user.switcher_focus_app(app)
 
@@ -435,7 +475,6 @@ def gui_running(gui: imgui.GUI):
 def update_launch_list():
     launch = get_apps()
 
-    # actions.user.talon_pretty_print(launch)
 
     ctx.lists["self.launch"] = actions.user.create_spoken_forms_from_map(
         launch, words_to_exclude
