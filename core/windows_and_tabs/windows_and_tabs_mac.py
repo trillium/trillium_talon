@@ -48,4 +48,5 @@ class AppActions:
 @ctx.action_class("user")
 class UserActions:
     def switcher_focus_last():
-        actions.key("cmd-tab")
+        # Use the window history tracker for exact window switching
+        actions.user.switcher_focus_last_window()
