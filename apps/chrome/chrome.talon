@@ -18,3 +18,9 @@ tab search <user.text>$:
 
 toggle dark [mode]:
     key(alt-shift-d)
+
+move tab (up | left):
+    key(ctrl-shift-pageup)
+
+move tab (down | right):
+    key(ctrl-shift-pagedown)
