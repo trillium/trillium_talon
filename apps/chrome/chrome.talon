@@ -5,6 +5,12 @@ tag(): user.tabs
 
 profile switch: user.chrome_mod("shift-m")
 
+full screen [switch]:
+    key(fn-f)
+
+(hide bookmarks | toggle bookmarks | bookmarks switch):
+    key(cmd-shift-f)
+
 tab search: user.chrome_mod("shift-a")
 
 tab search <user.text>$:
