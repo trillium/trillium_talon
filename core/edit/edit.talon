@@ -91,6 +91,9 @@ redo that: edit.redo()
 # Save
 file (save | safety): edit.save()
 ^(safety | disk)+$: edit.save()
+then (safety | disk)+$:
+    sleep(100ms)
+    edit.save()
 file save all: edit.save_all()
 
 [go] line mid: user.line_middle()
