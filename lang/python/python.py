@@ -2,6 +2,7 @@ import re
 
 from talon import Context, Module, actions, settings
 
+from ...core.described_functions import create_described_insert_between
 from ..tags.operators import Operators
 
 mod = Module()
@@ -9,18 +10,6 @@ ctx = Context()
 ctx.matches = r"""
 code.language: python
 """
-ctx.lists["user.code_common_function"] = {
-    "enumerate": "enumerate",
-    "integer": "int",
-    "length": "len",
-    "list": "list",
-    "print": "print",
-    "range": "range",
-    "set": "set",
-    "split": "split",
-    "string": "str",
-    "update": "update",
-}
 
 """a set of fields used in python docstrings that will follow the
 reStructuredText format"""
@@ -41,41 +30,6 @@ docstring_fields = {
 
 mod.list("python_docstring_fields", desc="python docstring fields")
 ctx.lists["user.python_docstring_fields"] = docstring_fields
-
-ctx.lists["user.code_type"] = {
-    "boolean": "bool",
-    "integer": "int",
-    "string": "str",
-    "none": "None",
-    "dick": "Dict",
-    "float": "float",
-    "any": "Any",
-    "tuple": "Tuple",
-    "union": "UnionAny",
-    "iterable": "Iterable",
-    "vector": "Vector",
-    "bytes": "bytes",
-    "sequence": "Sequence",
-    "callable": "Callable",
-    "list": "List",
-    "no return": "NoReturn",
-}
-
-ctx.lists["user.code_keyword"] = {
-    "assert": "assert ",
-    "break": "break",
-    "continue": "continue",
-    "class": "class ",
-    "return": "return ",
-    "import": "import ",
-    "null": "None",
-    "none": "None",
-    "pass": "pass",
-    "true": "True",
-    "false": "False",
-    "yield": "yield ",
-    "from": "from ",
-}
 
 exception_list = [
     "BaseException",
@@ -151,7 +105,7 @@ ctx.lists["user.python_exception"] = {
 
 operators = Operators(
     # code_operators_array
-    SUBSCRIPT=lambda: actions.user.insert_between("[", "]"),
+    SUBSCRIPT=create_described_insert_between("[", "]"),
     # code_operators_assignment
     ASSIGNMENT=" = ",
     ASSIGNMENT_SUBTRACTION=" -= ",
@@ -173,7 +127,7 @@ operators = Operators(
     BITWISE_LEFT_SHIFT=" << ",
     BITWISE_RIGHT_SHIFT=" >> ",
     # code_operators_lambda
-    LAMBDA=lambda: actions.user.insert_between("lambda ", ": "),
+    LAMBDA=create_described_insert_between("lambda ", ": "),
     # code_operators_math
     MATH_SUBTRACT=" - ",
     MATH_ADD=" + ",
@@ -216,51 +170,11 @@ class UserActions:
     def code_insert_is_not_null():
         actions.auto_insert(" is not None")
 
-    def code_state_if():
-        actions.user.insert_between("if ", ":")
-
-    def code_state_else_if():
-        actions.user.insert_between("elif ", ":")
-
-    def code_state_else():
-        actions.insert("else:")
-        actions.key("enter")
-
-    def code_state_switch():
-        actions.user.insert_between("match ", ":")
-
-    def code_state_case():
-        actions.user.insert_between("case ", ":")
-
-    def code_state_for():
-        actions.auto_insert("for ")
-
-    def code_state_for_each():
-        actions.user.insert_between("for ", " in ")
-
-    def code_state_while():
-        actions.user.insert_between("while ", ":")
-
-    def code_define_class():
-        actions.auto_insert("class ")
-
-    def code_import():
-        actions.auto_insert("import ")
-
-    def code_comment_line_prefix():
-        actions.auto_insert("# ")
-
-    def code_state_return():
-        actions.insert("return ")
-
     def code_insert_true():
         actions.auto_insert("True")
 
     def code_insert_false():
         actions.auto_insert("False")
-
-    def code_comment_documentation():
-        actions.user.insert_between('"""', '"""')
 
     def code_insert_function(text: str, selection: str):
         text += f"({selection or ''})"
@@ -297,9 +211,3 @@ class UserActions:
 
     def code_insert_return_type(type: str):
         actions.insert(f" -> {type}")
-
-    def code_break():
-        actions.insert("break")
-
-    def code_next():
-        actions.insert("continue")

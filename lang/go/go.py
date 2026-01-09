@@ -1,5 +1,6 @@
 from talon import Context, Module, actions, settings
 
+from ...core.described_functions import create_described_insert_between
 from ..tags.operators import Operators
 
 ctx = Context()
@@ -45,32 +46,9 @@ ctx.lists["user.code_keyword"] = {
     "const": "const",
 }
 
-ctx.lists["user.code_common_function"] = {
-    # golang buildin functions
-    "append": "append",
-    "length": "len",
-    "make": "make",
-    # formatting
-    "format print": "fmt.Printf",
-    "format sprint": "fmt.Sprintf",
-    "format print line": "fmt.Println",
-    # time
-    "time hour": "time.Hour",
-    "time minute": "time.Minute",
-    "time second": "time.Second",
-    "time millisecond": "time.Millisecond",
-    "time microsecond": "time.Microsecond",
-    "time nanosecond": "time.Nanosecond",
-    # IO
-    "buf I O": "bufio.",
-    # strings
-    "string convert": "strconv.",
-    "string convert to int": "strconv.AtoI",
-}
-
 operators = Operators(
     # code_operators_array
-    SUBSCRIPT=lambda: actions.user.insert_between("[", "]"),
+    SUBSCRIPT=create_described_insert_between("[", "]"),
     # code_operators_assignment
     ASSIGNMENT=" = ",
     ASSIGNMENT_ADDITION=" += ",
@@ -133,49 +111,11 @@ class UserActions:
     def code_insert_is_not_null():
         actions.insert(" != nil")
 
-    def code_state_if():
-        actions.user.insert_between("if ", " ")
-
-    def code_state_else_if():
-        actions.user.insert_between("else if ", " ")
-
-    def code_state_else():
-        actions.insert("else ")
-        actions.key("enter")
-
-    def code_state_switch():
-        actions.user.insert_between("switch ", " ")
-
-    def code_state_case():
-        actions.user.insert_between("case ", ":")
-
-    def code_state_for():
-        actions.user.insert_between("for ", " ")
-
-    # There is no while keyword in go. Closest approximation is a for loop.
-    def code_state_while():
-        actions.user.insert_between("for ", " ")
-
-    def code_break():
-        actions.insert("break")
-
-    def code_next():
-        actions.insert("continue")
-
     def code_insert_true():
         actions.insert("true")
 
     def code_insert_false():
         actions.insert("false")
-
-    def code_import():
-        actions.insert("import ")
-
-    def code_state_return():
-        actions.insert("return ")
-
-    def code_comment_line_prefix():
-        actions.insert("// ")
 
     def code_insert_function(text: str, selection: str):
         text += f"({selection or ''})"

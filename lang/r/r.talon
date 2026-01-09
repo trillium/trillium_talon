@@ -2,7 +2,6 @@ code.language: r
 -
 tag(): user.code_imperative
 
-tag(): user.code_block_c_like
 tag(): user.code_comment_line
 tag(): user.code_data_bool
 tag(): user.code_data_null
@@ -21,7 +20,6 @@ settings():
     user.code_protected_variable_formatter = "SNAKE_CASE"
     user.code_public_variable_formatter = "SNAKE_CASE"
 
-toggle library: user.code_toggle_libraries()
 library <user.code_libraries>:
     user.code_insert_library(code_libraries, "")
     key(end enter)
