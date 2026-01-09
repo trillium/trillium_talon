@@ -33,7 +33,7 @@ class WinActions:
         # of file, 'edit' will fail, but 'open' always gives the user a
         # choice between applications.
         try:
-            os.startfile(path, "edit")
+            os.startfile(path, "code")
         except OSError:
             os.startfile(path, "open")
 
