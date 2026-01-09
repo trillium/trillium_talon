@@ -96,11 +96,6 @@ settings():
 
     # Mouse grid border setting
     user.grid_narrow_expansion = 25
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> origin
     # Puts Talon into sleep mode if no commands are spoken for a defined period of time.
     # user.listening_timeout_minutes = 3
 
@@ -125,4 +120,4 @@ tag(): user.mouse_cursor_commands_enable
 # Uncomment the below to enable support for saying numbers without a prefix.
 # By default you need to say "numb one" to write "1". If you uncomment this,
 # you can say "one" to write "1".
-# tag(): user.unprefixed_numbers
+tag(): user.unprefixed_numbers
