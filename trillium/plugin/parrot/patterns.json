@@ -1,0 +1,84 @@
+{
+    "lip-pop": {
+        "sounds": ["lip_pop"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.95
+        },
+        "throttle": {
+            "lip-pop": 0.12
+        }
+    },
+    "kitty-cmere": {
+        "sounds": ["kitty_cmere_tongue_click"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.96
+        },
+        "throttle": {
+            "kitty-cmere": 0.2
+        }
+    },
+    "tongue-click": {
+        "sounds": ["alviolar_tongue_click"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.95
+        },
+        "throttle": {
+            "tongue-click": 0.12
+        }
+    },
+    "suppress_clicks": {
+        "sounds": ["background_noise_talking"],
+        "threshold": {
+            ">probability": 0.999,
+            ">power": 15
+        },
+        "throttle": {
+            "lip-pop": 0.15,
+            "tongue-click": 0.15,
+            "kitty-cmere": 0.15
+        }
+    },
+    "hiss": {
+        "sounds": ["hiss_sound"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.95
+        },
+        "throttle": {
+            "hiss": 0.03
+        }
+    },
+    "piggy-oink": {
+        "sounds": ["piggy_oink_sound"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.95
+        },
+        "throttle": {
+            "piggy-oink": 0.12
+        }
+    },
+    "shh": {
+        "sounds": ["shh_sound"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.95
+        },
+        "throttle": {
+            "shh": 0.03
+        }
+    },
+    "clap": {
+        "sounds": ["clapping_in_front_of_myself"],
+        "threshold": {
+            ">power": 10,
+            ">probability": 0.95
+        },
+        "throttle": {
+            "clap": 0.12
+        }
+    }
+}

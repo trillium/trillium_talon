@@ -1,0 +1,59 @@
+{
+  "editor": "code",
+  "workspaces": {
+    "user": {
+      "path": "/Users/trilliumsmith/.talon/user",
+      "aliases": [
+        "user"
+      ],
+      "last_invoked": "2026-02-09T21:26:22.349806+00:00"
+    },
+    "movies": {
+      "path": "/Users/trilliumsmith/Movies",
+      "aliases": [
+        "Movies"
+      ],
+      "last_invoked": "2026-02-07T23:31:33.024363+00:00"
+    },
+    "happier": {
+      "path": "/Users/trilliumsmith/code/happier",
+      "aliases": [
+        "happier"
+      ],
+      "last_invoked": "2026-02-07T23:32:22.943570+00:00"
+    },
+    "rowing tracker": {
+      "path": "/Users/trilliumsmith/code/rowing_tracker/rowing_tracker",
+      "aliases": [
+        "rowing tracker",
+        "rowing",
+        "rower",
+        "row"
+      ],
+      "last_invoked": "2026-02-09T20:22:27.096637+00:00"
+    },
+    "massage": {
+      "path": "/Users/trilliumsmith/code/massage/massage",
+      "aliases": [
+        "massage site"
+      ],
+      "last_invoked": "2026-02-08T00:34:25.568641+00:00"
+    },
+    "concept2": {
+      "path": "/Users/trilliumsmith/code/concept2",
+      "aliases": [
+        "concept",
+        "concept two"
+      ],
+      "last_invoked": "2026-02-08T03:57:21.646568+00:00"
+    },
+    "talon deck": {
+      "path": "/Users/trilliumsmith/.talon/talon_deck",
+      "aliases": [
+        "talon deck"
+      ],
+      "last_invoked": "2026-02-08T20:30:18.531267+00:00"
+    }
+  },
+  "removed": {}
+}

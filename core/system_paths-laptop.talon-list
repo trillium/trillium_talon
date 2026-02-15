@@ -1,0 +1,16 @@
+list: user.system_paths
+hostname: laptop
+-
+user: /home/trillium
+desktop: /home/trillium/Desktop
+desk: /home/trillium/Desktop
+documents: /home/trillium/Documents
+docks: /home/trillium/Documents
+downloads: /home/trillium/Downloads
+music: /home/trillium/Music
+pictures: /home/trillium/Pictures
+videos: /home/trillium/Videos
+talon home: /home/trillium/.talon
+talon recordings: /home/trillium/.talon/recordings
+talon user: /home/trillium/.talon/user
+home: /home/trillium

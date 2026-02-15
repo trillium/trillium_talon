@@ -1,0 +1,16 @@
+Command trigger,Description
+<user.raw_prose>,Raw dictation from engine
+{user.prose_formatter} <user.prose>,Formatted prose commands
+talon open log,User excluded command
+repeater exclude last,User excluded command
+slash <user.slash_command>,User excluded command
+command history,User excluded command
+parrot on,User excluded command
+parrot off,User excluded command
+set microphone main,User excluded command
+wiki wiki | wakey wakey,User excluded command
+grid off,User excluded command
+clock off,User excluded command
+friction end,User excluded command
+mouse clock,User excluded command
+hints off [{user.rango_hints_toggle_levels}],User excluded command
