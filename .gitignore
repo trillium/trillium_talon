@@ -9,9 +9,27 @@ __pycache__
 .vscode/settings.json
 .DS_Store
 *.bak
+.talonfmt-*
+*-converted-to-talon-list
 # Emacs (from https://github.com/github/gitignore/blob/main/Global/Emacs.gitignore)
 *~
 \#*\#
 .\#*
 # Vim (from https://github.com/github/gitignore/blob/main/Global/Vim.gitignore)
 [._]*.swp
+
+# External repos (added separately at deploy time)
+cursorless-talon-dev/
+cursorless-settings/
+
+# Runtime data
+recordings/
+
+# IDE/editor config
+.claude/
+
+# Root-level scripts not part of community fork
+openclaw_setup.py
+openclaw_setup.talon
+run_openclaw_setup.py
+run_openclaw_setup.talon
