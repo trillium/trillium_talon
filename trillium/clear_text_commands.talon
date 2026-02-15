@@ -1,13 +1,14 @@
 mode: command
 mode: dictation
 -
-clear left <user.number_small> hundred:
-    key(backspace)
-    repeat(number_small * 100 - 1)
+# Disabled: TalonScript doesn't support arithmetic in repeat()
+# clear left <user.number_small> hundred:
+#     key(backspace)
+#     repeat(number_small * 100 - 1)
 
-clear right <user.number_small> hundred:
-    key(delete)
-    repeat(number_small * 100 - 1)
+# clear right <user.number_small> hundred:
+#     key(delete)
+#     repeat(number_small * 100 - 1)
 
 ^destroy$:
     user.clear_last_dictation()

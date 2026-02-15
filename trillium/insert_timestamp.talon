@@ -1,4 +1,4 @@
-key(cmd-ctrl-alt-shift-t:up):
+key(super-ctrl-alt-shift-t:up):
     insert(user.time_format_utc("T"))
     insert(user.time_format_utc("%Y-%m-%dT%H:%M:%S+00:00"))
 
