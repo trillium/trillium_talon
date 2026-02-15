@@ -1,17 +1,17 @@
 mode: command
 mode: dictation
 -
-^dictation mode$:
+^(dictation mode | mode dictation)$:
     mode.disable("sleep")
     mode.disable("command")
     mode.enable("dictation")
     user.code_clear_language_mode()
     user.gdb_disable()
-^command mode$:
+^(command mode | mode command)$:
     mode.disable("sleep")
     mode.disable("dictation")
     mode.enable("command")
-^mode mixed$:
+^(mixed mode | mode mixed)$:
     mode.disable("sleep")
     mode.enable("command")
     mode.enable("dictation")

@@ -1,0 +1,15 @@
+list: user.system_paths
+hostname: trilliums-mbp.lan
+-
+user: /Users/trilliumsmith
+profile: /Users/trilliumsmith
+desktop: /Users/trilliumsmith/Desktop
+desk: /Users/trilliumsmith/Desktop
+documents: /Users/trilliumsmith/Documents
+docks: /Users/trilliumsmith/Documents
+downloads: /Users/trilliumsmith/Downloads
+music: /Users/trilliumsmith/Music
+pictures: /Users/trilliumsmith/Pictures
+videos: /Users/trilliumsmith/Videos
+talon home: /Users/trilliumsmith/.talon
+talon user: /Users/trilliumsmith/.talon/user

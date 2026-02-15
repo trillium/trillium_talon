@@ -26,8 +26,22 @@ scroll down: edit.page_down()
 # go word left, go 2 words right
 go <user.navigation_step>+: user.perform_navigation_steps(navigation_step_list)
 
-go line start | head: edit.line_start()
-go line end | tail: edit.line_end()
+# Adding north east south west
+west: edit.left()
+east: edit.right()
+north: edit.up()
+south: edit.down()
+
+# Adding north east south west
+pull: edit.left()
+push: edit.right()
+
+# More east west
+go line east: edit.line_start()
+go line west: edit.line_end()
+
+go line start | [go] head: edit.line_start()
+go line end | [go] tail: edit.line_end()
 
 go way left:
     edit.line_start()
@@ -75,11 +89,16 @@ padding: user.insert_between(" ", " ")
     insert(" ")
 
 # Undo/redo
+nope: edit.undo()
 undo that: edit.undo()
 redo that: edit.redo()
 
 # Save
-file save: edit.save()
+file (save | safety): edit.save()
+^(safety | disk)+$: edit.save()
+then (safety | disk)+$:
+    sleep(100ms)
+    edit.save()
 file save all: edit.save_all()
 
 [go] line mid: user.line_middle()

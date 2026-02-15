@@ -1,3 +1,9 @@
+# TODO 
+# - Add north east south west for easier clicking on edges
+# - Add applying grid to current mouse position
+# - Add Click history
+# - Add indication that the mapping is outside the screen in zoom-in mode
+
 # courtesy of https://github.com/timo/
 # see https://github.com/timo/talon_scripts
 import math
@@ -37,7 +43,15 @@ class MouseSnapNine:
         self.was_zoom_mouse_active = False
         self.was_control_mouse_active = False
         self.was_control1_mouse_active = False
+        self.grid_stroke = 1
 
+        self.rows = 5
+        self.cols = 5
+        self.chars = "abcdefghijklmnopqrstuvwxyz"
+        self.crosses = False
+        self.max_zoom = 3
+        self.chars_map = { key: val for val, key in enumerate(self.chars, start=1)}
+                
     def setup(self, *, rect: Rect = None, screen_num: int = None):
         screens = ui.screens()
         # each if block here might set the rect to None to indicate failure
@@ -106,57 +120,42 @@ class MouseSnapNine:
         paint = canvas.paint
 
         def draw_grid(offset_x, offset_y, width, height):
-            canvas.draw_line(
-                offset_x + width // 3,
-                offset_y,
-                offset_x + width // 3,
-                offset_y + height,
-            )
-            canvas.draw_line(
-                offset_x + 2 * width // 3,
-                offset_y,
-                offset_x + 2 * width // 3,
-                offset_y + height,
-            )
+            for line_vert in range(1, self.rows ):
+                canvas.draw_line(
+                    offset_x + line_vert * width // self.rows,
+                    offset_y,
+                    offset_x + line_vert * width // self.rows,
+                    offset_y + height,
+                )
 
-            canvas.draw_line(
-                offset_x,
-                offset_y + height // 3,
-                offset_x + width,
-                offset_y + height // 3,
-            )
-            canvas.draw_line(
-                offset_x,
-                offset_y + 2 * height // 3,
-                offset_x + width,
-                offset_y + 2 * height // 3,
-            )
-
+            for line_horz in range(1, self.cols):
+                canvas.draw_line(
+                    offset_x,
+                    offset_y + line_horz * height // self.cols,
+                    offset_x + width,
+                    offset_y + line_horz * height // self.cols,
+                )
+            
         def draw_crosses(offset_x, offset_y, width, height):
             for row in range(0, 2):
                 for col in range(0, 2):
-                    cx = offset_x + width / 6 + (col + 0.5) * width / 3
-                    cy = offset_y + height / 6 + (row + 0.5) * height / 3
+                    cx = offset_x + width / 6 + (col + 0.5) * width / self.rows
+                    cy = offset_y + height / 6 + (row + 0.5) * height / self.cols
 
                     canvas.draw_line(cx - 10, cy, cx + 10, cy)
                     canvas.draw_line(cx, cy - 10, cx, cy + 10)
 
-        grid_stroke = 1
-
         def draw_text(offset_x, offset_y, width, height):
             canvas.paint.text_align = canvas.paint.TextAlign.CENTER
-            for row in range(3):
-                for col in range(3):
-                    text_string = ""
-                    if settings.get("user.grids_put_one_bottom_left"):
-                        text_string = f"{(2 - row)*3+col+1}"
-                    else:
-                        text_string = f"{row*3+col+1}"
+            i = 0
+            for row in range(self.rows):
+                for col in range(self.cols):
+                    text_string = f'{self.chars[i].upper()}'
                     text_rect = canvas.paint.measure_text(text_string)[1]
                     background_rect = text_rect.copy()
                     background_rect.center = Point2d(
-                        offset_x + width / 6 + col * width / 3,
-                        offset_y + height / 6 + row * height / 3,
+                        offset_x + width / (self.rows * 2) + col * width / self.rows,
+                        offset_y + height / (self.cols * 2) + row * height / self.cols,
                     )
                     background_rect = background_rect.inset(-4)
                     paint.color = "9999995f"
@@ -165,9 +164,10 @@ class MouseSnapNine:
                     paint.color = "00ff00ff"
                     canvas.draw_text(
                         text_string,
-                        offset_x + width / 6 + col * width / 3,
-                        offset_y + height / 6 + row * height / 3 + text_rect.height / 2,
+                        offset_x + width / (self.rows * 2) + col * width / self.rows,
+                        offset_y + height / (self.cols * 2) + row * height / self.cols + text_rect.height / 2,
                     )
+                    i = i + 1
 
         if self.count < 2:
             paint.color = "00ff007f"
@@ -175,9 +175,10 @@ class MouseSnapNine:
                 gap = 35 - self.count * 10
                 if not self.active:
                     gap = 45
-                draw_crosses(*self.calc_narrow(which, self.rect))
+                # draw_crosses(*self.calc_narrow([which], self.rect))
+                # todo deal with this later
 
-        paint.stroke_width = grid_stroke
+        paint.stroke_width = self.grid_stroke
         if self.active:
             paint.color = "ff0000ff"
         else:
@@ -185,10 +186,10 @@ class MouseSnapNine:
         if self.count >= 2:
             aspect = self.rect.width / self.rect.height
             if aspect >= 1:
-                w = self.screen.width / 3
+                w = self.screen.width / self.cols
                 h = w / aspect
             else:
-                h = self.screen.height / 3
+                h = self.screen.height / self.rows
                 w = h * aspect
             x = self.screen.x + (self.screen.width - w) / 2
             y = self.screen.y + (self.screen.height - h) / 2
@@ -201,26 +202,35 @@ class MouseSnapNine:
             paint.textsize += 12 - self.count * 3
             draw_text(self.rect.x, self.rect.y, self.rect.width, self.rect.height)
 
-    def calc_narrow(self, which, rect):
+    def calc_narrow(self, boxes, rect):  
         rect = rect.copy()
-        bdr = settings.get("user.grid_narrow_expansion")
-        row = int(which - 1) // 3
-        col = int(which - 1) % 3
-        if settings.get("user.grids_put_one_bottom_left"):
-            row = 2 - row
-        rect.x += int(col * rect.width // 3) - bdr
-        rect.y += int(row * rect.height // 3) - bdr
-        rect.width = (rect.width // 3) + bdr * 2
-        rect.height = (rect.height // 3) + bdr * 2
+        # bdr = narrow_expansion.get()
+        bdr = settings.get('user.grid_narrow_expansion')
+
+        x_list = []
+        y_list = []
+        
+        for coord in boxes:
+            row = int(coord - 1) // self.rows
+            col = int(coord - 1) % self.cols
+            x = int(col * rect.width // self.cols) - bdr
+            y = int(row * rect.height // self.rows) - bdr
+            x_list.append(x)
+            y_list.append(y)
+        
+        rect.x += sum(x_list) // len(x_list)
+        rect.y += sum(y_list) // len(y_list)
+        
+        rect.width = (rect.width // self.cols) + bdr * 2
+        rect.height = (rect.height // self.rows) + bdr * 2
+        
         return rect
 
-    def narrow(self, which, move=True):
-        if which < 1 or which > 9:
-            return
+    def narrow(self, boxes, move=True):
         self.save_state()
-        rect = self.calc_narrow(which, self.rect)
+        rect = self.calc_narrow(boxes, self.rect)
         # check count so we don't bother zooming in _too_ far
-        if self.count < 5:
+        if self.count < self.max_zoom:
             self.rect = rect.copy()
             self.count += 1
         if move:
@@ -245,8 +255,8 @@ class MouseSnapNine:
             canvas.draw_image_rect(self.img, src, dst)
 
     def narrow_to_pos(self, x, y):
-        col_size = int(self.width // 3)
-        row_size = int(self.height // 3)
+        col_size = int(self.width // self.cols)
+        row_size = int(self.height // self.rows)
         col = math.floor((x - self.rect.x) / col_size)
         row = math.floor((y - self.rect.x) / row_size)
         self.narrow(1 + col + 3 * row, move=False)
@@ -288,12 +298,19 @@ class GridActions:
 
     def grid_narrow_list(digit_list: list[str]):
         """Choose fields multiple times in a row"""
+        out = []
         for d in digit_list:
-            actions.self.grid_narrow(int(d))
+            out.append(mg.chars_map[d])
+        mg.narrow(out)
+    
 
     def grid_narrow(digit: Union[int, str]):
         """Choose a field of the grid and narrow the selection down"""
-        mg.narrow(int(digit))
+        mg.narrow([mg.chars_map[digit]])
+
+    def grid_narrow_letter(letter: str):
+        """Choose a field of the grid and narrow the selection down"""
+        mg.narrow([mg.chars_map[letter]])
 
     def grid_go_back():
         """Sets the grid state back to what it was before the last command"""

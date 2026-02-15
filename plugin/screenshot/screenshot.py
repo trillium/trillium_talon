@@ -69,6 +69,7 @@ class Actions:
         selected_screen = get_screen(screen_num)
         flash_rect(rect)
         img = screen.capture_rect(rect)
+        clip.set_image(img)
         path = get_screenshot_path(title)
         img.write_file(path)
 

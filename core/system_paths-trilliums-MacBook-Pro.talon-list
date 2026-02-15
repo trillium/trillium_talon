@@ -1,0 +1,16 @@
+list: user.system_paths
+hostname: trilliums-MacBook-Pro
+-
+user: /Users/trilliumsmith
+desktop: /Users/trilliumsmith/Desktop
+desk: /Users/trilliumsmith/Desktop
+documents: /Users/trilliumsmith/Documents
+docks: /Users/trilliumsmith/Documents
+downloads: /Users/trilliumsmith/Downloads
+music: /Users/trilliumsmith/Music
+pictures: /Users/trilliumsmith/Pictures
+videos: /Users/trilliumsmith/Videos
+talon home: /Users/trilliumsmith/.talon
+talon recordings: /Users/trilliumsmith/.talon/recordings
+talon user: /Users/trilliumsmith/.talon/user
+home: /Users/trilliumsmith
