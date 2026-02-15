@@ -23,6 +23,10 @@ not tag: user.deep_sleep
 # say "talon wake" over and over again before the speech timeout ever gets hit, which
 # means that these won't recognize. The (+) handles this case, so if you say
 # <pause> "talon wake talon wake" <pause>, it'll still work.
+parrot(cluck):
+    user.mouse_wake()
+    # user.history_enable()
+    user.talon_mode()
 
 ^(welcome back)+$:
     user.mouse_wake()

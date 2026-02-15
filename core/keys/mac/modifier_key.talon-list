@@ -4,7 +4,9 @@ os: mac
 
 alt: alt
 control: ctrl
+troll: ctrl
 shift: shift
+sky: shift
 super: cmd
 command: cmd
 option: alt

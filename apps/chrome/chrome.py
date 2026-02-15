@@ -11,6 +11,7 @@ and app.exe: /^chrome\.exe$/i
 mod.apps.chrome = """
 os: mac
 app.bundle: com.google.Chrome
+app.bundle: com.google.Chrome.beta
 app.bundle: com.google.Chrome.canary
 app.bundle: org.chromium.Chromium
 """

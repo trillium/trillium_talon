@@ -25,7 +25,7 @@ pick sticker: user.discord_sticker_picker()
 
 # Misc
 mark inbox channel read: user.discord_mark_inbox_read()
-[toggle] (mute | unmute): user.discord_mute()
+# [toggle] (mute | unmute): user.discord_mute()
 (mute | unmute) and sleep:
     user.discord_mute()
     speech.disable()

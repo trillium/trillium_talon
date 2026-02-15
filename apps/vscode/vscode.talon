@@ -22,9 +22,11 @@ bar extensions: user.vscode("workbench.view.extensions")
 bar outline: user.vscode("outline.focus")
 bar run: user.vscode("workbench.view.debug")
 bar search: user.vscode("workbench.view.search")
+(super find it | find in (file | files)): key(cmd-shift-f)
 bar source: user.vscode("workbench.view.scm")
 bar test: user.vscode("workbench.view.testing.focus")
 bar switch: user.vscode("workbench.action.toggleSidebarVisibility")
+(aux | ox | axillary | copilot) switch: user.vscode("workbench.action.toggleAuxiliaryBar")
 
 # Symbol search
 symbol hunt [<user.text>]:
@@ -43,6 +45,7 @@ panel output: user.vscode("workbench.panel.output.focus")
 panel problems: user.vscode("workbench.panel.markers.view.focus")
 panel switch: user.vscode("workbench.action.togglePanel")
 panel terminal: user.vscode("workbench.action.terminal.focus")
+(panel | terminal) [toggle] max [toggle]: user.vscode("workbench.action.toggleMaximizedPanel")
 focus editor: user.vscode("workbench.action.focusActiveEditorGroup")
 
 # Settings
@@ -58,6 +61,7 @@ show snippets: user.vscode("workbench.action.openSnippets")
 
 # VSCode Snippets
 snip (last | previous): user.vscode("jumpToPrevSnippetPlaceholder")
+[snip] next: user.vscode("jumpToNextSnippetPlaceholder")
 
 # Display
 centered switch: user.vscode("workbench.action.toggleCenteredLayout")
@@ -65,6 +69,8 @@ fullscreen switch: user.vscode("workbench.action.toggleFullScreen")
 theme switch: user.vscode("workbench.action.selectTheme")
 wrap switch: user.vscode("editor.action.toggleWordWrap")
 zen switch: user.vscode("workbench.action.toggleZenMode")
+zen [mode] switch: user.vscode("workbench.action.toggleZenMode")
+toggle zen [mode]: user.vscode("workbench.action.toggleZenMode")
 
 # File Commands
 file hunt [<user.text>]:
@@ -96,7 +102,7 @@ file delete:
     sleep(150ms)
 file open folder: user.vscode("revealFileInOS")
 file reveal: user.vscode("workbench.files.action.showActiveFileInExplorer")
-save ugly: user.vscode("workbench.action.files.saveWithoutFormatting")
+save (ugly | dirty | filthy): user.vscode("workbench.action.files.saveWithoutFormatting")
 
 # Language Features
 suggest show: user.vscode("editor.action.triggerSuggest")
@@ -184,7 +190,9 @@ git ignore: user.vscode("git.ignore")
 git merge: user.vscode("git.merge")
 git output: user.vscode("git.showOutput")
 git pull: user.vscode("git.pullRebase")
-git push: user.vscode("git.push")
+git push:
+    user.vscode("git.push")
+    key(f20)
 git push force: user.vscode("git.pushForce")
 git rebase abort: user.vscode("git.rebaseAbort")
 git reveal: user.vscode("git.revealInExplorer")
@@ -235,7 +243,7 @@ debug clean: user.vscode("workbench.debug.panel.action.clearReplAction")
 terminal external: user.vscode("workbench.action.terminal.openNativeConsole")
 terminal new: user.vscode("workbench.action.terminal.new")
 terminal next: user.vscode("workbench.action.terminal.focusNext")
-terminal last: user.vscode("workbench.action.terminal.focusPrevious")
+terminal (last | previous): user.vscode("workbench.action.terminal.focusPrevious")
 terminal split: user.vscode("workbench.action.terminal.split")
 terminal zoom: user.vscode("workbench.action.toggleMaximizedPanel")
 terminal trash: user.vscode("workbench.action.terminal.kill")
@@ -287,3 +295,13 @@ cell run: user.vscode("notebook.cell.execute")
 
 install local: user.vscode("workbench.extensions.action.installVSIX")
 preview markdown: user.vscode("markdown.showPreview")
+
+save (this | that):
+    user.hud_add_log("warning", "use 'file save")
+
+(linty | lint (this | that)):
+    key(alt-shift-f)
+
+# Splits
+
+pop sesh: user.vscode("workbench.action.focusNextGroup")
