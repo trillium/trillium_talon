@@ -6,7 +6,6 @@ from pathlib import Path
 
 import talon
 from talon import Context, Module, actions, app, fs, imgui, ui
-from ....trillium_obs.config import SAFE_APPS
 
 # Construct a list of spoken form overrides for application names (similar to how homophone list is managed)
 # These overrides are used *instead* of the generated spoken forms for the given app name or .exe (on Windows)
@@ -348,50 +347,10 @@ class Actions:
         """Focus a new application by name"""
         app = actions.user.get_running_app(name)
 
-        # Switch scene to blurred
-
-        actions.user.obs_get_blurry()
+        # Focus next window on same app
         if app == ui.active_app():
             actions.app.window_next()
         # Focus new app
-        else:
-            actions.user.switcher_focus_app(app)
-        
-        # Switch to safe scene if SAFE_APP
-        if ui.active_app().name in SAFE_APPS:
-            actions.user.obs_get_clear()
-            rect = ui.active_app().windows()[0].rect
-            print(rect)
-            actions.user.draw_mask_on_image_inplace(rect)
-        else:
-            print(ui.active_app().name, "not safe")
-            
-
-    def switcher_focus_print_backup(name: str):
-        """Focus a new application by name"""
-        app = actions.user.get_running_app(name)
-
-        # Focus next window on same app
-        if app == ui.active_app():
-            print()
-            print("========================================")
-            print()
-            print("[switcher_focus]", app)
-            print("[next app guess] -> ", app.windows()[1].title)
-            # Which app is going to be next?
-            # Pretty sure it's suppose to be app.windows()[1]
-            for num, item in enumerate(app.windows()):
-                print(num, item.title)
-                
-            # Focus new app
-            actions.app.window_next()
-
-            time.sleep(.5)
-            ui.active_app()
-            print("[actual        ] -> ", app.windows()[0].title)
-            for num, item in enumerate(app.windows()):
-                print(num, item.title)
-
         else:
             actions.user.switcher_focus_app(app)
 
