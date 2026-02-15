@@ -9,9 +9,10 @@ repeat that <number_small> [times]: core.repeat_command(number_small)
 
 # Reverse action (voice triggered version of cmere noise)
 reverse: user.noise_cmere()
-reverse <number_small> times:
-    repeat(number_small):
-        user.noise_cmere()
+# Disabled: repeat() doesn't support arithmetic
+# reverse <number_small> times:
+#     user.noise_cmere()
+#     repeat(number_small - 1)
 
 repeater exclude last:
     user.repeater_exclude_last_command()

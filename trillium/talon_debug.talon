@@ -1,7 +1,7 @@
 mode: command
 -
 
-key(cmd-ctrl-alt-shift-l):
+key(super-ctrl-alt-shift-l):
     mimic('talon open log')
 
 ^(custom debug view | talon debug view | frosty socks)$:

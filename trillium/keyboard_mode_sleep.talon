@@ -1,7 +1,7 @@
 mode: sleep
 -
 
-key(cmd-ctrl-alt-shift-`):
+key(super-ctrl-alt-shift-`):
     #capslock -> #super
 
     mode.disable("sleep")
@@ -10,7 +10,7 @@ key(cmd-ctrl-alt-shift-`):
     user.mic_keyboard_toggle_action()
     speech.enable()
 
-key(cmd-ctrl-alt-shift-m):
+key(super-ctrl-alt-shift-m):
     user.mic_onboard()
     mode.disable("sleep")
     mode.disable("dictation")

@@ -1,5 +1,4 @@
-from talon import Context, actions, ctrl, mac
-from talon.mac import ui
+from talon import Context, actions
 
 ctx = Context()
 ctx.matches = r"""
@@ -79,7 +78,7 @@ class UserActions:
         actions.key("cmd-shift-e")
 
     def discord_mute():
-        ctrl.key_press("m", app=ui.apps(bundle="com.hnc.Discord")[0], super=True, shift=True)
+        actions.key("cmd-shift-m")
 
     def discord_deafen():
         actions.key("cmd-shift-d")
