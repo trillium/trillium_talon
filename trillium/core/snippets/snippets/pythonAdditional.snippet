@@ -1,0 +1,19 @@
+language: python
+---
+
+name: pythonVariableDeclaration
+phrase: var
+insertionScope: statement
+$1.insertionFormatter: SNAKE_CASE
+-
+$1 = $0
+---
+
+name: pythonVariableDeclaration
+phrase: const
+insertionScope: statement
+$1.insertionFormatter: ALL_CAPS|SNAKE_CASE
+-
+$1 = $0
+---
+
