@@ -1,7 +1,7 @@
 """
 Command Logger - Logs metadata for every Talon command executed
 
-Schema version 1.1 - unified with parrot_logger
+Schema version 1.2 - added hostname to context
 
 Creates a JSON file for each command in ~/.talon/recordings/commands/
 This data is never cleaned up - it's a permanent record of Talon usage.
@@ -17,7 +17,7 @@ import re
 COMMANDS_RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "commands"
 
 # Schema version - bump when format changes
-SCHEMA_VERSION = "1.1"
+SCHEMA_VERSION = "1.2"
 
 
 def get_safe_microphone():
@@ -73,6 +73,12 @@ def get_context_data():
             context["tags"] = list(current_tags) if isinstance(current_tags, set) else current_tags
     except Exception:
         pass
+
+    # Get hostname
+    try:
+        context["hostname"] = actions.user.talon_get_hostname()
+    except Exception:
+        context["hostname"] = None
 
     return context
 
