@@ -1,3 +1,5 @@
+os: mac
+-
 # key(f1):
 #     user.hud_add_log("success", "f1")
 #     key(f1)
