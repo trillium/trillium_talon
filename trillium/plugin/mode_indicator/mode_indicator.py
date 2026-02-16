@@ -1,4 +1,7 @@
-from talon import Module, actions, app, cron, registry, scope, settings, skia, ui
+import json
+from pathlib import Path
+
+from talon import Module, app, registry, resource, settings, skia, ui
 from talon.canvas import Canvas
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
@@ -7,15 +10,22 @@ from talon.types.point import Point2d
 from talon.ui import Rect
 
 canvas: Canvas = None
-current_mode = ""
-current_microphone = ""
-current_parrot_on = False
-last_command_text = ""
-opposite_command_text = ""
-_bar_color_override = None  # Event-driven color override for top bar only
 mod = Module()
 
 TOP_LINE_THICKNESS = 35
+
+state_path = str(Path(__file__).parent / "mode_indicator_state.json")
+
+_state = {
+    "mode": "",
+    "microphone": "",
+    "parrot_on": False,
+    "command_text": "",
+    "opposite_text": "",
+    "bar_color_override": None,
+    "week_percent": 0,
+    "static_percent": 20,
+}
 
 
 mod.setting(
@@ -82,15 +92,16 @@ setting_paths = {
 
 def get_mode_color() -> str:
     """Get color based on current Talon mode (for circle indicator)."""
-    if current_microphone == "None":
+    if _state["microphone"] == "None":
         return settings.get("user.mode_indicator_color_mute")
-    if current_mode == "sleep":
+    mode = _state["mode"]
+    if mode == "sleep":
         return settings.get("user.mode_indicator_color_sleep")
-    elif current_mode == "dictation":
+    elif mode == "dictation":
         return settings.get("user.mode_indicator_color_dictation")
-    elif current_mode == "mixed":
+    elif mode == "mixed":
         return settings.get("user.mode_indicator_color_mixed")
-    elif current_mode == "command":
+    elif mode == "command":
         return settings.get("user.mode_indicator_color_command")
     else:
         return settings.get("user.mode_indicator_color_other")
@@ -98,8 +109,8 @@ def get_mode_color() -> str:
 
 def get_bar_color() -> str:
     """Get color for top bar (supports override for friction mode, etc.)."""
-    if _bar_color_override:
-        return _bar_color_override
+    if _state["bar_color_override"]:
+        return _state["bar_color_override"]
     return get_mode_color()
 
 
@@ -109,11 +120,8 @@ def get_alpha_color() -> str:
 
 def get_gradient_color(color: str) -> str:
     factor = settings.get("user.mode_indicator_color_gradient")
-    # hex -> rgb
     (r, g, b) = tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
-    # Darken rgb
     r, g, b = int(r * factor), int(g * factor), int(b * factor)
-    # rgb -> hex
     return f"{r:02x}{g:02x}{b:02x}"
 
 
@@ -138,17 +146,24 @@ def on_draw(c: SkiaCanvas):
 
     text_base_x = rect.width * 0.35
 
-    if last_command_text:
-        display_text = last_command_text
+    command_text = _state["command_text"]
+    if command_text:
+        display_text = command_text
         if len(display_text) > 20:
             display_text = display_text[:17] + "..."
         c.draw_text(display_text, text_base_x, 20)
 
-    if opposite_command_text:
-        display_text = opposite_command_text
+    opposite_text = _state["opposite_text"]
+    if opposite_text:
+        display_text = opposite_text
         if len(display_text) > 20:
             display_text = display_text[:17] + "..."
         c.draw_text(display_text, text_base_x, 35)
+
+    # Draw week percentages just right of the mode indicator
+    text_right_x = rect.width * 0.45
+    c.draw_text(f"{_state['static_percent']}%", text_right_x, 20)
+    c.draw_text(f"{_state['week_percent']}%", text_right_x, 35)
 
     # --- Draw circle SECOND (on top of bar) ---
     circle_color = get_mode_color()
@@ -179,7 +194,7 @@ def on_draw(c: SkiaCanvas):
     c.paint.imagefilter = None
     c.paint.style = c.paint.Style.STROKE
     c.paint.stroke_width = 2
-    if current_parrot_on:
+    if _state["parrot_on"]:
         c.paint.color = "00aa00ff"  # Green
     else:
         c.paint.color = "aa0000ff"  # Red
@@ -190,7 +205,8 @@ def on_draw(c: SkiaCanvas):
         c.paint.shader = None
         c.paint.style = c.paint.Style.FILL
         c.paint.color = text_color
-        text = current_microphone[:2]
+        mic = _state["microphone"]
+        text = mic[:2] if mic else ""
         text_rect = c.paint.measure_text(text)[1]
         c.draw_text(
             text,
@@ -216,80 +232,40 @@ def hide_indicator():
 
 def update_indicator():
     if settings.get("user.mode_indicator_show"):
-        if canvas:
-            hide_indicator()
-        show_indicator()
+        if not canvas:
+            show_indicator()
         canvas.freeze()
     elif canvas:
         hide_indicator()
 
 
-def on_update_contexts():
-    global current_mode, current_parrot_on
-    modes = scope.get("mode")
-    if "sleep" in modes:
-        mode = "sleep"
-    elif "dictation" in modes:
-        if "command" in modes:
-            mode = "mixed"
-        else:
-            mode = "dictation"
-    elif "command" in modes:
-        mode = "command"
-    else:
-        mode = "other"
+def rebuild_indicator():
+    """Destroy and recreate the canvas (for screen changes, settings that affect geometry)."""
+    if canvas:
+        hide_indicator()
+    update_indicator()
 
-    # Check if parrot_on tag changed
-    tags = scope.get("tag", [])
-    parrot_on = "user.parrot_on" in tags
 
-    # Update indicator if mode or parrot state changed
-    if current_mode != mode or current_parrot_on != parrot_on:
-        current_mode = mode
-        current_parrot_on = parrot_on
-        update_indicator()
+@resource.watch(state_path)
+def on_state_change(f):
+    """Reload state from JSON and redraw."""
+    global _state
+    try:
+        data = json.load(f)
+        _state.update(data)
+    except Exception:
+        return
+    update_indicator()
 
 
 def on_update_settings(updated_settings: set[str]):
     if setting_paths & updated_settings:
-        update_indicator()
-
-
-def poll_microphone():
-    global current_microphone
-    microphone = actions.sound.active_microphone()
-    if current_microphone != microphone:
-        current_microphone = microphone
-        update_indicator()
+        rebuild_indicator()
 
 
 def on_ready():
-    registry.register("update_contexts", on_update_contexts)
     registry.register("update_settings", on_update_settings)
-    ui.register("screen_change", lambda _: update_indicator)
-    cron.interval("500ms", poll_microphone)
+    ui.register("screen_change", lambda _: rebuild_indicator())
 
 
 app.register("ready", on_ready)
-
-
-@mod.action_class
-class Actions:
-    def mode_indicator_set_command_text(last_command: str, opposite_command: str = ""):
-        """Set the last command and opposite command text for the mode indicator"""
-        global last_command_text, opposite_command_text
-        last_command_text = last_command
-        opposite_command_text = opposite_command
-        update_indicator()
-
-    def mode_indicator_set_color(color: str):
-        """Set a color override for the top bar (e.g., 'ff0000' for red). Circle keeps mode color."""
-        global _bar_color_override
-        _bar_color_override = color
-        update_indicator()
-
-    def mode_indicator_clear_color():
-        """Clear the bar color override and return to normal mode-based coloring"""
-        global _bar_color_override
-        _bar_color_override = None
-        update_indicator()
