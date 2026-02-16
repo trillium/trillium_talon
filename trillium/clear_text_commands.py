@@ -11,6 +11,10 @@ class Actions:
         """Return the length of the given text"""
         return len(text)
 
+    def clear_last_dictation():
+        """Delete the last dictation utterance by pressing backspace for each character"""
+        actions.user.clear_last_phrase()
+
     def clear_left_by_text(text: str):
         """Delete characters to the left based on the length of the given text"""
         length = len(text)
