@@ -24,7 +24,8 @@ _state = {
     "opposite_text": "",
     "bar_color_override": None,
     "week_percent": 0,
-    "static_percent": 20,
+    "week_remaining": "",
+    "static_percent": "?%",
 }
 
 
@@ -160,10 +161,12 @@ def on_draw(c: SkiaCanvas):
             display_text = display_text[:17] + "..."
         c.draw_text(display_text, text_base_x, 35)
 
-    # Draw week percentages just right of the mode indicator
+    # Draw usage + week info just right of the mode indicator
     text_right_x = rect.width * 0.45
-    c.draw_text(f"{_state['static_percent']}%", text_right_x, 20)
-    c.draw_text(f"{_state['week_percent']}%", text_right_x, 35)
+    c.draw_text(str(_state['static_percent']), text_right_x, 20)
+    week_remaining = _state.get("week_remaining", "")
+    week_text = f"{_state['week_percent']}%  {week_remaining}" if week_remaining else f"{_state['week_percent']}%"
+    c.draw_text(week_text, text_right_x, 35)
 
     # --- Draw circle SECOND (on top of bar) ---
     circle_color = get_mode_color()

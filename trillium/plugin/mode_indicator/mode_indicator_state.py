@@ -24,12 +24,12 @@ _state = {
     "opposite_text": "",
     "bar_color_override": None,
     "week_percent": 0,
-    "static_percent": 20,
+    "week_remaining": "",
 }
 
 
-def get_week_percent() -> int:
-    """Get percentage of week elapsed since last Wednesday 7pm to next Wednesday 7pm."""
+def _week_bounds():
+    """Return (last_wed_7pm, next_wed_7pm) bracketing now."""
     now = datetime.now()
     days_since_wed = (now.weekday() - 2) % 7
     last_wed_7pm = now.replace(hour=19, minute=0, second=0, microsecond=0) - timedelta(
@@ -38,9 +38,31 @@ def get_week_percent() -> int:
     if last_wed_7pm > now:
         last_wed_7pm -= timedelta(weeks=1)
     next_wed_7pm = last_wed_7pm + timedelta(weeks=1)
-    elapsed = (now - last_wed_7pm).total_seconds()
-    total = (next_wed_7pm - last_wed_7pm).total_seconds()
+    return last_wed_7pm, next_wed_7pm
+
+
+def get_week_percent() -> int:
+    """Get percentage of week elapsed since last Wednesday 7pm to next Wednesday 7pm."""
+    now = datetime.now()
+    start, end = _week_bounds()
+    elapsed = (now - start).total_seconds()
+    total = (end - start).total_seconds()
     return int(elapsed / total * 100)
+
+
+def get_week_remaining() -> str:
+    """Get remaining time until next Wednesday 7pm as 'Xd Yh' or 'Xh Ym'."""
+    now = datetime.now()
+    _, end = _week_bounds()
+    remaining = int((end - now).total_seconds())
+    if remaining <= 0:
+        return "0h"
+    days = remaining // 86400
+    hours = (remaining % 86400) // 3600
+    minutes = (remaining % 3600) // 60
+    if days > 0:
+        return f"{days}d{hours}h"
+    return f"{hours}h{minutes}m"
 
 
 def update(**kwargs):
@@ -55,9 +77,15 @@ def update(**kwargs):
 
 
 def _flush():
-    """Write current state to JSON file."""
+    """Write current state to JSON file, preserving keys set by external scripts."""
+    # Read existing file to preserve externally-managed keys
+    try:
+        on_disk = json.loads(STATE_FILE.read_text())
+    except Exception:
+        on_disk = {}
+    on_disk.update(_state)
     with open(STATE_FILE, "w") as f:
-        json.dump(_state, f, indent=2)
+        json.dump(on_disk, f, indent=2)
 
 
 def _on_update_contexts():
@@ -89,12 +117,13 @@ def _poll_microphone():
 
 
 def _poll_week_percent():
-    update(week_percent=get_week_percent())
+    update(week_percent=get_week_percent(), week_remaining=get_week_remaining())
 
 
 def on_ready():
     # Flush initial state (with computed values)
     _state["week_percent"] = get_week_percent()
+    _state["week_remaining"] = get_week_remaining()
     _flush()
 
     registry.register("update_contexts", _on_update_contexts)
