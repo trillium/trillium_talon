@@ -18,3 +18,4 @@ __pycache__
 # Runtime state files
 saved_windows.json
 mode_indicator_state.json
+usage_log.csv
