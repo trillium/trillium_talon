@@ -47,6 +47,21 @@ class UserActions:
         actions.sleep("180ms")
         actions.app.tab_close()
 
+    def tab_duplicate():
+        actions.browser.focus_address()
+        actions.sleep("180ms")
+        possibly_edited_url = actions.edit.selected_text()
+        actions.key("esc")
+        actions.browser.focus_address()
+        actions.sleep("180ms")
+        url_address = actions.edit.selected_text()
+        if possibly_edited_url == url_address:
+            actions.key("alt-enter")
+        else:
+            actions.user.paste(possibly_edited_url)
+            actions.app.tab_open()
+            actions.user.paste(url_address)
+            actions.key("enter")
 
 @ctx.action_class("browser")
 class BrowserActions:
