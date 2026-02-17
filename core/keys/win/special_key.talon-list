@@ -10,7 +10,6 @@ enter: enter
 page down: pagedown
 page up: pageup
 escape: escape
-scrape: escape
 space: space
 tab: tab
 insert: insert
