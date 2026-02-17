@@ -22,6 +22,7 @@ output style: /output-style
 
 # Navigation & history
 plan: /plan
+resume: /resume
 rewind: /rewind
 export: /export
 
