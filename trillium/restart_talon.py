@@ -6,6 +6,7 @@ Preserves user state (mode, parrot, etc.) across restarts.
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 from talon import Module, app, scope, actions
 
@@ -23,7 +24,7 @@ RESTART_STATE_FILE = Path.home() / ".talon" / "restart_state.json"
 # 5. Brief pause for clean state
 # 6. Relaunch with 'open' command
 # 7. Poll until timestamp file changes (confirms Talon is ready)
-RESTART_SCRIPT = '''
+RESTART_SCRIPT_MACOS = '''
 TIMESTAMP_FILE="$HOME/.talon/launch_timestamp"
 RESTART_MARKER="$HOME/.talon/restart_marker"
 
@@ -54,6 +55,42 @@ sleep 1
 open /Applications/Talon.app
 
 # Wait for timestamp to change (confirms Talon is ready, up to 30 seconds)
+for i in $(seq 1 60); do
+    if [ -f "$TIMESTAMP_FILE" ]; then
+        NEW_TIMESTAMP=$(cat "$TIMESTAMP_FILE")
+        if [ "$NEW_TIMESTAMP" != "$OLD_TIMESTAMP" ]; then
+            break
+        fi
+    fi
+    sleep 0.5
+done
+'''
+
+RESTART_SCRIPT_LINUX = '''
+TIMESTAMP_FILE="$HOME/.talon/launch_timestamp"
+RESTART_MARKER="$HOME/.talon/restart_marker"
+TALON_RUN="$HOME/talon/run.sh"
+
+touch "$RESTART_MARKER"
+
+OLD_TIMESTAMP=""
+if [ -f "$TIMESTAMP_FILE" ]; then
+    OLD_TIMESTAMP=$(cat "$TIMESTAMP_FILE")
+fi
+
+pkill -f "$HOME/talon/talon"
+
+for i in $(seq 1 50); do
+    if ! pgrep -f "$HOME/talon/talon" > /dev/null 2>&1; then
+        break
+    fi
+    sleep 0.2
+done
+
+sleep 1
+
+nohup "$TALON_RUN" > /dev/null 2>&1 &
+
 for i in $(seq 1 60); do
     if [ -f "$TIMESTAMP_FILE" ]; then
         NEW_TIMESTAMP=$(cat "$TIMESTAMP_FILE")
@@ -171,12 +208,11 @@ app.register("ready", on_ready)
 class Actions:
     def restart_talon():
         """Quit and restart Talon, preserving current state"""
-        # Save state before restart
         save_state()
 
-        # Spawn shell script as a detached process that survives Talon quitting
+        script = RESTART_SCRIPT_LINUX if sys.platform == "linux" else RESTART_SCRIPT_MACOS
         subprocess.Popen(
-            ['/bin/bash', '-c', RESTART_SCRIPT],
+            ['/bin/bash', '-c', script],
             start_new_session=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
