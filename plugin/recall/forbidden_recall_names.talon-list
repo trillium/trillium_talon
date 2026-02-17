@@ -1,0 +1,73 @@
+list: user.forbidden_recall_names
+-
+
+# Recall subcommands
+recall: recall
+save: save
+assign: assign
+forget: forget
+list: list
+alias: alias
+combine: combine
+rename: rename
+promote: promote
+restore: restore
+help: help
+close: close
+bravely: bravely
+
+# Common Talon commands
+undo: undo
+redo: redo
+copy: copy
+paste: paste
+cut: cut
+delete: delete
+find: find
+search: search
+replace: replace
+select: select
+cancel: cancel
+quit: quit
+exit: exit
+open: open
+complete: complete
+execute: execute
+comment: comment
+launch: launch
+switch: switch
+recent: recent
+options: options
+preferences: preferences
+suspend: suspend
+resume: resume
+reset: reset
+send: send
+reply: reply
+mark: mark
+accept: accept
+refactor: refactor
+
+# Navigation
+next: next
+previous: previous
+back: back
+forward: forward
+up: up
+down: down
+left: left
+right: right
+north: north
+south: south
+east: east
+west: west
+
+# Mode/state
+sleep: sleep
+wake: wake
+nope: nope
+scratch: scratch
+
+# Other
+then: then
+all: all

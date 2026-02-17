@@ -6,14 +6,21 @@ solving the problem where "focus chrome" brings any Chrome window instead
 of the specific one you care about.
 
 Features:
-- Save the focused window with a name: "recall assign edgar"
+- Save the focused window with a name: "recall assign edgar" or "recall save edgar"
 - Switch to it by just saying the name: "edgar"
 - Dictate into a named window: "edgar hello world"
 - See all named windows: "recall list" (shows overlay labels for 5 seconds)
 - Forget a named window: "recall forget edgar"
+- Add an alias: "recall alias edgar ed" — "ed" now also switches to edgar's window
+- Combine duplicates: "recall combine velma vilma" — merges vilma into velma as an alias
+- Restore a terminal: "edgar restore" — launches new terminal at saved path
 """
 
 import json
+import os
+import re
+import subprocess
+import time
 from pathlib import Path
 from talon import Module, Context, actions, app, ui
 from . import recall_overlay
@@ -21,11 +28,37 @@ from . import recall_overlay
 mod = Module()
 ctx = Context()
 
+# Tags
+mod.tag("recall_pending_input", desc="Waiting for second input in a two-step recall command")
+mod.tag("recall_overlay_visible", desc="A recall overlay is currently showing")
+pending_ctx = Context()
+overlay_ctx = Context()
+
+# State for two-step commands (combine, rename, alias)
+# _pending_mode: "combine" | "rename" | "alias" | ""
+_pending_mode: str = ""
+_pending_name: str = ""
+
 # Storage file path
 STORAGE_FILE = Path(__file__).parent / "saved_windows.json"
 
-# In-memory storage: {name: {id: int, app: str, title: str}}
+# In-memory storage: {name: {id, app, title, path, aliases}}
 saved_windows = {}
+
+# Forbidden names are defined in forbidden_recall_names.talon-list
+mod.list("forbidden_recall_names", desc="Words that cannot be used as recall window names")
+
+
+def is_forbidden(name: str) -> bool:
+    """Check if a name is in the forbidden list"""
+    return name.lower() in ctx.lists.get("user.forbidden_recall_names", {}).values()
+
+
+# Known terminal app names for path detection
+TERMINAL_APPS = {
+    "Gnome-terminal", "Mate-terminal", "kitty", "Alacritty",
+    "foot", "xfce4-terminal", "Terminator", "Tilix",
+}
 
 mod.list("saved_window_names", desc="Names of saved windows for recall")
 
@@ -59,12 +92,19 @@ def save_to_disk():
 
 
 def update_window_list():
-    """Update the dynamic list of saved window names for voice commands"""
+    """Update the dynamic list of saved window names for voice commands.
+    Uses create_spoken_forms_from_map so aliases resolve to the canonical name."""
     if saved_windows:
-        window_names = list(saved_windows.keys())
-        spoken_forms = actions.user.create_spoken_forms_from_list(
-            window_names,
-            generate_subsequences=True
+        # Build map: {spoken_form: canonical_name}
+        # Both the canonical name and all aliases point to the canonical name
+        name_map = {}
+        for name, info in saved_windows.items():
+            name_map[name] = name
+            for alias in info.get("aliases", []):
+                name_map[alias] = name
+        spoken_forms = actions.user.create_spoken_forms_from_map(
+            name_map,
+            generate_subsequences=True,
         )
         ctx.lists["self.saved_window_names"] = spoken_forms
     else:
@@ -76,6 +116,81 @@ def find_window_by_id(window_id: int) -> ui.Window:
     for a in ui.apps(background=False):
         for window in a.windows():
             if window.id == window_id:
+                return window
+    return None
+
+
+def is_terminal(app_name: str) -> bool:
+    """Check if an app name is a known terminal emulator"""
+    return app_name in TERMINAL_APPS
+
+
+def detect_terminal_path(window: ui.Window) -> str:
+    """Detect the working directory of a terminal window.
+    Tries title parsing first (most reliable per-window), then /proc."""
+    # Method 1: parse title like "user@host: /some/path" or "user@host:/some/path"
+    try:
+        match = re.search(r"@[^:]*:\s*(.+)$", window.title)
+        if match:
+            path = match.group(1).strip()
+            # Expand ~ to home dir
+            path = os.path.expanduser(path)
+            if os.path.isdir(path):
+                return path
+    except Exception:
+        pass
+
+    # Method 2: /proc — find shell children, prefer one whose cwd is in the title
+    try:
+        pid = window.app.pid
+        result = subprocess.run(
+            ["pgrep", "-P", str(pid)],
+            capture_output=True, text=True, timeout=2
+        )
+        if result.returncode == 0:
+            child_pids = result.stdout.strip().split("\n")
+            candidates = []
+            for cpid in child_pids:
+                cpid = cpid.strip()
+                if not cpid:
+                    continue
+                cwd_link = f"/proc/{cpid}/cwd"
+                if os.path.exists(cwd_link):
+                    path = os.readlink(cwd_link)
+                    if os.path.isdir(path):
+                        candidates.append(path)
+            # Prefer a path that appears in the window title
+            title = window.title
+            for path in candidates:
+                if path in title or path.replace(os.path.expanduser("~"), "~") in title:
+                    return path
+            # Otherwise return the last candidate (most recently spawned)
+            if candidates:
+                return candidates[-1]
+    except Exception:
+        pass
+
+    return None
+
+
+def rematch_window(info: dict) -> ui.Window:
+    """Try to re-match a saved window by app name and path/title.
+    Returns the matched window or None."""
+    app_name = info.get("app")
+    saved_path = info.get("path")
+    saved_title = info.get("title", "")
+
+    for a in ui.apps(background=False):
+        if a.name != app_name:
+            continue
+        for window in a.windows():
+            if window.rect.width <= 0 or window.rect.height <= 0:
+                continue
+            # Match by path in title
+            if saved_path and saved_path in window.title:
+                return window
+            # Match by title prefix
+            if saved_title and window.title.startswith(saved_title):
                 return window
     return None
 
@@ -95,24 +210,49 @@ def cleanup_closed_windows(closed_window: ui.Window):
         update_window_list()
 
 
+def _cancel_pending():
+    """Cancel any pending two-step command."""
+    global _pending_mode, _pending_name
+    _pending_mode = ""
+    _pending_name = ""
+    pending_ctx.tags = []
+
+
 @mod.action_class
 class Actions:
     def save_window(name: str):
         """Save the currently focused window with the given name"""
         global saved_windows
 
+        if is_forbidden(name):
+            recall_overlay.flash(f'"{name}" is a reserved word')
+            return
+
         window = ui.active_window()
+        app_name = window.app.name
+
+        # Detect path for terminals
+        path = None
+        if is_terminal(app_name):
+            path = detect_terminal_path(window)
+
+        # Preserve existing aliases if re-saving under the same name
+        existing_aliases = saved_windows.get(name, {}).get("aliases", [])
+
         saved_windows[name] = {
             "id": window.id,
-            "app": window.app.name,
-            "title": window.title
+            "app": app_name,
+            "title": window.title,
+            "path": path,
+            "aliases": existing_aliases,
         }
 
         save_to_disk()
         update_window_list()
+        recall_overlay.highlight_window(window, name)
 
     def recall_window(name: str):
-        """Focus the saved window with the given name"""
+        """Focus the saved window with the given name, with re-match fallback"""
         if name not in saved_windows:
             return
 
@@ -120,10 +260,27 @@ class Actions:
         window = find_window_by_id(info["id"])
 
         if window is None:
+            # Try re-matching by app + path/title
+            window = rematch_window(info)
+            if window is not None:
+                # Update stored ID silently
+                info["id"] = window.id
+                info["title"] = window.title
+                save_to_disk()
+
+        if window is None:
             recall_overlay.show_overlay()
             return
 
+        # Refresh terminal path on focus
+        if is_terminal(info.get("app", "")):
+            new_path = detect_terminal_path(window)
+            if new_path and new_path != info.get("path"):
+                info["path"] = new_path
+                save_to_disk()
+
         actions.user.switcher_focus_window(window)
+        recall_overlay.highlight_window(window, name)
 
     def forget_window(name: str):
         """Remove a saved window by name"""
@@ -135,23 +292,318 @@ class Actions:
         del saved_windows[name]
         save_to_disk()
         update_window_list()
+        recall_overlay.flash(f'forgot "{name}"')
 
     def forget_all_windows():
         """Clear all saved windows"""
         global saved_windows
 
+        count = len(saved_windows)
         saved_windows = {}
         save_to_disk()
         update_window_list()
+        recall_overlay.flash(f"forgot all ({count} windows)")
+
+    def recall_number(name: str, number: int):
+        """Focus a saved window and press a number key"""
+        actions.user.recall_window(name)
+        actions.sleep("50ms")
+        actions.key(str(number))
 
     def dictate_to_window(name: str, text: str):
         """Focus a saved window and type dictated text into it"""
         actions.user.recall_window(name)
         actions.user.dictation_insert(text)
 
+    def dictate_to_window_and_enter(name: str, text: str):
+        """Focus a saved window, type dictated text, and press Enter"""
+        actions.user.recall_window(name)
+        actions.user.dictation_insert(text)
+        actions.sleep("50ms")
+        actions.key("enter")
+
     def list_saved_windows():
         """Show window name labels on each saved window for 5 seconds"""
         recall_overlay.show_overlay()
+
+    def show_recall_help():
+        """Show the full help overlay with all saved windows and commands"""
+        recall_overlay.show_help()
+
+    def hide_recall_overlay():
+        """Dismiss whichever recall overlay is currently active"""
+        _cancel_pending()
+        recall_overlay.hide_any()
+
+    def recall_combine(primary: str, secondary: str):
+        """Combine two saved windows: secondary becomes an alias of primary"""
+        global saved_windows
+
+        if primary not in saved_windows or secondary not in saved_windows:
+            return
+        if primary == secondary:
+            return
+
+        # Merge secondary's aliases into primary
+        primary_info = saved_windows[primary]
+        secondary_info = saved_windows[secondary]
+
+        aliases = primary_info.get("aliases", [])
+        # Add the secondary name itself as an alias
+        if secondary not in aliases:
+            aliases.append(secondary)
+        # Also bring over any aliases the secondary had
+        for alias in secondary_info.get("aliases", []):
+            if alias not in aliases and alias != primary:
+                aliases.append(alias)
+        primary_info["aliases"] = aliases
+
+        # Merge path if primary doesn't have one
+        if not primary_info.get("path") and secondary_info.get("path"):
+            primary_info["path"] = secondary_info["path"]
+
+        # Remove secondary entry
+        del saved_windows[secondary]
+
+        save_to_disk()
+        update_window_list()
+        recall_overlay.flash(f'combined: {secondary} -> {primary}')
+        print(f'[recall] combined: "{secondary}" is now an alias of "{primary}"')
+
+    def recall_combine_start(primary: str):
+        """Start two-step combine: show prompt and wait for second name"""
+        global _pending_mode, _pending_name
+
+        if primary not in saved_windows:
+            return
+
+        _pending_mode = "combine"
+        _pending_name = primary
+        pending_ctx.tags = ["user.recall_pending_input"]
+        recall_overlay.show_prompt(
+            f'Combine with "{primary}"',
+            "Say the name to merge as an alias...",
+        )
+
+    def recall_rename_start(name: str):
+        """Start two-step rename: show prompt and wait for new name"""
+        global _pending_mode, _pending_name
+
+        if name not in saved_windows:
+            return
+
+        _pending_mode = "rename"
+        _pending_name = name
+        pending_ctx.tags = ["user.recall_pending_input"]
+        recall_overlay.show_prompt(
+            f'Rename "{name}"',
+            "Say the new name...",
+        )
+
+    def recall_alias_start(name: str):
+        """Start two-step alias: show prompt and wait for alias"""
+        global _pending_mode, _pending_name
+
+        print(f"[recall] alias_start: name={name!r}, pending_mode={_pending_mode!r}, pending_name={_pending_name!r}")
+
+        # If we're already waiting for alias input, treat this as the alias
+        if _pending_mode == "alias" and _pending_name:
+            print(f"[recall] alias_start: already pending — treating {name!r} as alias for {_pending_name!r}")
+            actions.user.recall_pending_finish(name)
+            return
+
+        if name not in saved_windows:
+            print(f"[recall] alias_start: ABORT — name not found")
+            return
+
+        _pending_mode = "alias"
+        _pending_name = name
+        pending_ctx.tags = ["user.recall_pending_input"]
+        print(f"[recall] alias_start: tag set, pending_mode={_pending_mode!r}, pending_name={_pending_name!r}")
+        recall_overlay.show_prompt(
+            f'Add alias for "{name}"',
+            "Say the alias...",
+        )
+
+    def recall_pending_finish(spoken: str):
+        """Complete whichever two-step command is pending"""
+        global _pending_mode, _pending_name
+
+        print(f"[recall] pending_finish: raw spoken={spoken!r}, type={type(spoken).__name__}")
+
+        # Normalize: <user.raw_prose> gives a Phrase/list, not a str
+        if not isinstance(spoken, str):
+            spoken = " ".join(str(w) for w in spoken)
+        spoken = spoken.strip()
+
+        print(f"[recall] pending_finish: normalized spoken={spoken!r}")
+
+        mode = _pending_mode
+        name = _pending_name
+        print(f"[recall] pending_finish: mode={mode!r}, name={name!r}")
+        _cancel_pending()
+        recall_overlay.hide_prompt()
+
+        if not mode or not name or not spoken:
+            print(f"[recall] pending_finish: ABORT — empty mode/name/spoken")
+            return
+
+        print(f"[recall] pending_finish: dispatching mode={mode!r} name={name!r} spoken={spoken!r}")
+        if mode == "combine":
+            actions.user.recall_combine(name, spoken)
+        elif mode == "rename":
+            actions.user.recall_rename(name, spoken)
+        elif mode == "alias":
+            actions.user.add_recall_alias(name, spoken)
+
+    def recall_promote(spoken_name: str):
+        """Promote an alias to be the canonical name, demoting the old name to alias"""
+        global saved_windows
+
+        if is_forbidden(spoken_name):
+            recall_overlay.flash(f'"{spoken_name}" is a reserved word')
+            return
+
+        spoken = spoken_name.lower().strip()
+
+        # Find which canonical entry has this as an alias
+        canonical = None
+        for name, info in saved_windows.items():
+            if name.lower() == spoken:
+                # Already canonical, nothing to do
+                return
+            if spoken in [a.lower() for a in info.get("aliases", [])]:
+                canonical = name
+                break
+
+        if canonical is None:
+            print(f'[recall] promote: "{spoken_name}" is not a known alias')
+            return
+
+        info = saved_windows[canonical]
+
+        # Remove the alias from the list
+        aliases = info.get("aliases", [])
+        aliases = [a for a in aliases if a.lower() != spoken]
+        # Add the old canonical name as an alias
+        aliases.append(canonical)
+        info["aliases"] = aliases
+
+        # Re-key the entry under the new name
+        del saved_windows[canonical]
+        saved_windows[spoken_name] = info
+
+        save_to_disk()
+        update_window_list()
+        recall_overlay.flash(f'promoted: {spoken_name} (was {canonical})')
+        print(f'[recall] promoted: "{spoken_name}" is now canonical (was alias of "{canonical}")')
+
+    def recall_rename(name: str, new_name: str):
+        """Rename a saved window to a completely new name"""
+        global saved_windows
+
+        if is_forbidden(new_name):
+            recall_overlay.flash(f'"{new_name}" is a reserved word')
+            return
+
+        if name not in saved_windows:
+            return
+
+        info = saved_windows[name]
+        del saved_windows[name]
+        saved_windows[new_name] = info
+
+        save_to_disk()
+        update_window_list()
+        recall_overlay.flash(f'renamed: {name} -> {new_name}')
+
+    def add_recall_alias(name: str, alias: str):
+        """Add an alias spoken form for a saved window"""
+        print(f"[recall] add_alias: name={name!r}, alias={alias!r}")
+        if is_forbidden(alias):
+            print(f"[recall] add_alias: ABORT — forbidden")
+            recall_overlay.flash(f'"{alias}" is a reserved word')
+            return
+
+        if name not in saved_windows:
+            print(f"[recall] add_alias: ABORT — name not in saved_windows")
+            return
+
+        aliases = saved_windows[name].get("aliases", [])
+        if alias not in aliases:
+            aliases.append(alias)
+            saved_windows[name]["aliases"] = aliases
+            save_to_disk()
+            update_window_list()
+            recall_overlay.flash(f'alias: {alias} -> {name}')
+
+    def remove_recall_alias(alias: str):
+        """Remove an alias from whichever window owns it"""
+        spoken = alias.lower().strip()
+
+        for name, info in saved_windows.items():
+            aliases = info.get("aliases", [])
+            matching = [a for a in aliases if a.lower() == spoken]
+            if matching:
+                info["aliases"] = [a for a in aliases if a.lower() != spoken]
+                save_to_disk()
+                update_window_list()
+                recall_overlay.flash(f'removed alias: {alias} (was {name})')
+                return
+
+        recall_overlay.flash(f'"{alias}" is not an alias')
+
+    def restore_window(name: str):
+        """Restore a saved terminal window by launching a new one at the saved path"""
+        if name not in saved_windows:
+            return
+
+        info = saved_windows[name]
+        app_name = info.get("app", "")
+        path = info.get("path")
+
+        if not is_terminal(app_name) or not path:
+            # Non-terminal or no path — just try re-match
+            actions.user.recall_window(name)
+            return
+
+        if not os.path.isdir(path):
+            print(f"[recall] restore: path no longer exists: {path}")
+            actions.user.recall_window(name)
+            return
+
+        # Collect existing window IDs for this app
+        existing_ids = set()
+        for a in ui.apps(background=False):
+            if a.name == app_name:
+                for w in a.windows():
+                    existing_ids.add(w.id)
+
+        # Launch new terminal at the saved path
+        ui.launch(path="gnome-terminal", args=[f"--working-directory={path}"])
+
+        # Poll for the new window (~2s)
+        new_window = None
+        for _ in range(20):
+            time.sleep(0.1)
+            for a in ui.apps(background=False):
+                if a.name == app_name:
+                    for w in a.windows():
+                        if w.id not in existing_ids and w.rect.width > 0:
+                            new_window = w
+                            break
+                if new_window:
+                    break
+            if new_window:
+                break
+
+        if new_window:
+            info["id"] = new_window.id
+            info["title"] = new_window.title
+            save_to_disk()
+            actions.user.switcher_focus_window(new_window)
+        else:
+            print("[recall] restore: timed out waiting for new window")
 
 
 def on_ready():
