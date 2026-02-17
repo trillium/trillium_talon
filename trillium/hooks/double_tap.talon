@@ -1,3 +1,5 @@
+os: mac
+-
 # key(f19):
 #     # user.hud_add_log("warning", "F19 pressed")
 #     user.short_repeat()

@@ -13,6 +13,5 @@ mode: dictation
     mode.enable("command")
 ^(mixed mode | mode mixed)$:
     mode.disable("sleep")
-    mode.enable("command")
     mode.enable("dictation")
-    user.dictation_format_reset()
+    mode.enable("command")

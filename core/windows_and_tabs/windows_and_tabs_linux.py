@@ -1,7 +1,5 @@
 # defines the default app actions for linux
 
-import subprocess
-
 from talon import Context, actions
 
 ctx = Context()
@@ -28,7 +26,7 @@ class AppActions:
         actions.key("ctrl-shift-t")
 
     def window_close():
-        subprocess.Popen(["wmctrl", "-c", ":ACTIVE:"])
+        actions.key("alt-f4")
 
     def window_hide():
         actions.key("alt-space n")
