@@ -1,0 +1,76 @@
+Spoken form, Cursorless identifier
+-five section, sectionLevelFive
+-four section, sectionLevelFour
+-one section, sectionLevelOne
+-six section, sectionLevelSix
+-three section, sectionLevelThree
+-two section, sectionLevelTwo
+arg, argumentOrParameter
+attribute, attribute
+block, paragraph
+branch, branch
+call, functionCall
+callee, functionCallee
+cell, notebookCell
+chapter, chapter
+car, character
+class, class
+class name, className
+comment, comment
+condition, condition
+element, xmlElement
+end tag, xmlEndTag
+environment, environment
+file, document
+funk, namedFunction
+funk name, functionName
+identifier, identifier
+if state, ifStatement
+instance, instance
+item, collectionItem
+key, collectionKey
+lambda, anonymousFunction
+line, line
+link, url
+list, list
+map, map
+name, name
+paint, nonWhitespaceSequence
+paragraph, namedParagraph
+part, part
+regex, regularExpression
+section, section
+selector, selector
+short paint, boundedNonWhitespaceSequence
+start tag, xmlStartTag
+state, statement
+string, string
+subparagraph, subParagraph
+subsection, subSection
+subsubsection, subSubSection
+tags, xmlBothTags
+token, token
+type, type
+unit, unit
+value, value
+word, word
+
+
+# 2023-12-11 11:15:17 - New entries automatically added by cursorless
+command, command
+sentence, sentence
+
+# 2023-12-12 11:11:24 - New entries automatically added by cursorless
+glyph, glyph
+
+# 2024-10-02 19:15:36 - New entries automatically added by cursorless
+short block, boundedParagraph
+
+# 2025-06-23 09:46:03 - New entries automatically added by cursorless
+arg list, argumentList
+
+# Disabled: not recognized by installed cursorless version (2026-02-16)
+# that, that
+
+# 2026-01-22 13:32:51 - New entries automatically added by cursorless
+full line, fullLine

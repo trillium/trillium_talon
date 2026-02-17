@@ -1,0 +1,31 @@
+Spoken form, Cursorless identifier
+backward, backward
+bounds, excludeInterior
+content, keepContentFilter
+empty, keepEmptyFilter
+every, every
+first, first
+forward, forward
+head, extendThroughStartOf
+inside, interiorOnly
+its, inferPreviousMark
+just, toRawSelection
+last, last
+leading, leading
+next, next
+previous, previous
+slice, verticalRange
+tail, extendThroughEndOf
+trailing, trailing
+
+
+# 2023-12-11 11:15:17 - New entries automatically added by cursorless
+visible, visible
+
+# 2023-12-22 23:28:25 - New entries automatically added by cursorless
+grand, ancestor
+
+# Disabled: not recognized by installed cursorless version (2026-02-16)
+# base, filenameWithoutExtension
+# file name, filename
+# reference, reference
