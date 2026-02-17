@@ -45,6 +45,9 @@ STORAGE_FILE = Path(__file__).parent / "saved_windows.json"
 # In-memory storage: {name: {id, app, title, path, aliases}}
 saved_windows = {}
 
+# Archive of forgotten windows: {name: {id, app, title, path, aliases, forgotten_at}}
+archived_windows = {}
+
 # Forbidden names are defined in forbidden_recall_names.talon-list
 mod.list("forbidden_recall_names", desc="Words that cannot be used as recall window names")
 
@@ -71,22 +74,29 @@ def saved_window_names(m) -> str:
 
 def load_saved_windows():
     """Load saved windows from JSON file"""
-    global saved_windows
+    global saved_windows, archived_windows
     if STORAGE_FILE.exists():
         try:
             with open(STORAGE_FILE, "r") as f:
-                saved_windows = json.load(f)
+                data = json.load(f)
+            # Archive lives under "_archive" key, everything else is active
+            archived_windows = data.pop("_archive", {})
+            saved_windows = data
             update_window_list()
         except Exception as e:
             print(f"[recall] Error loading saved windows: {e}")
             saved_windows = {}
+            archived_windows = {}
 
 
 def save_to_disk():
-    """Persist saved windows to JSON file"""
+    """Persist saved windows and archive to JSON file"""
     try:
+        data = dict(saved_windows)
+        if archived_windows:
+            data["_archive"] = archived_windows
         with open(STORAGE_FILE, "w") as f:
-            json.dump(saved_windows, f, indent=2)
+            json.dump(data, f, indent=2)
     except Exception as e:
         print(f"[recall] Error saving to disk: {e}")
 
@@ -195,13 +205,22 @@ def rematch_window(info: dict) -> ui.Window:
     return None
 
 
+def archive_window(name: str, info: dict):
+    """Move a window entry to the archive, preserving its metadata."""
+    global archived_windows
+    info = dict(info)  # copy
+    info["forgotten_at"] = time.time()
+    archived_windows[name] = info
+
+
 def cleanup_closed_windows(closed_window: ui.Window):
-    """Remove saved windows that have been closed"""
+    """Archive saved windows that have been closed"""
     global saved_windows
 
     removed = []
     for name, info in list(saved_windows.items()):
         if info["id"] == closed_window.id:
+            archive_window(name, info)
             del saved_windows[name]
             removed.append(name)
 
@@ -289,26 +308,108 @@ class Actions:
         actions.key("enter")
 
     def forget_window(name: str):
-        """Remove a saved window by name"""
+        """Archive a saved window (remove from active, keep in history)"""
         global saved_windows
 
         if name not in saved_windows:
             return
 
+        archive_window(name, saved_windows[name])
         del saved_windows[name]
         save_to_disk()
         update_window_list()
-        recall_overlay.flash(f'forgot "{name}"')
+        recall_overlay.flash(f'forgot "{name}" (archived)')
 
     def forget_all_windows():
-        """Clear all saved windows"""
+        """Archive all saved windows"""
         global saved_windows
 
         count = len(saved_windows)
+        for name, info in saved_windows.items():
+            archive_window(name, info)
         saved_windows = {}
         save_to_disk()
         update_window_list()
-        recall_overlay.flash(f"forgot all ({count} windows)")
+        recall_overlay.flash(f"forgot all ({count} windows, archived)")
+
+    def recall_revive(name: str):
+        """Relaunch an archived window (terminal at saved path) and re-register it"""
+        global saved_windows, archived_windows
+
+        if name not in archived_windows:
+            recall_overlay.flash(f'"{name}" not in archive')
+            return
+
+        info = archived_windows[name]
+        app_name = info.get("app", "")
+        path = info.get("path")
+
+        if not is_terminal(app_name) or not path:
+            recall_overlay.flash(f'"{name}" has no terminal path to restore')
+            return
+
+        if not os.path.isdir(path):
+            recall_overlay.flash(f'"{name}" path no longer exists: {path}')
+            return
+
+        # Collect existing window IDs to detect the new one
+        existing_ids = set()
+        for a in ui.apps(background=False):
+            if a.name == app_name:
+                for w in a.windows():
+                    existing_ids.add(w.id)
+
+        ui.launch(path="gnome-terminal", args=[f"--working-directory={path}"])
+
+        # Poll for the new window (~2s)
+        new_window = None
+        for _ in range(20):
+            time.sleep(0.1)
+            for a in ui.apps(background=False):
+                if a.name == app_name:
+                    for w in a.windows():
+                        if w.id not in existing_ids and w.rect.width > 0:
+                            new_window = w
+                            break
+                if new_window:
+                    break
+            if new_window:
+                break
+
+        if new_window:
+            # Move from archive to active
+            archived_windows.pop(name)
+            revived = dict(info)
+            revived.pop("forgotten_at", None)
+            revived["id"] = new_window.id
+            revived["title"] = new_window.title
+            saved_windows[name] = revived
+            save_to_disk()
+            update_window_list()
+            actions.user.switcher_focus_window(new_window)
+            recall_overlay.highlight_window(new_window, name)
+        else:
+            recall_overlay.flash(f'"{name}" timed out waiting for window')
+
+    def recall_list_archive():
+        """Show archived window names"""
+        if not archived_windows:
+            recall_overlay.flash("archive is empty")
+            return
+        names = ", ".join(archived_windows.keys())
+        recall_overlay.flash(f"archive: {names}")
+
+    def recall_purge(name: str):
+        """Permanently delete an archived window"""
+        global archived_windows
+
+        if name not in archived_windows:
+            recall_overlay.flash(f'"{name}" not in archive')
+            return
+
+        del archived_windows[name]
+        save_to_disk()
+        recall_overlay.flash(f'purged "{name}" permanently')
 
     def recall_number(name: str, number: int):
         """Focus a saved window and press a number key"""
