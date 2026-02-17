@@ -1,10 +1,10 @@
 {
   "mode": "mixed",
   "microphone": "Wireless GO II RX Analog Stereo",
-  "parrot_on": true,
-  "command_text": "lap",
+  "parrot_on": false,
+  "command_text": "",
   "opposite_text": "",
   "bar_color_override": null,
-  "week_percent": 57,
+  "week_percent": 73,
   "static_percent": 20
 }
