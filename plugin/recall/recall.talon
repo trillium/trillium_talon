@@ -15,6 +15,9 @@
 # Rename:            "recall rename edgar newname"
 # Promote alias:     "recall promote vilma"
 # Restore terminal:  "recall restore edgar"
+# Revive archived:   "recall revive boat"
+# Show archive:      "recall archive"
+# Purge from archive:"recall purge boat"
 # Help screen:       "recall help"
 # Dismiss overlay:   "recall close"
 
@@ -53,6 +56,15 @@ recall combine <user.saved_window_names> <user.saved_window_names>:
 
 recall combine <user.saved_window_names>:
     user.recall_combine_start(saved_window_names)
+
+recall revive <user.word>:
+    user.recall_revive(word)
+
+recall archive:
+    user.recall_list_archive()
+
+recall purge <user.word>:
+    user.recall_purge(word)
 
 recall (help | show | info):
     user.show_recall_help()
