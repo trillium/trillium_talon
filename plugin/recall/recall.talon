@@ -4,6 +4,7 @@
 # Switch to it:      "edgar"
 # Dictate into it:   "edgar hello world"
 # Press number:      "edgar 1"
+# Switch + Enter:    "edgar bravely"
 # Dictate + Enter:   "edgar hello world bravely" (see dictation_ender list)
 # List all:          "recall list"
 # Forget one:        "recall forget edgar"
@@ -58,6 +59,9 @@ recall (help | show | info):
 
 recall close:
     user.hide_recall_overlay()
+
+<user.saved_window_names> {user.dictation_ender}$:
+    user.recall_window_and_enter(saved_window_names)
 
 <user.saved_window_names> <number_small>$:
     user.recall_number(saved_window_names, number_small)

@@ -282,6 +282,12 @@ class Actions:
         actions.user.switcher_focus_window(window)
         recall_overlay.highlight_window(window, name)
 
+    def recall_window_and_enter(name: str):
+        """Focus the saved window and press enter"""
+        actions.user.recall_window(name)
+        actions.sleep("50ms")
+        actions.key("enter")
+
     def forget_window(name: str):
         """Remove a saved window by name"""
         global saved_windows
