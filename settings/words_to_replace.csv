@@ -15,3 +15,5 @@ MCP agent,map agent
 MCP agents,map agents
 MCP tool,map tool
 MCP tools,map tools
+close,clothes
+running close,running clothes
