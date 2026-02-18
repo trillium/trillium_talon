@@ -1,0 +1,28 @@
+# Unified phrase replacements — one file to fix misrecognitions everywhere.
+#
+# Types:
+#   symbol  — injects into punctuation + symbol_key grammars (commands & dictation)
+#   word    — injects into dictate.replace_words (dictation text output)
+#   command — injects into vocabulary list (available in captures)
+#
+# Format: type,replacement,original
+# (replacement = what you want, original = what Talon hears)
+Type,Replacement,Original
+
+# Symbols — these become recognized spoken forms for the character
+symbol,?,christa mark
+symbol,?,christ mark
+symbol,?,chris mark
+symbol,?,quest mark
+
+# Words — fix dictation text output
+word,JSON,jason
+word,JSON,Jason
+word,JSON file,jason file
+word,JSON file,Jason file
+word,JSON files,jason files
+word,JSON files,Jason files
+
+# Commands — alternate spoken forms available in vocabulary captures
+command,nuke left,new cleft
+command,nuke left,new left
