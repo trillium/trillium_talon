@@ -135,8 +135,6 @@ def update_state(usage):
     runway = estimate_runway(seven_d)
 
     parts = [f"{seven_d}%"]
-    if cycles:
-        parts.append(cycles)
     if runway:
         parts.append(runway)
     text = " ".join(parts)
