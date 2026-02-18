@@ -25,8 +25,3 @@ mode: dictation
 ^go right <user.text>$:
     user.go_right_by_text(text)
 
-^clear left <user.text>$:
-    user.clear_left_by_text(text)
-
-^clear right <user.text>$:
-    user.clear_right_by_text(text)
