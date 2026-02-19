@@ -306,14 +306,18 @@ ACCEL_COMMANDS = {"wheel up", "wheel down"}  # Commands that support acceleratio
 
 
 def get_accel_multiplier(count: int) -> int:
-    """Get scroll multiplier based on repeat count."""
+    """Get scroll multiplier based on repeat count. No cap — keeps growing."""
     if count <= 3:
         return 1
     if count <= 6:
         return 2
     if count <= 9:
         return 3
-    return 5
+    if count <= 12:
+        return 5
+    if count <= 15:
+        return 8
+    return 12
 
 
 def notify_accel_tier_change(old_mult: int, new_mult: int):
@@ -349,8 +353,19 @@ def execute_accelerated_scroll(command: str, multiplier: int):
     """Execute scroll command with acceleration multiplier."""
     if command == "wheel down":
         actions.user.mouse_scroll_down(multiplier)
+        opposite = "wheel up"
     elif command == "wheel up":
         actions.user.mouse_scroll_up(multiplier)
+        opposite = "wheel down"
+    else:
+        return
+
+    # Update mode indicator with multiplier
+    try:
+        label = f"{command} {multiplier}x"
+        actions.user.mode_indicator_set_command_text(label, opposite)
+    except Exception:
+        pass
 
 
 def reverse_navigation_steps(capture):
