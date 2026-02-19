@@ -220,9 +220,9 @@ class Delegate(ParrotDelegate):
     def apply_patterns(self) -> None:
         classes = self.classes
         patterns_to_validate = self.raw_patterns
-        logging.warning(f"[parrot] apply_patterns called. classes={classes}, patterns_to_validate={len(patterns_to_validate)}")
+        logging.info(f"[parrot] apply_patterns called. classes={classes}, patterns_to_validate={len(patterns_to_validate)}")
         if classes is None:
-            logging.warning(f"[parrot] apply_patterns skipped - no classes set yet")
+            logging.info(f"[parrot] apply_patterns skipped - no classes set yet")
             return
         # discard invalid patterns
         invalid_patterns: set[str] = set()
@@ -236,10 +236,10 @@ class Delegate(ParrotDelegate):
                 events.write("parrot", f"invalid: {pattern.name}")
             else:
                 patterns[pattern.name] = pattern
-                logging.warning(f"[parrot] Pattern {repr(pattern.name)} is VALID - added!")
+                logging.info(f"[parrot] Pattern {repr(pattern.name)} is VALID - added!")
                 events.write("parrot", f"added: {pattern.name}")
         self.patterns = patterns
-        logging.warning(f"[parrot] Final pattern count: {len(self.patterns)}")
+        logging.info(f"[parrot] Final pattern count: {len(self.patterns)}")
         for name in invalid_patterns:
             logging.warning(f"[parrot] pattern {repr(name)} contains invalid labels and will not be used.")
         if invalid_patterns:
@@ -247,7 +247,7 @@ class Delegate(ParrotDelegate):
             logging.warning(f"[parrot] use one of the following labels: {class_names}")
 
     def set_class_names(self, classes: set[str]) -> None:
-        logging.warning(f"[parrot] set_class_names called with: {classes}")
+        logging.info(f"[parrot] set_class_names called with: {classes}")
         self.classes = classes
         self.apply_patterns()
 
@@ -324,17 +324,17 @@ class Delegate(ParrotDelegate):
 last_parrot_confidence: float = 0.0
 
 parrot_delegate = Delegate(debug=True)
-logging.warning(f"[parrot] Creating ParrotSystem with model: {model_path}")
+logging.info(f"[parrot] Creating ParrotSystem with model: {model_path}")
 system = ParrotSystem(model_path, parrot_delegate)
-logging.warning(f"[parrot] ParrotSystem created: {system}")
+logging.info(f"[parrot] ParrotSystem created: {system}")
 
 @resource.watch(pattern_path)
 def on_pattern(f):
-    logging.warning(f"[parrot] on_pattern called, loading from: {pattern_path}")
+    logging.info(f"[parrot] on_pattern called, loading from: {pattern_path}")
     try:
         patterns = json.load(f)
-        logging.warning(f"[parrot] Loaded patterns: {list(patterns.keys())}")
+        logging.info(f"[parrot] Loaded patterns: {list(patterns.keys())}")
         parrot_delegate.set_patterns(patterns)
-        logging.warning(f"[parrot] Patterns set successfully")
+        logging.info(f"[parrot] Patterns set successfully")
     except Exception:
         log_exception(f"[parrot] invalid pattern file: {pattern_path}")
