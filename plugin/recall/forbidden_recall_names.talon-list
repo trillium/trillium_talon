@@ -2,6 +2,7 @@ list: user.forbidden_recall_names
 -
 
 # Recall subcommands
+border: border
 recall: recall
 save: save
 assign: assign
@@ -15,6 +16,12 @@ restore: restore
 help: help
 close: close
 bravely: bravely
+
+# Focus/window commands
+focus: focus
+running: running
+window: window
+snap: snap
 
 # Common Talon commands
 undo: undo
