@@ -85,16 +85,18 @@ def load_saved_windows():
             with open(STORAGE_FILE, "r") as f:
                 data = json.load(f)
             # Archive lives under "_archive" key, everything else is active
-            archived_windows = data.pop("_archive", {})
+            archived_windows.clear()
+            archived_windows.update(data.pop("_archive", {}))
             # Settings (persistent_highlight, etc.) live under "_settings"
             settings = data.pop("_settings", {})
             _persistent_highlight_enabled = settings.get("persistent_highlight", False)
-            saved_windows = data
+            saved_windows.clear()
+            saved_windows.update(data)
             update_window_list()
         except Exception as e:
             print(f"[recall] Error loading saved windows: {e}")
-            saved_windows = {}
-            archived_windows = {}
+            saved_windows.clear()
+            archived_windows.clear()
 
 
 def save_to_disk():
