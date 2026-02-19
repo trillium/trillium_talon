@@ -128,6 +128,7 @@ class Actions:
 
     def recall_window(name: str):
         """Focus the saved window with the given name, with re-match fallback"""
+        recall_overlay.hide_any()
         if name not in saved_windows:
             return
 

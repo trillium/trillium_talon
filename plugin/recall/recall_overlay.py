@@ -496,6 +496,8 @@ def show_status():
     """Show the status overlay with all saved windows."""
     global _status_canvas, _status_hide_job
 
+    hide_help()
+
     if _status_hide_job:
         cron.cancel(_status_hide_job)
         _status_hide_job = None
@@ -527,6 +529,8 @@ def hide_status():
 def show_help():
     """Show the help overlay with command reference."""
     global _help_canvas, _help_hide_job
+
+    hide_status()
 
     if _help_hide_job:
         cron.cancel(_help_hide_job)
