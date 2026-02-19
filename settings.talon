@@ -2,6 +2,9 @@ settings():
     # Adjust the scale of the imgui
     imgui.scale = 1.3
 
+    # Save audio recordings of each utterance as .flac files in ~/.talon/recordings/
+    speech.record_all = 1
+
     # Uncomment to set the speech timeout. This is the amount of time after you stop
     # speaking until Talon starts processing the spoken audio. Default is 0.3s.
     # speech.timeout = 0.3
