@@ -107,6 +107,38 @@ def _on_update_contexts():
 
     update(mode=mode, parrot_on=parrot_on)
 
+    # Persist mode state for restoration on next boot/crash
+    _save_mode_state(modes, tags)
+
+
+# ── Mode persistence across boots ────────────────────────────────────
+
+_MODE_STATE_FILE = Path.home() / ".talon" / "mode_state.json"
+_last_saved_modes = None
+_last_saved_tags = None
+
+
+def _save_mode_state(modes, tags):
+    """Save current mode and tags to disk, but only when they change."""
+    global _last_saved_modes, _last_saved_tags
+    modes_key = tuple(sorted(modes)) if modes else ()
+    tags_to_save = tuple(t for t in (tags or []) if t in ("user.parrot_on",))
+
+    if modes_key == _last_saved_modes and tags_to_save == _last_saved_tags:
+        return
+
+    _last_saved_modes = modes_key
+    _last_saved_tags = tags_to_save
+
+    try:
+        state = {
+            "modes": list(modes_key),
+            "tags": list(tags_to_save),
+        }
+        _MODE_STATE_FILE.write_text(json.dumps(state))
+    except Exception:
+        pass
+
 
 def _poll_microphone():
     try:
