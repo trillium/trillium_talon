@@ -15,6 +15,7 @@ mod = Module()
 TIMESTAMP_FILE = Path.home() / ".talon" / "launch_timestamp"
 RESTART_MARKER_FILE = Path.home() / ".talon" / "restart_marker"
 RESTART_STATE_FILE = Path.home() / ".talon" / "restart_state.json"
+MODE_STATE_FILE = Path.home() / ".talon" / "mode_state.json"
 
 # Shell script that runs independently of Talon:
 # 1. Create restart marker file (so Talon knows it was restarted, not fresh launched)
@@ -191,14 +192,38 @@ def restore_state(state: dict):
         print(f"Failed to restore state: {e}")
 
 
+def load_mode_state() -> dict | None:
+    """Load persistent mode state (written on every mode change)."""
+    try:
+        if MODE_STATE_FILE.exists():
+            return json.loads(MODE_STATE_FILE.read_text())
+    except Exception as e:
+        print(f"Failed to load mode state: {e}")
+    return None
+
+
 def on_ready():
-    """Called when Talon is ready - restore state if this was a restart."""
+    """Called when Talon is ready - restore state from restart or previous boot."""
     if RESTART_MARKER_FILE.exists():
+        # Explicit restart — use full restart state (modes + repeater + tags)
         RESTART_MARKER_FILE.unlink()
         state = load_state()
         if state:
             restore_state(state)
-            actions.user.notify("Talon restarted - state restored")
+            print("[restart_talon] Restored full state from explicit restart")
+            return
+
+    # Fresh boot or crash — restore just mode and tags from persistent state
+    mode_state = load_mode_state()
+    if mode_state:
+        modes = mode_state.get("modes", [])
+        tags = mode_state.get("tags", [])
+        # Don't restore if it was in sleep mode — default command mode is better
+        if "sleep" not in modes and (
+            ("dictation" in modes) or ("user.parrot_on" in tags)
+        ):
+            restore_state(mode_state)
+            print(f"[restart_talon] Restored mode from previous session: modes={modes}, tags={tags}")
 
 
 app.register("ready", on_ready)
