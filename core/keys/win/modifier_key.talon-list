@@ -4,7 +4,9 @@ os: linux
 -
 alt: alt
 control: ctrl
+troll: ctrl
 shift: shift
+sky: shift
 # super is the windows key
 super: super
 command: ctrl
