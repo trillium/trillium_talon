@@ -14,10 +14,13 @@
 # Combine:           "recall combine velma vilma"
 # Rename:            "recall rename edgar newname"
 # Promote alias:     "recall promote vilma"
+# Set default cmd:   "recall config edgar claude"
+# Clear default cmd:  "recall config edgar clear"
 # Restore terminal:  "recall restore edgar"
 # Revive archived:   "recall revive boat"
 # Show archive:      "recall archive"
 # Purge from archive:"recall purge boat"
+# Window status:     "recall status"
 # Help screen:       "recall help"
 # Dismiss overlay:   "recall close"
 
@@ -41,6 +44,15 @@ recall alias <user.saved_window_names> <user.word>:
 
 recall (unalias | remove alias) <user.saved_window_names>:
     user.remove_recall_alias(saved_window_names)
+
+recall edit (command | commands | list):
+    user.recall_edit_commands()
+
+recall config <user.saved_window_names> clear:
+    user.recall_clear_command(saved_window_names)
+
+recall config <user.saved_window_names> <user.recall_command_name>:
+    user.recall_set_command(saved_window_names, recall_command_name)
 
 recall restore <user.saved_window_names>:
     user.restore_window(saved_window_names)
@@ -66,8 +78,14 @@ recall archive:
 recall purge <user.word>:
     user.recall_purge(word)
 
-recall (help | show | info):
+recall (status | info):
+    user.show_recall_status()
+
+recall (help | show):
     user.show_recall_help()
+
+recall border:
+    user.recall_toggle_border()
 
 recall close:
     user.hide_recall_overlay()
