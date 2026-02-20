@@ -17,13 +17,13 @@ settings():
     user.mode_indicator_color_text = "EEE"
     # Black color for when the microphone is muted (set to "None")
     user.mode_indicator_color_mute = "000000"
-    # Grey color for sleep mode
-    user.mode_indicator_color_sleep = "808080"
-    # Gold color for dictation mode
-    user.mode_indicator_color_dictation = "ffd700"
-    # MediumSeaGreen color for mixed mode
-    user.mode_indicator_color_mixed = "3cb371"
-    # CornflowerBlue color for command mode
-    user.mode_indicator_color_command = "6495ed"
-    # GhostWhite color for other modes
-    user.mode_indicator_color_other = "f8f8ff"
+    # Grey color for sleep mode (darkened ~50%)
+    user.mode_indicator_color_sleep = "3f3f3f"
+    # Gold color for dictation mode (darkened ~50%)
+    user.mode_indicator_color_dictation = "7d6900"
+    # MediumSeaGreen color for mixed mode (darkened ~50%)
+    user.mode_indicator_color_mixed = "1d5837"
+    # CornflowerBlue color for command mode (darkened ~50%)
+    user.mode_indicator_color_command = "314974"
+    # GhostWhite color for other modes (darkened ~50%)
+    user.mode_indicator_color_other = "7a7a7d"

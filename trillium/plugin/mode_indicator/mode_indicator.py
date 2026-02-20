@@ -73,7 +73,7 @@ mod.setting("mode_indicator_color_dictation", type=str)
 mod.setting("mode_indicator_color_mixed", type=str)
 mod.setting("mode_indicator_color_command", type=str)
 mod.setting("mode_indicator_color_other", type=str)
-mod.setting("mode_indicator_color_friction", type=str, default="ff0000", desc="Color when friction capture mode is active")
+mod.setting("mode_indicator_color_friction", type=str, default="7d0000", desc="Color when friction capture mode is active")
 
 setting_paths = {
     "user.mode_indicator_show",
@@ -131,13 +131,73 @@ def on_draw(c: SkiaCanvas):
     rect = screen.rect
     scale = screen.scale if app.platform != "mac" else 1
 
+    # --- Measure content to determine bar width ---
+    bar_height = TOP_LINE_THICKNESS * scale
+    c.paint.textsize = 10
+    c.paint.style = c.paint.Style.FILL
+
+    text_base_x = rect.width * 0.38
+    text_right_x = rect.width * 0.45
+
+    # Measure left-side text widths
+    command_text = _state["command_text"]
+    cmd_display = ""
+    if command_text:
+        cmd_display = command_text[:17] + "..." if len(command_text) > 20 else command_text
+
+    opposite_text = _state["opposite_text"]
+    opp_display = ""
+    if opposite_text:
+        opp_display = opposite_text[:17] + "..." if len(opposite_text) > 20 else opposite_text
+
+    # Measure right-side text widths
+    static_text = str(_state['static_percent'])
+    week_remaining = _state.get("week_remaining", "")
+    week_text = f"{_state['week_percent']}%  {week_remaining}" if week_remaining else f"{_state['week_percent']}%"
+
+    # Find the widest text on each side
+    left_max_w = max(
+        c.paint.measure_text(cmd_display)[1].width if cmd_display else 0,
+        c.paint.measure_text(opp_display)[1].width if opp_display else 0,
+    )
+    right_max_w = max(
+        c.paint.measure_text(static_text)[1].width,
+        c.paint.measure_text(week_text)[1].width,
+    )
+
+    # Bar extends from left text start to right text end, with padding
+    bar_pad = 8
+    bar_left = text_base_x - bar_pad
+    bar_right = text_right_x + right_max_w + bar_pad
+    # Make both sides symmetric around the circle center
+    circle_center_x = settings.get("user.mode_indicator_x") * rect.width
+    half_width = max(circle_center_x - bar_left, bar_right - circle_center_x)
+    bar_left = circle_center_x - half_width
+    bar_right = circle_center_x + half_width
+
     # --- Draw top bar FIRST (so circle renders on top) ---
     bar_color = get_bar_color()
-    bar_alpha = "44"  # 30% opacity
     c.paint.style = c.paint.Style.FILL
-    c.paint.color = f"#{bar_color}{bar_alpha}"
-    bar_height = TOP_LINE_THICKNESS * scale
-    c.draw_rect(Rect(rect.left, rect.top, rect.width, bar_height))
+    c.paint.color = f"#{bar_color}"
+
+    # Draw bar with rounded bottom corners only (top flush with screen edge)
+    rad = 8
+    bx, by, bw, bh = bar_left, rect.top, bar_right - bar_left, bar_height
+    path = skia.Path()
+    path.move_to(bx, by)
+    path.line_to(bx + bw, by)
+    path.line_to(bx + bw, by + bh - rad)
+    path.arc_to_with_oval(
+        Rect(bx + bw - rad * 2, by + bh - rad * 2, rad * 2, rad * 2),
+        0, 90, False,
+    )
+    path.line_to(bx + rad, by + bh)
+    path.arc_to_with_oval(
+        Rect(bx, by + bh - rad * 2, rad * 2, rad * 2),
+        90, 90, False,
+    )
+    path.close()
+    c.draw_path(path)
 
     # Draw command text on the top line (stacked, smaller text)
     c.paint.shader = None
@@ -145,27 +205,13 @@ def on_draw(c: SkiaCanvas):
     c.paint.color = "ffffffff"  # White
     c.paint.textsize = 10
 
-    text_base_x = rect.width * 0.38
-
-    command_text = _state["command_text"]
-    if command_text:
-        display_text = command_text
-        if len(display_text) > 20:
-            display_text = display_text[:17] + "..."
-        c.draw_text(display_text, text_base_x, 11)
-
-    opposite_text = _state["opposite_text"]
-    if opposite_text:
-        display_text = opposite_text
-        if len(display_text) > 20:
-            display_text = display_text[:17] + "..."
-        c.draw_text(display_text, text_base_x, 23)
+    if cmd_display:
+        c.draw_text(cmd_display, text_base_x, 11)
+    if opp_display:
+        c.draw_text(opp_display, text_base_x, 23)
 
     # Draw usage + week info just right of the mode indicator
-    text_right_x = rect.width * 0.45
-    c.draw_text(str(_state['static_percent']), text_right_x, 11)
-    week_remaining = _state.get("week_remaining", "")
-    week_text = f"{_state['week_percent']}%  {week_remaining}" if week_remaining else f"{_state['week_percent']}%"
+    c.draw_text(static_text, text_right_x, 11)
     c.draw_text(week_text, text_right_x, 23)
 
     # --- Draw circle SECOND (on top of bar) ---
