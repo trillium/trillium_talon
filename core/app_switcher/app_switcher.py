@@ -351,23 +351,18 @@ class Actions:
         """Focus a new application by name"""
         app = actions.user.get_running_app(name)
 
-        # Switch scene to blurred
-
-        actions.user.obs_get_blurry()
+        # TODO: Re-enable when OBS/trillium_obs is installed
+        # actions.user.obs_get_blurry()
         if app == ui.active_app():
             actions.app.window_next()
-        # Focus new app
         else:
             actions.user.switcher_focus_app(app)
-        
-        # Switch to safe scene if SAFE_APP
-        if ui.active_app().name in SAFE_APPS:
-            actions.user.obs_get_clear()
-            rect = ui.active_app().windows()[0].rect
-            print(rect)
-            actions.user.draw_mask_on_image_inplace(rect)
-        else:
-            print(ui.active_app().name, "not safe")
+
+        # TODO: Re-enable when OBS/trillium_obs is installed
+        # if ui.active_app().name in SAFE_APPS:
+        #     actions.user.obs_get_clear()
+        #     rect = ui.active_app().windows()[0].rect
+        #     actions.user.draw_mask_on_image_inplace(rect)
             
 
     def switcher_focus_print_backup(name: str):

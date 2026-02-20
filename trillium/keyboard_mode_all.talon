@@ -9,7 +9,7 @@ key(super-ctrl-alt-shift-d):
     menu.open_debug_window()
 
 key(super-ctrl-alt-shift-h):
-    user.history_toggle()
+    user.toggle_phrase_history()
 
 key(super-ctrl-alt-shift-p):
     mimic('talon open rebel')
