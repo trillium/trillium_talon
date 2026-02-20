@@ -6,9 +6,9 @@ from pathlib import Path
 
 import talon
 from talon import Context, Module, actions, app, fs, imgui, ui
-if app.platform == "mac":
+try:
     from ....trillium_obs.config import SAFE_APPS
-else:
+except (ImportError, ModuleNotFoundError):
     SAFE_APPS = []
 
 # Construct a list of spoken form overrides for application names (similar to how homophone list is managed)
