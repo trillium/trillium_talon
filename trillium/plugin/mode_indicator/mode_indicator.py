@@ -12,7 +12,7 @@ from talon.ui import Rect
 canvas: Canvas = None
 mod = Module()
 
-TOP_LINE_THICKNESS = 35
+TOP_LINE_THICKNESS = 25
 
 state_path = str(Path(__file__).parent / "mode_indicator_state.json")
 
@@ -139,34 +139,34 @@ def on_draw(c: SkiaCanvas):
     bar_height = TOP_LINE_THICKNESS * scale
     c.draw_rect(Rect(rect.left, rect.top, rect.width, bar_height))
 
-    # Draw command text on the top line
+    # Draw command text on the top line (stacked, smaller text)
     c.paint.shader = None
     c.paint.style = c.paint.Style.FILL
     c.paint.color = "ffffffff"  # White
-    c.paint.textsize = 14
+    c.paint.textsize = 10
 
-    text_base_x = rect.width * 0.35
+    text_base_x = rect.width * 0.38
 
     command_text = _state["command_text"]
     if command_text:
         display_text = command_text
         if len(display_text) > 20:
             display_text = display_text[:17] + "..."
-        c.draw_text(display_text, text_base_x, 20)
+        c.draw_text(display_text, text_base_x, 11)
 
     opposite_text = _state["opposite_text"]
     if opposite_text:
         display_text = opposite_text
         if len(display_text) > 20:
             display_text = display_text[:17] + "..."
-        c.draw_text(display_text, text_base_x, 35)
+        c.draw_text(display_text, text_base_x, 23)
 
     # Draw usage + week info just right of the mode indicator
     text_right_x = rect.width * 0.45
-    c.draw_text(str(_state['static_percent']), text_right_x, 20)
+    c.draw_text(str(_state['static_percent']), text_right_x, 11)
     week_remaining = _state.get("week_remaining", "")
     week_text = f"{_state['week_percent']}%  {week_remaining}" if week_remaining else f"{_state['week_percent']}%"
-    c.draw_text(week_text, text_right_x, 35)
+    c.draw_text(week_text, text_right_x, 23)
 
     # --- Draw circle SECOND (on top of bar) ---
     circle_color = get_mode_color()
