@@ -282,6 +282,12 @@ class Actions:
         actions.sleep("50ms")
         actions.key(str(number))
 
+    def recall_window_and_mimic(name: str, text: str):
+        """Focus a saved window, wait for context update, then mimic remaining words"""
+        actions.user.recall_window(name)
+        actions.sleep("25ms")
+        actions.mimic(text)
+
     def dictate_to_window(name: str, text: str):
         """Focus a saved window and type dictated text into it"""
         actions.user.recall_window(name)
