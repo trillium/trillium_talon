@@ -69,28 +69,17 @@ def detect_terminal_path(window: ui.Window) -> str:
     return _parse_title_path(window.title)
 
 
-# Map app names to the binary + args needed to launch with a working directory
-_TERMINAL_LAUNCH = {
-    "Gnome-terminal":   ("gnome-terminal", ["--working-directory={path}"]),
-    "Mate-terminal":    ("mate-terminal", ["--working-directory={path}"]),
-    "kitty":            ("kitty", ["--directory", "{path}"]),
-    "Alacritty":        ("alacritty", ["--working-directory", "{path}"]),
-    "foot":             ("foot", ["--working-directory={path}"]),
-    "xfce4-terminal":   ("xfce4-terminal", ["--working-directory={path}"]),
-    "Terminator":       ("terminator", ["--working-directory={path}"]),
-    "Tilix":            ("tilix", ["--working-directory={path}"]),
-    "Terminal":          ("open", ["-a", "Terminal", "{path}"]),
-    "iTerm2":            ("open", ["-a", "iTerm", "{path}"]),
-}
+# Launcher registry: maps app name -> callable(path)
+# OS-specific files (recall_terminal_mac.py, recall_terminal_linux.py)
+# register their entries at load time
+TERMINAL_LAUNCHERS = {}
 
 
 def _launch_terminal(app_name: str, path: str):
-    """Launch a terminal at the given path using the correct binary for the app."""
-    entry = _TERMINAL_LAUNCH.get(app_name)
-    if entry:
-        binary, arg_templates = entry
-        args = [a.format(path=path) for a in arg_templates]
-        ui.launch(path=binary, args=args)
+    """Launch a terminal at the given path using OS-registered launchers."""
+    launcher = TERMINAL_LAUNCHERS.get(app_name)
+    if launcher:
+        launcher(path)
     else:
-        # Fallback: try launching the app name lowercased with common --working-directory
+        # Generic fallback
         ui.launch(path=app_name.lower(), args=[f"--working-directory={path}"])

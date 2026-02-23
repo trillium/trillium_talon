@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Update a recall window's path to the current working directory.
+
+Usage: recall-set-path <name> [path]
+
+If path is omitted, uses the current working directory.
+"""
+
+import json
+import os
+import sys
+
+SAVED_WINDOWS = os.path.expanduser(
+    "~/.talon/user/trillium_talon/plugin/recall/saved_windows.json"
+)
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: recall-set-path <name> [path]", file=sys.stderr)
+        sys.exit(1)
+
+    name = sys.argv[1]
+    path = sys.argv[2] if len(sys.argv) > 2 else os.getcwd()
+
+    with open(SAVED_WINDOWS, "r") as f:
+        data = json.load(f)
+
+    if name not in data:
+        print(f"No recall window named '{name}'", file=sys.stderr)
+        sys.exit(1)
+
+    data[name]["path"] = path
+    with open(SAVED_WINDOWS, "w") as f:
+        json.dump(data, f, indent=2)
+
+    print(f"{name}: path set to {path}")
+
+
+if __name__ == "__main__":
+    main()

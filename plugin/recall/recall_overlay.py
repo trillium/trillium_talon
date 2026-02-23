@@ -22,7 +22,7 @@ _hide_job = None
 PAD_X = 20
 PAD_Y = 12
 FONT_SIZE = 48
-SHOW_DURATION = "5s"
+SHOW_DURATION = "7s"
 MISSING_GAP = 10  # vertical gap between stacked missing-window labels
 
 # Status overlay globals
@@ -308,10 +308,10 @@ def on_draw_status(c: SkiaCanvas):
     # Centered panel
     panel_w = sr.width * 0.55
 
-    # Sort: active windows first, then missing
+    # Sort: alphabetically by name, active windows first within that
     window_names = sorted(
         saved_windows.keys(),
-        key=lambda n: 0 if find_window_by_id(saved_windows[n]["id"]) else 1,
+        key=lambda n: (0 if find_window_by_id(saved_windows[n]["id"]) else 1, n.lower()),
     )
 
     # Pre-calculate panel height

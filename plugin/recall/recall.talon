@@ -7,6 +7,7 @@
 # Switch + Enter:    "edgar bravely"
 # Dictate + Enter:   "edgar hello world bravely" (see dictation_ender list)
 # List all:          "recall list"
+# Detach window:     "recall detach edgar"
 # Forget one:        "recall forget edgar"
 # Forget all:        "recall forget all"
 # Add alias:         "recall alias edgar egger"
@@ -16,6 +17,7 @@
 # Promote alias:     "recall promote vilma"
 # Set default cmd:   "recall config edgar claude"
 # Clear default cmd:  "recall config edgar clear"
+# Auto-assign toggle: "recall auto settings"
 # Restore terminal:  "recall restore edgar"
 # Revive archived:   "recall revive boat"
 # Show archive:      "recall archive"
@@ -30,6 +32,9 @@
 ^<user.saved_window_names>:
     user.recall_window(saved_window_names)
     sleep(25ms)
+
+^recall detach <user.saved_window_names>$:
+    user.recall_unsave(saved_window_names)
 
 ^(recall forget | forget recall) <user.saved_window_names>$:
     user.forget_window(saved_window_names)
@@ -84,6 +89,9 @@
 
 ^recall (help | show)$:
     user.show_recall_help()
+
+^recall auto <user.saved_window_names>$:
+    user.recall_auto_assign(saved_window_names)
 
 ^recall border$:
     user.recall_toggle_border()

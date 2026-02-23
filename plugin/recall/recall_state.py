@@ -127,7 +127,7 @@ def update_window_list():
                 name_map[alias] = name
         spoken_forms = actions.user.create_spoken_forms_from_map(
             name_map,
-            generate_subsequences=True,
+            generate_subsequences=False,
         )
         ctx.lists["self.saved_window_names"] = spoken_forms
     else:
