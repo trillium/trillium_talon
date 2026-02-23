@@ -9,6 +9,8 @@ from talon.skia.imagefilter import ImageFilter
 from talon.types.point import Point2d
 from talon.ui import Rect
 
+from .sysmon_graph import measure_graph_width, draw_graph
+
 canvas: Canvas = None
 mod = Module()
 
@@ -26,6 +28,9 @@ _state = {
     "week_percent": 0,
     "week_remaining": "",
     "static_percent": "?%",
+    "cpu_per_core": [],
+    "mem_percent": 0,
+    "mem_pressure": 0,
 }
 
 
@@ -165,10 +170,15 @@ def on_draw(c: SkiaCanvas):
         c.paint.measure_text(week_text)[1].width,
     )
 
-    # Bar extends from left text start to right text end, with padding
+    # --- Calculate sysmon graph dimensions ---
+    per_core = _state.get("cpu_per_core", [])
+    graph_total_w = measure_graph_width(len(per_core))
+
+    # Bar extends from left text start to right text end + graph, with padding
     bar_pad = 8
     bar_left = text_base_x - bar_pad
-    bar_right = text_right_x + right_max_w + bar_pad
+    graph_start_x = text_right_x + right_max_w + bar_pad
+    bar_right = graph_start_x + graph_total_w + bar_pad
     # Make both sides symmetric around the circle center
     circle_center_x = settings.get("user.mode_indicator_x") * rect.width
     half_width = max(circle_center_x - bar_left, bar_right - circle_center_x)
@@ -213,6 +223,17 @@ def on_draw(c: SkiaCanvas):
     # Draw usage + week info just right of the mode indicator
     c.draw_text(static_text, text_right_x, 11)
     c.draw_text(week_text, text_right_x, 23)
+
+    # --- Draw system monitor bar graph (CPU bars + memory line) ---
+    draw_graph(
+        c,
+        x=graph_start_x + 2,
+        top=rect.top + 2,
+        bottom=rect.top + bar_height - 3,
+        cpu_per_core=per_core,
+        mem_percent=_state.get("mem_percent", 0),
+        mem_pressure=_state.get("mem_pressure", 0),
+    )
 
     # --- Draw circle SECOND (on top of bar) ---
     circle_color = get_mode_color()
