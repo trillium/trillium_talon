@@ -25,9 +25,8 @@ frame, frame
 # 2023-09-16 08:26:13 - New entries automatically added by cursorless
 black, userColor1
 plum, userColor2
-# Disabled: not recognized by installed cursorless version (2026-02-16)
-# white, userColor3
-# teal, userColor4
+white, userColor3
+teal, userColor4
 
 # 2025-03-15 13:29:38 - New entries automatically added by cursorless
 play, play
