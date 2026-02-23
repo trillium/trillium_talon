@@ -25,6 +25,9 @@ _state = {
     "bar_color_override": None,
     "week_percent": 0,
     "week_remaining": "",
+    "cpu_per_core": [],
+    "mem_percent": 0,
+    "mem_pressure": 0,
 }
 
 
@@ -152,6 +155,27 @@ def _poll_week_percent():
     update(week_percent=get_week_percent(), week_remaining=get_week_remaining())
 
 
+SYSMON_STATS = Path.home() / "code" / "system-monitor" / "data" / "stats.json"
+
+
+def _poll_sysmon():
+    """Read system monitor stats and merge CPU per-core + memory into state."""
+    try:
+        data = json.loads(SYSMON_STATS.read_text())
+        cpu = data.get("cpu", {})
+        mem = data.get("memory", {})
+        per_core = cpu.get("per_core", [])
+        mem_percent = mem.get("percent", 0)
+        mem_pressure = mem.get("pressure", 0)
+        update(
+            cpu_per_core=per_core,
+            mem_percent=mem_percent,
+            mem_pressure=mem_pressure,
+        )
+    except Exception:
+        pass
+
+
 def on_ready():
     # Flush initial state (with computed values)
     _state["week_percent"] = get_week_percent()
@@ -161,6 +185,7 @@ def on_ready():
     registry.register("update_contexts", _on_update_contexts)
     cron.interval("500ms", _poll_microphone)
     cron.interval("60s", _poll_week_percent)
+    cron.interval("1s", _poll_sysmon)
 
 
 app.register("ready", on_ready)
