@@ -1,7 +1,4 @@
-# This makes it easy to chain commands.
-then:
-    sleep(100ms)
-    skip()
+# "then" command chaining is handled by then_mimic.py
 ^focus$:
     sleep(100ms)
     skip()
