@@ -27,7 +27,7 @@ _state = {
     "bar_color_override": None,
     "week_percent": 0,
     "week_remaining": "",
-    "static_percent": "?%",
+    "static_percent": "",
     "cpu_per_core": [],
     "mem_percent": 0,
     "mem_pressure": 0,
@@ -221,7 +221,8 @@ def on_draw(c: SkiaCanvas):
         c.draw_text(opp_display, text_base_x, 23)
 
     # Draw usage + week info just right of the mode indicator
-    c.draw_text(static_text, text_right_x, 11)
+    if static_text:
+        c.draw_text(static_text, text_right_x, 11)
     c.draw_text(week_text, text_right_x, 23)
 
     # --- Draw system monitor bar graph (CPU bars + memory line) ---

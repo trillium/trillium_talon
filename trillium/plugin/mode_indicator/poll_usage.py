@@ -7,6 +7,7 @@ Or via cron/systemd timer.
 
 import csv
 import json
+import subprocess
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -14,7 +15,6 @@ from pathlib import Path
 
 STATE_FILE = Path(__file__).parent / "mode_indicator_state.json"
 LOG_FILE = Path(__file__).parent / "usage_log.csv"
-CREDS_FILE = Path.home() / ".claude" / ".credentials.json"
 API_URL = "https://api.anthropic.com/api/oauth/usage"
 INTERVAL = 300  # 5 minutes
 
@@ -30,7 +30,12 @@ _last_logged = (None, None)  # (five_hour_util, seven_day_util)
 
 
 def get_token():
-    data = json.loads(CREDS_FILE.read_text())
+    raw = subprocess.check_output([
+        "security", "find-generic-password",
+        "-s", "Claude Code-credentials",
+        "-w",
+    ], text=True).strip()
+    data = json.loads(raw)
     return data["claudeAiOauth"]["accessToken"]
 
 
