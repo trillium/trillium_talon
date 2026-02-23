@@ -39,6 +39,9 @@ settings():
     # The amount to scroll up/down (equivalent to mouse wheel on Windows by default)
     user.mouse_wheel_down_amount = 120
 
+    # Reverse scroll direction to compensate for OS-level natural scrolling
+    user.mouse_wheel_reverse_direction = true
+
     # Set the amount to scroll left/right
     user.mouse_wheel_horizontal_amount = 40
 
@@ -70,6 +73,10 @@ settings():
     # 'size aware' keeps absolute window size the same, except full-height or
     # -width windows are resized to stay full-height/width.
     # user.window_snap_screen = "size aware"
+
+    # Gaze OCR text overlay colors
+    user.ocr_light_background_debug_color = "FF4444"
+    user.ocr_dark_background_debug_color = "00AA00"
 
     # Mouse grid border setting
     user.grid_narrow_expansion = 25
