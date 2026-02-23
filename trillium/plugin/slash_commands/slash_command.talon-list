@@ -39,5 +39,9 @@ model opus: /model opus
 # MCP
 M C P: /mcp
 
+# Session
+exit: /exit
+clear: /clear
+
 # Memory
 memory: /memory

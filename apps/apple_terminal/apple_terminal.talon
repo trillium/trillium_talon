@@ -24,3 +24,6 @@ suspend: key(ctrl-z)
 resume:
     insert("fg")
     key(enter)
+
+(convo | terminal) next: app.tab_next()
+(convo | terminal) previous: app.tab_previous()
