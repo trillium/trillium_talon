@@ -6,6 +6,9 @@ from typing import Callable, Optional, Union
 from talon import Context, Module, actions, app, registry
 from talon.grammar import Phrase
 
+# Import dictation_formatter to track insert length for destroy command
+from ..text.text_and_dictation import dictation_formatter
+
 
 class Formatter(ABC):
     def __init__(self, id: str):
@@ -407,7 +410,12 @@ class Actions:
 
     def insert_formatted(phrase: Union[str, Phrase], formatters: str):
         """Inserts a phrase formatted according to formatters. Formatters is a comma separated list of formatters (e.g. 'CAPITALIZE_ALL_WORDS,DOUBLE_QUOTED_STRING')"""
-        actions.insert(format_phrase(phrase, formatters))
+        text = format_phrase(phrase, formatters)
+        actions.insert(text)
+        # Track length so destroy command can delete it
+        dictation_formatter.last_dictation_length = len(text)
+        dictation_formatter.last_was_dictation = True
+        print(f"insert_formatted: text='{text}' length={len(text)}")
 
     def insert_with_history(text: str):
         """Inserts some text, remembering it in the phrase history."""
@@ -478,5 +486,11 @@ class Actions:
 
     def insert_many(strings: list[str]) -> None:
         """Insert a list of strings, sequentially."""
+        total_length = 0
         for string in strings:
             actions.insert(string)
+            total_length += len(string)
+        # Track length so destroy command can delete it
+        dictation_formatter.last_dictation_length = total_length
+        dictation_formatter.last_was_dictation = True
+        print(f"insert_many: strings={strings} total_length={total_length}")
