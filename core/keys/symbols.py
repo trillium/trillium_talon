@@ -59,7 +59,7 @@ symbols = [
     Symbol(",", ["comma", "coma", "drip"]),
     Symbol(".", ["period", "full stop"], ["dot", "point"]),
     Symbol(";", ["semicolon"], ["semi"]),
-    Symbol(":", ["colon"]),
+    Symbol(":", ["colon", "stack"]),
     Symbol("?", ["question mark"], ["question"]),
     Symbol("!", ["exclamation mark", "exclamation point"], ["bang"]),
     Symbol("*", ["asterisk"], ["star"]),
