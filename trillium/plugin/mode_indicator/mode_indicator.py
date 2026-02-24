@@ -14,8 +14,6 @@ from .sysmon_graph import measure_graph_width, draw_graph
 canvas: Canvas = None
 mod = Module()
 
-TOP_LINE_THICKNESS = 25
-
 state_path = str(Path(__file__).parent / "mode_indicator_state.json")
 
 _state = {
@@ -49,16 +47,19 @@ mod.setting(
 mod.setting(
     "mode_indicator_size",
     type=float,
+    default=25,
     desc="Mode indicator diameter in pixels",
 )
 mod.setting(
     "mode_indicator_x",
     type=float,
+    default=0.437,
     desc="Mode indicator center X-position in percentages(0-1). 0=left, 1=right",
 )
 mod.setting(
     "mode_indicator_y",
     type=float,
+    default=0,
     desc="Mode indicator center Y-position in percentages(0-1). 0=top, 1=bottom",
 )
 mod.setting(
@@ -79,6 +80,42 @@ mod.setting("mode_indicator_color_mixed", type=str)
 mod.setting("mode_indicator_color_command", type=str)
 mod.setting("mode_indicator_color_other", type=str)
 mod.setting("mode_indicator_color_friction", type=str, default="7d0000", desc="Color when friction capture mode is active")
+mod.setting(
+    "mode_indicator_bar_height",
+    type=float,
+    default=25,
+    desc="Top bar height in pixels",
+)
+mod.setting(
+    "mode_indicator_bar_left_x",
+    type=float,
+    default=0.32,
+    desc="Left edge of bar (0-1 fraction of screen width)",
+)
+mod.setting(
+    "mode_indicator_bar_right_x",
+    type=float,
+    default=0.62,
+    desc="Right edge of bar (0-1 fraction of screen width)",
+)
+mod.setting(
+    "mode_indicator_text_left_x",
+    type=float,
+    default=0.36,
+    desc="Column 1 text X-position (0-1). 0=left, 1=right",
+)
+mod.setting(
+    "mode_indicator_text_right_x",
+    type=float,
+    default=0.556,
+    desc="Column 2 text X-position (0-1). 0=left, 1=right",
+)
+mod.setting(
+    "mode_indicator_text_y",
+    type=float,
+    default=11,
+    desc="Bar text top-row Y-position in pixels from screen top",
+)
 
 setting_paths = {
     "user.mode_indicator_show",
@@ -93,6 +130,12 @@ setting_paths = {
     "user.mode_indicator_color_mixed",
     "user.mode_indicator_color_command",
     "user.mode_indicator_color_other",
+    "user.mode_indicator_bar_height",
+    "user.mode_indicator_bar_left_x",
+    "user.mode_indicator_bar_right_x",
+    "user.mode_indicator_text_left_x",
+    "user.mode_indicator_text_right_x",
+    "user.mode_indicator_text_y",
 }
 
 
@@ -136,15 +179,22 @@ def on_draw(c: SkiaCanvas):
     rect = screen.rect
     scale = screen.scale if app.platform != "mac" else 1
 
-    # --- Measure content to determine bar width ---
-    bar_height = TOP_LINE_THICKNESS * scale
+    # --- Compute shared geometry ---
+    bar_height = settings.get("user.mode_indicator_bar_height") * scale
+    radius = settings.get("user.mode_indicator_size") * scale / 2
+    circle_center_x = rect.left + min(
+        max(settings.get("user.mode_indicator_x") * rect.width, radius),
+        rect.width - radius,
+    )
+
     c.paint.textsize = 10
     c.paint.style = c.paint.Style.FILL
 
-    text_base_x = rect.width * 0.38
-    text_right_x = rect.width * 0.45
+    # Both text columns are to the right of the circle
+    text_col1_x = rect.width * settings.get("user.mode_indicator_text_left_x")
+    text_col2_x = rect.width * settings.get("user.mode_indicator_text_right_x")
 
-    # Measure left-side text widths
+    # Prepare text content
     command_text = _state["command_text"]
     cmd_display = ""
     if command_text:
@@ -155,42 +205,26 @@ def on_draw(c: SkiaCanvas):
     if opposite_text:
         opp_display = opposite_text[:17] + "..." if len(opposite_text) > 20 else opposite_text
 
-    # Measure right-side text widths
     static_text = str(_state['static_percent'])
     week_remaining = _state.get("week_remaining", "")
     week_text = f"{_state['week_percent']}%  {week_remaining}" if week_remaining else f"{_state['week_percent']}%"
-
-    # Find the widest text on each side
-    left_max_w = max(
-        c.paint.measure_text(cmd_display)[1].width if cmd_display else 0,
-        c.paint.measure_text(opp_display)[1].width if opp_display else 0,
-    )
-    right_max_w = max(
-        c.paint.measure_text(static_text)[1].width,
-        c.paint.measure_text(week_text)[1].width,
-    )
 
     # --- Calculate sysmon graph dimensions ---
     per_core = _state.get("cpu_per_core", [])
     graph_total_w = measure_graph_width(len(per_core))
 
-    # Bar extends from left text start to right text end + graph, with padding
+    # --- Bar extents from dedicated settings (decoupled from text position) ---
+    bar_left = rect.width * settings.get("user.mode_indicator_bar_left_x")
+    bar_right = rect.width * settings.get("user.mode_indicator_bar_right_x")
+    # Anchor graph to right edge of bar
     bar_pad = 8
-    bar_left = text_base_x - bar_pad
-    graph_start_x = text_right_x + right_max_w + bar_pad
-    bar_right = graph_start_x + graph_total_w + bar_pad
-    # Make both sides symmetric around the circle center
-    circle_center_x = settings.get("user.mode_indicator_x") * rect.width
-    half_width = max(circle_center_x - bar_left, bar_right - circle_center_x)
-    bar_left = circle_center_x - half_width
-    bar_right = circle_center_x + half_width
+    graph_start_x = bar_right - graph_total_w - bar_pad
 
     # --- Draw top bar FIRST (so circle renders on top) ---
     bar_color = get_bar_color()
     c.paint.style = c.paint.Style.FILL
     c.paint.color = f"#{bar_color}"
 
-    # Draw bar with rounded bottom corners only (top flush with screen edge)
     rad = 8
     bx, by, bw, bh = bar_left, rect.top, bar_right - bar_left, bar_height
     path = skia.Path()
@@ -215,15 +249,18 @@ def on_draw(c: SkiaCanvas):
     c.paint.color = "ffffffff"  # White
     c.paint.textsize = 10
 
-    if cmd_display:
-        c.draw_text(cmd_display, text_base_x, 11)
-    if opp_display:
-        c.draw_text(opp_display, text_base_x, 23)
+    text_y_top = settings.get("user.mode_indicator_text_y")
+    text_y_bottom = text_y_top + 12
 
-    # Draw usage + week info just right of the mode indicator
+    if cmd_display:
+        c.draw_text(cmd_display, text_col1_x, text_y_top)
+    if opp_display:
+        c.draw_text(opp_display, text_col1_x, text_y_bottom)
+
+    # Draw usage + week info (column 2)
     if static_text:
-        c.draw_text(static_text, text_right_x, 11)
-    c.draw_text(week_text, text_right_x, 23)
+        c.draw_text(static_text, text_col2_x, text_y_top)
+    c.draw_text(week_text, text_col2_x, text_y_bottom)
 
     # --- Draw system monitor bar graph (CPU bars + memory line) ---
     draw_graph(
@@ -242,11 +279,7 @@ def on_draw(c: SkiaCanvas):
     circle_alpha = get_alpha_color()
     text_color = settings.get("user.mode_indicator_color_text")
 
-    radius = settings.get("user.mode_indicator_size") * scale / 2
-    circle_x = rect.left + min(
-        max(settings.get("user.mode_indicator_x") * rect.width, radius),
-        rect.width - radius,
-    )
+    circle_x = circle_center_x
     circle_y = rect.top + min(
         max(settings.get("user.mode_indicator_y") * rect.height, radius),
         rect.height - radius,
