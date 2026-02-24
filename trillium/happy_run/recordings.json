@@ -1,0 +1,77 @@
+[
+  {
+    "changes": 7,
+    "entries": [
+      {
+        "elapsed_s": 0.0,
+        "window_id": 26254,
+        "title": "Terminal \u2014 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 0.5,
+        "window_id": 26254,
+        "title": "Terminal \u2014 tail \u25c2 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 1.5,
+        "window_id": 26254,
+        "title": "Terminal \u2014 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 2.0,
+        "window_id": 26254,
+        "title": "Terminal \u2014 -zsh \u25b8 openclaw \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 5.0,
+        "window_id": 26254,
+        "title": "trilliumsmith \u2014 trilliumsmith@macbookpro \u2014 ~ \u2014 -zsh \u25c2 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 5.5,
+        "window_id": 26254,
+        "title": "trilliumsmith \u2014 trilliumsmith@macbookpro \u2014 ~ \u2014 zsh \u25c2 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 6.0,
+        "window_id": 26254,
+        "title": "trilliumsmith \u2014 trilliumsmith@macbookpro \u2014 ~ \u2014 -zsh \u25b8 -zsh \u2014 80\u00d724"
+      }
+    ]
+  },
+  {
+    "changes": 6,
+    "entries": [
+      {
+        "elapsed_s": 0.0,
+        "window_id": 26330,
+        "title": "Terminal \u2014 -zsh \u25c2 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 0.5,
+        "window_id": 26330,
+        "title": "Terminal \u2014 tail \u25c2 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 1.0,
+        "window_id": 26330,
+        "title": "Terminal \u2014 -zsh \u25c2 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 1.5,
+        "window_id": 26330,
+        "title": "Terminal \u2014 -zsh \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 2.0,
+        "window_id": 26330,
+        "title": "Terminal \u2014 -zsh \u25b8 openclaw \u2014 80\u00d724"
+      },
+      {
+        "elapsed_s": 4.5,
+        "window_id": 26330,
+        "title": "Terminal \u2014 -zsh \u25b8 openclaw-completion \u2014 80\u00d724"
+      }
+    ]
+  }
+]

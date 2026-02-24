@@ -9,6 +9,7 @@ touch:
     mouse_click(0)
     # close the mouse grid if open
     user.grid_close()
+
     # End any open drags
     # Touch automatically ends left drags so this is for right drags specifically
     user.mouse_drag_end()
@@ -20,12 +21,14 @@ righty:
     # close the mouse grid if open
     user.grid_close()
 
+
 mid click:
     # close zoom if open
     tracking.zoom_cancel()
     mouse_click(2)
     # close the mouse grid
     user.grid_close()
+
 
 #see keys.py for modifiers.
 #defaults
@@ -42,6 +45,7 @@ mid click:
     key("{modifiers}:up")
     # close the mouse grid
     user.grid_close()
+
 <user.modifiers> righty:
     # close zoom if open
     tracking.zoom_cancel()
@@ -50,6 +54,7 @@ mid click:
     key("{modifiers}:up")
     # close the mouse grid
     user.grid_close()
+
 (dub click | duke):
     # close zoom if open
     tracking.zoom_cancel()
@@ -57,6 +62,7 @@ mid click:
     mouse_click()
     # close the mouse grid
     user.grid_close()
+
 (trip click | trip lick):
     # close zoom if open
     tracking.zoom_cancel()
@@ -65,19 +71,22 @@ mid click:
     mouse_click()
     # close the mouse grid
     user.grid_close()
+
 left drag | drag | drag start:
     # close zoom if open
     tracking.zoom_cancel()
     user.mouse_drag(0)
     # close the mouse grid
     user.grid_close()
+
 right drag | righty drag:
     # close zoom if open
     tracking.zoom_cancel()
     user.mouse_drag(1)
     # close the mouse grid
     user.grid_close()
-end drag | drag end: user.mouse_drag_end()
+
+end drag | drag end | drag off: user.mouse_drag_end()
 wheel down: user.mouse_scroll_down()
 wheel down here:
     user.mouse_move_center_active_window()
@@ -86,6 +95,14 @@ wheel tiny [down]: user.mouse_scroll_down(0.2)
 wheel tiny [down] here:
     user.mouse_move_center_active_window()
     user.mouse_scroll_down(0.2)
+wheel downer <number_small>: user.mouse_scroll_down_continuous(number_small)
+wheel downer: user.mouse_scroll_down_continuous()
+wheel downer here <number_small>:
+    user.mouse_move_center_active_window()
+    user.mouse_scroll_down_continuous(number_small)
+wheel downer here:
+    user.mouse_move_center_active_window()
+    user.mouse_scroll_down_continuous()
 wheel up: user.mouse_scroll_up()
 wheel up here:
     user.mouse_move_center_active_window()
@@ -94,6 +111,14 @@ wheel tiny up: user.mouse_scroll_up(0.2)
 wheel tiny up here:
     user.mouse_move_center_active_window()
     user.mouse_scroll_up(0.2)
+wheel upper <number_small>: user.mouse_scroll_up_continuous(number_small)
+wheel upper: user.mouse_scroll_up_continuous()
+wheel upper here <number_small>:
+    user.mouse_move_center_active_window()
+    user.mouse_scroll_up_continuous(number_small)
+wheel upper here:
+    user.mouse_move_center_active_window()
+    user.mouse_scroll_up_continuous()
 wheel gaze: user.mouse_gaze_scroll()
 wheel gaze here:
     user.mouse_move_center_active_window()

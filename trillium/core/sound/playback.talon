@@ -1,0 +1,6 @@
+(playback | play back) <number_small>: user.playback(number_small)
+(playback | play back) [last] <number_small> minutes: user.playback_minutes(number_small)
+(playback | play back) minutes <number_small>: user.playback_minutes(number_small)
+(playback | play back) pause: user.playback_pause()
+(playback | play back) resume: user.playback_resume()
+(playback | play back) stop: user.playback_stop()

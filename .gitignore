@@ -15,3 +15,7 @@ __pycache__
 .\#*
 # Vim (from https://github.com/github/gitignore/blob/main/Global/Vim.gitignore)
 [._]*.swp
+# Runtime state files
+saved_windows.json
+mode_indicator_state.json
+usage_log.csv

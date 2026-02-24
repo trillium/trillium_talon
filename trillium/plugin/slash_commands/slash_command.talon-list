@@ -1,0 +1,47 @@
+list: user.slash_command
+-
+
+# Help & info
+help: /help
+notes: /notes
+stats: /stats
+cost: /cost
+diagnose: /diagnose
+
+# Project
+init: /init
+review: /review
+compact: /compact
+add dir: /add-dir
+
+# Configuration
+config: /config
+model: /model
+theme: /theme
+output style: /output-style
+
+# Navigation & history
+plan: /plan
+resume: /resume
+rewind: /rewind
+export: /export
+
+# Account
+auth: /auth
+logout: /logout
+
+# Models
+models: /models
+model haiku: /model haiku
+model sonnet: /model sonnet
+model opus: /model opus
+
+# MCP
+M C P: /mcp
+
+# Session
+exit: /exit
+clear: /clear
+
+# Memory
+memory: /memory

@@ -28,6 +28,12 @@ mod.setting(
     desc="The amount to scroll up/down (equivalent to mouse wheel on Windows by default)",
 )
 mod.setting(
+    "mouse_wheel_reverse_direction",
+    type=bool,
+    default=False,
+    desc="Reverse scroll direction to compensate for OS-level natural scrolling",
+)
+mod.setting(
     "mouse_wheel_horizontal_amount",
     type=int,
     default=40,
@@ -78,6 +84,14 @@ mod.tag(
 )
 
 
+def _scroll(y: float = 0, x: float = 0):
+    """Wrapper around actions.mouse_scroll that respects the reverse direction setting."""
+    if settings.get("user.mouse_wheel_reverse_direction"):
+        actions.mouse_scroll(-y, -x)
+    else:
+        actions.mouse_scroll(y, x)
+
+
 @imgui.open(x=700, y=0)
 def gui_wheel(gui: imgui.GUI):
     gui.text(f"Scroll mode: {continuous_scroll_mode}")
@@ -92,22 +106,22 @@ class Actions:
     def mouse_scroll_up(amount: float = 1):
         """Scrolls up"""
         y = amount * settings.get("user.mouse_wheel_down_amount")
-        actions.mouse_scroll(-y)
+        _scroll(-y)
 
     def mouse_scroll_down(amount: float = 1):
         """Scrolls down"""
         y = amount * settings.get("user.mouse_wheel_down_amount")
-        actions.mouse_scroll(y)
+        _scroll(y)
 
     def mouse_scroll_left(amount: float = 1):
         """Scrolls left"""
         x = amount * settings.get("user.mouse_wheel_horizontal_amount")
-        actions.mouse_scroll(0, -x)
+        _scroll(0, -x)
 
     def mouse_scroll_right(amount: float = 1):
         """Scrolls right"""
         x = amount * settings.get("user.mouse_wheel_horizontal_amount")
-        actions.mouse_scroll(0, x)
+        _scroll(0, x)
 
     def mouse_scroll_continuous(direction: str, speed_factor: Optional[int] = None):
         """Scrolls continuously in the given direction"""
@@ -291,9 +305,9 @@ def scroll_continuous_helper():
     if scroll_delta == 0:
         scroll_delta = scroll_dir
     if is_continuous_scrolling_vertical:
-        actions.mouse_scroll(scroll_delta)
+        _scroll(scroll_delta)
     else:
-        actions.mouse_scroll(0, scroll_delta)
+        _scroll(0, scroll_delta)
 
 
 def scroll_gaze_helper():
@@ -311,7 +325,7 @@ def scroll_gaze_helper():
         "user.mouse_gaze_scroll_speed_multiplier"
     )
     amount = factor * (((y - midpoint) / (rect.height / 10)) ** 3)
-    actions.mouse_scroll(amount)
+    _scroll(amount)
 
 
 def get_window_containing(x: float, y: float):
