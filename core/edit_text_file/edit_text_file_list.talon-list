@@ -18,3 +18,7 @@ contacts json: private/contacts.json
 contacts csv: private/contacts.csv
 
 settings: settings.talon
+
+speak timing: ~/code/speak/config/trim.yaml
+speak rewrites: ~/code/speak/config/rewrites.json
+speak voices: ~/code/speak/config/voices.json
