@@ -42,8 +42,9 @@ class WinActions:
 class MacActions:
     def edit_text_file(file: str):
         path = get_full_path(file)
-        # -t means try to open in a text editor.
-        open_with_subprocess(path, ["/usr/bin/open", "-t", path.expanduser().resolve()])
+        # Open in VS Code / Cursor via 'code' CLI (non-blocking, full path).
+        resolved = str(path.expanduser().resolve())
+        subprocess.Popen(["/opt/homebrew/bin/code", resolved], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 @ctx_linux.action_class("user")
@@ -74,7 +75,7 @@ def open_with_subprocess(path: Path, args: list[str | Path]):
 
 
 def get_full_path(file: str) -> Path:
-    path = Path(file)
+    path = Path(file).expanduser()
     if not path.is_absolute():
         path = REPO_DIR / path
     return path.resolve()

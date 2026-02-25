@@ -213,6 +213,15 @@ OPPOSITES = {
         "trigger": "volume up",
         "action": ("actions", "key", ("volup",))
     },
+    # speak history navigation (tag-gated: user.speak_history_active)
+    "next": {
+        "trigger": "previous",
+        "action": ("user", "speak_history_previous", ())
+    },
+    "previous": {
+        "trigger": "next",
+        "action": ("user", "speak_history_next", ())
+    },
     # reverse command - opposite is to move in original direction
     "reverse": {
         "trigger": "original",

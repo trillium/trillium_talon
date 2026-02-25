@@ -2,5 +2,7 @@
   {"command": "copy file name", "description": "cursorless scope modifier — filename with extension (VS Code)"},
   {"command": "copy base", "description": "cursorless scope modifier — filename without extension (VS Code)"},
   {"command": "bring reference", "description": "cursorless scope modifier — references (VS Code)"},
-  {"command": "git revert", "description": "discard changes in current file (VS Code)"}
+  {"command": "git revert", "description": "discard changes in current file (VS Code)"},
+  {"command": "customize speak timing", "description": "open punctuation gap config (trim.json) — controls pause duration between clauses"},
+  {"command": "customize speak rewrites", "description": "open pronunciation/phrase rewrite config (rewrites.json)"}
 ]
