@@ -4,3 +4,4 @@ hostname: laptop
 -
 
 ^wake up laptop$: speech.enable()
+^only laptop [<phrase>]$: speech.enable()

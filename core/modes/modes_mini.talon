@@ -5,10 +5,5 @@ hostname: trillium-mini
 -
 
 ^sleep mini [<phrase>]$: speech.disable()
-
-^only mini [<phrase>]$:
-    speech.disable()
-    sleep(200ms)
-    speech.enable()
-
 ^only laptop [<phrase>]$: speech.disable()
+^wake up laptop$: speech.disable()
