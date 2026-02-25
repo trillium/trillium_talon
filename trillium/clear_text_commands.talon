@@ -17,6 +17,10 @@ mode: dictation
     user.clear_last_dictation()
     key(enter)
 
+^destroy <user.text> {user.dictation_ender}$:
+    user.clear_left_by_text(text)
+    key(enter)
+
 ^destroy <user.text>$:
     user.clear_left_by_text(text)
 
