@@ -25,7 +25,7 @@ visible, visible
 # 2023-12-22 23:28:25 - New entries automatically added by cursorless
 grand, ancestor
 
-# Disabled: not recognized by installed cursorless version (2026-02-16)
-# base, filenameWithoutExtension
-# file name, filename
-# reference, reference
+# 2026-01-24 15:52:28 - New entries automatically added by cursorless
+base, filenameWithoutExtension
+file name, filename
+reference, reference
