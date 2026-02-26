@@ -1,0 +1,33 @@
+// Cursorless VSCode settings — tracked in trillium_talon/cursorless-settings/
+// Apply to a machine with: python3 trillium_talon/cursorless-settings/apply-vscode-settings.py
+{
+  "cursorless.hatSizeAdjustment": 10,
+  "cursorless.wordSeparators": ["_", "-"],
+  "cursorless.commandHistory": true,
+  "cursorless.experimental.hatStability": "greedy",
+  "cursorless.colors.light": {
+    "blue": "#0d2a85",
+    "userColor1": "#4da6a6",
+    "userColor2": "#000000-#ffffff",
+  },
+  "cursorless.colors.dark": {
+    "userColor2": "#8E44AD",
+    "userColor1": "#000000-#ffffff",
+    "userColor3": "#ffffff-#dddddd",
+    "userColor4": "#00D1D1-#00FFFF",
+  },
+  "cursorless.hatEnablement.colors": {
+    "userColor1": true,
+    "userColor2": true,
+    "userColor3": true,
+    "userColor4": true,
+  },
+  "cursorless.hatEnablement.shapes": {
+    "eye": true,
+    "fox": true,
+    "curve": true,
+    "bolt": true,
+    "play": true,
+    "ex": true,
+  },
+}
