@@ -121,13 +121,28 @@ def cleanup_closed_windows(closed_window: ui.Window):
 @mod.action_class
 class Actions:
     def save_window(name: str):
-        """Save the currently focused window with the given name"""
+        """Save the currently focused window with the given name.
+        If this window is already saved under a different name, the new
+        name is automatically added as an alias of the existing entry."""
         if is_forbidden(name):
             recall_overlay.flash(f'"{name}" is a reserved word')
             return
 
         window = ui.active_window()
         app_name = window.app.name
+
+        # Check if this window is already saved under a different name
+        existing_name = find_name_for_window_id(window.id)
+        if existing_name and existing_name != name:
+            # Add as alias instead of creating a duplicate
+            aliases = saved_windows[existing_name].get("aliases", [])
+            if name not in aliases:
+                aliases.append(name)
+                saved_windows[existing_name]["aliases"] = aliases
+                save_to_disk()
+                update_window_list()
+                recall_overlay.flash(f'alias: {name} -> {existing_name}')
+            return
 
         # Detect path for terminals and VS Code
         path = None

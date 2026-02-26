@@ -1,6 +1,6 @@
 # Voice commands for the window recall system
 #
-# Save a window:     "recall assign edgar" or "recall save edgar"
+# Save a window:     "recall save edgar" or "save recall edgar"
 # Switch to it:      "edgar"
 # Dictate into it:   "edgar hello world"
 # Press number:      "edgar 1"
@@ -26,7 +26,7 @@
 # Help screen:       "recall help"
 # Dismiss overlay:   "recall close"
 
-^(recall save | save recall | recall assign) <user.text>$:
+^(recall save | save recall) <user.text>$:
     user.save_window(text)
 
 ^<user.saved_window_names>:
