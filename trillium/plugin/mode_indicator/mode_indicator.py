@@ -89,25 +89,25 @@ mod.setting(
 mod.setting(
     "mode_indicator_bar_left_x",
     type=float,
-    default=0.32,
+    default=0.37,
     desc="Left edge of bar (0-1 fraction of screen width)",
 )
 mod.setting(
     "mode_indicator_bar_right_x",
     type=float,
-    default=0.62,
+    default=0.51,
     desc="Right edge of bar (0-1 fraction of screen width)",
 )
 mod.setting(
     "mode_indicator_text_left_x",
     type=float,
-    default=0.36,
+    default=0.38,
     desc="Column 1 text X-position (0-1). 0=left, 1=right",
 )
 mod.setting(
     "mode_indicator_text_right_x",
     type=float,
-    default=0.556,
+    default=0.45,
     desc="Column 2 text X-position (0-1). 0=left, 1=right",
 )
 mod.setting(
