@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "hostname": "trillium-mini",
+  "timestamp": "2026-02-26T05:25:39.219800+00:00",
+  "talon_user_path": "/Users/trilliumsmith/.talon/user",
+  "directories": {
+    "cursorless-settings": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "actions.csv",
+          "size": 1477,
+          "mtime": "2026-02-19T16:59:20.131030",
+          "sha256": "a5344808e21191abb4d9cf002c58cb7138f332353212c688abb61c466d56c86c"
+        },
+        {
+          "path": "experimental/actions_custom.csv",
+          "size": 28,
+          "mtime": "2026-02-19T16:59:20.172529",
+          "sha256": "ee735ace542b475856a79a539b49476d73b6db429227d90198990cc016bc98c8"
+        },
+        {
+          "path": "experimental/experimental_actions.csv",
+          "size": 75,
+          "mtime": "2026-02-19T16:59:20.164728",
+          "sha256": "59a4397b238238b5572ea846707cc7e1519be7aa43446e869b01474770bf724e"
+        },
+        {
+          "path": "experimental/regex_scope_types.csv",
+          "size": 19,
+          "mtime": "2026-02-19T16:59:20.173733",
+          "sha256": "9c51d526d47384ad006f05094093e3e53447bb7dcac1676d07ab3bcf28197d1a"
+        },
+        {
+          "path": "hat_styles.csv",
+          "size": 830,
+          "mtime": "2026-02-20T15:31:55.075554",
+          "sha256": "c6e13648d9c0227562f6653371948f786e70b2eea79833461480cf030db6d13f"
+        },
+        {
+          "path": "modifier_scope_types.csv",
+          "size": 1274,
+          "mtime": "2026-02-19T16:59:20.168621",
+          "sha256": "65b693150d7a5207301419f08f2c9bec0f5e5d24d28e26b40551f8ac74fa2a21"
+        },
+        {
+          "path": "modifiers.csv",
+          "size": 562,
+          "mtime": "2026-02-21T00:37:20.481221",
+          "sha256": "dd65e78a86f84bd54d6478cc37ce89a01cd9b041a8cba3946d7e0da409f0e9cf"
+        },
+        {
+          "path": "paired_delimiters.csv",
+          "size": 341,
+          "mtime": "2026-02-19T16:59:20.155286",
+          "sha256": "cf6865c2f62042e3dcdc86f589747f6174fcb8a2e0888a878ca4d52ee94bd5e4"
+        },
+        {
+          "path": "positions.csv",
+          "size": 91,
+          "mtime": "2026-02-19T16:59:20.150762",
+          "sha256": "0e1ef9a8a31c8e729ffc606e22e897e04254c7f0d2dd6f15a51449dd6e3e769e"
+        },
+        {
+          "path": "scope_visualizer.csv",
+          "size": 143,
+          "mtime": "2026-02-19T16:59:20.162689",
+          "sha256": "1b400769e1bea1bf2e3c72250f4f1873964a90a5b0f2cc89af1bd962fb48e1cb"
+        },
+        {
+          "path": "special_marks.csv",
+          "size": 221,
+          "mtime": "2026-02-19T16:59:20.159722",
+          "sha256": "5715a43d363e69b9077d5c11f5e49cabd0a453542acecdecd86c7ba76ae55dee"
+        },
+        {
+          "path": "target_connectives.csv",
+          "size": 201,
+          "mtime": "2026-02-19T16:59:20.138732",
+          "sha256": "d1df35fe6c0843dd45002b195ae35540f03daba21e8e09296393933e93ca0b81"
+        }
+      ]
+    },
+    "cursorless-talon": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/cursorless-talon.git",
+          "upstream": "https://github.com/cursorless-dev/cursorless-talon.git"
+        },
+        "branch": "main",
+        "head_sha": "6fa38d547327b38bc2572ecec15bef69b87b4d67",
+        "tracking": "origin/main",
+        "ahead": 0,
+        "behind": 0,
+        "dirty_files": [
+          {
+            "status": "M",
+            "path": "src/actions/generate_snippet.py"
+          },
+          {
+            "status": "M",
+            "path": "src/actions/wrap.py"
+          },
+          {
+            "status": "M",
+            "path": "src/cheatsheet/sections/actions.py"
+          },
+          {
+            "status": "M",
+            "path": "src/cheatsheet/sections/modifiers.py"
+          },
+          {
+            "status": "M",
+            "path": "src/csv_overrides.py"
+          },
+          {
+            "status": "M",
+            "path": "src/cursorless.talon"
+          },
+          {
+            "status": "M",
+            "path": "src/modifiers/modifiers.py"
+          },
+          {
+            "status": "M",
+            "path": "src/scope_visualizer.py"
+          },
+          {
+            "status": "M",
+            "path": "src/spoken_forms.json"
+          },
+          {
+            "status": "M",
+            "path": "src/spoken_forms.py"
+          }
+        ],
+        "untracked_files": [
+          "src/modifiers/reference.py"
+        ],
+        "stash_count": 0,
+        "submodules": []
+      }
+    },
+    "parrot.py": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/parrot.py.git",
+          "upstream": "https://github.com/chaosparrot/parrot.py.git"
+        },
+        "branch": "master",
+        "head_sha": "3d6a696e23a0d31b48be34fbc2b27088ae804109",
+        "tracking": "origin/master",
+        "ahead": 0,
+        "behind": 0,
+        "dirty_files": [],
+        "untracked_files": [],
+        "stash_count": 0,
+        "submodules": []
+      }
+    },
+    "rango-talon": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/david-tejada/rango-talon.git"
+        },
+        "branch": "main",
+        "head_sha": "41661231ad0ee7e5ea787fe3e640fecffa88e936",
+        "tracking": "origin/main",
+        "ahead": 0,
+        "behind": 0,
+        "dirty_files": [
+          {
+            "status": "M",
+            "path": "src/modes/direct_clicking.talon"
+          }
+        ],
+        "untracked_files": [],
+        "stash_count": 0,
+        "submodules": []
+      }
+    },
+    "talon-gaze-ocr": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/talon-gaze-ocr.git",
+          "upstream": "https://github.com/wolfmanstout/talon-gaze-ocr.git"
+        },
+        "branch": "trillium",
+        "head_sha": "1eef6e6e26fae16b975e9a6b0a1b89fbf48b31f3",
+        "tracking": null,
+        "ahead": null,
+        "behind": null,
+        "dirty_files": [],
+        "untracked_files": [],
+        "stash_count": 0,
+        "submodules": [
+          {
+            "path": ".subtrees/rapidfuzz",
+            "nested_submodules": [
+              {
+                "name": "extern/rapidfuzz-cpp",
+                "path": "extern/rapidfuzz-cpp",
+                "url": "https://github.com/rapidfuzz/rapidfuzz-cpp.git"
+              },
+              {
+                "name": "extern/taskflow",
+                "path": "extern/taskflow",
+                "url": "https://github.com/taskflow/taskflow.git"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "talon_backup_repo_user": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "trillium/workspace/workspaces.json",
+          "size": 1427,
+          "mtime": "2026-02-20T09:40:04.209010",
+          "sha256": "0c4644d043273b12b946b14d4970815164f0bbef2e31e4fa5a0a2d3c32dbebf1"
+        }
+      ]
+    },
+    "talon_mcp": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/talon_mcp.git"
+        },
+        "branch": "main",
+        "head_sha": "230713b1846c383ad498689389d2c02d28bae867",
+        "tracking": "origin/main",
+        "ahead": 0,
+        "behind": 0,
+        "dirty_files": [],
+        "untracked_files": [],
+        "stash_count": 0,
+        "submodules": []
+      }
+    },
+    "trillium_talon": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/trillium_talon.git",
+          "upstream": "https://github.com/talonhub/community.git"
+        },
+        "branch": "mini",
+        "head_sha": "c00de03529dd08a4522fcf56750c73f1a1220aba",
+        "tracking": "origin/mini",
+        "ahead": 1,
+        "behind": 0,
+        "dirty_files": [
+          {
+            "status": "M",
+            "path": "trillium/keys.talon"
+          }
+        ],
+        "untracked_files": [
+          "core/system_paths-trillium-mini.talon-list",
+          "trillium/blade_phrases.talon-list"
+        ],
+        "stash_count": 0,
+        "submodules": []
+      }
+    }
+  },
+  "hostname_files": [
+    {
+      "path": "trillium_talon/core/modes/modes_laptop.talon",
+      "hostnames_referenced": [
+        "laptop"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/modes/modes_mini.talon",
+      "hostnames_referenced": [
+        "trillium-mini"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/modes/sleep_mode_laptop.talon",
+      "hostnames_referenced": [
+        "laptop"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/modes/sleep_mode_mini.talon",
+      "hostnames_referenced": [
+        "trillium-mini"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-laptop.talon-list",
+      "hostnames_referenced": [
+        "laptop"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-mac-mini.lan.talon-list",
+      "hostnames_referenced": [
+        "mac-mini.lan"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-macbookpro.lan.talon-list",
+      "hostnames_referenced": [
+        "macbookpro.lan"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-mini.talon-list",
+      "hostnames_referenced": [
+        "mini"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-trillium-mini.talon-list",
+      "hostnames_referenced": [
+        "trillium-mini"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-trilliums-MacBook-Pro.talon-list",
+      "hostnames_referenced": [
+        "trilliums-MacBook-Pro"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-trilliums-mbp.lan.talon-list",
+      "hostnames_referenced": [
+        "trilliums-mbp.lan"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-trilliums-mini.lan.talon-list",
+      "hostnames_referenced": [
+        "trilliums-mini.lan"
+      ]
+    },
+    {
+      "path": "trillium_talon/trillium/core/system_paths-MacBookPro.lan1.talon-list",
+      "hostnames_referenced": [
+        "MacBookPro.lan1"
+      ]
+    }
+  ]
+}
