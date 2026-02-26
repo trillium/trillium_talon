@@ -5,7 +5,7 @@ Merges cursorless.* keys into the existing settings file, preserving all other s
 Handles JSONC (trailing commas, comments) in both input and output.
 
 Usage:
-    python3 apply-vscode-settings.py [--dry-run]
+    python3 ~/.talon/user/trillium_talon/.scripts/apply-vscode-settings.py [--dry-run]
 """
 
 import json
@@ -20,7 +20,7 @@ VSCODE_SETTINGS_PATHS = [
     Path.home() / ".config/Code/User/settings.json",  # Linux
 ]
 
-SOURCE = Path(__file__).parent / "vscode-settings.jsonc"
+SOURCE = Path(__file__).parent.parent / "cursorless-settings/vscode-settings.jsonc"
 
 
 def strip_jsonc(text: str) -> str:
