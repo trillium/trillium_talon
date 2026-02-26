@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "hostname": "macbookpro.lan",
-  "timestamp": "2026-02-26T05:43:38.602712+00:00",
+  "timestamp": "2026-02-26T05:50:33.467681+00:00",
   "talon_user_path": "/Users/trilliumsmith/.talon/user",
   "directories": {
     "Mouse Control Chicken Data": {
@@ -2728,7 +2728,7 @@
           "upstream": "https://github.com/knausj85/knausj_talon.git"
         },
         "branch": "macbook",
-        "head_sha": "d08b381eb63f5c7aeb74ea63a992e452696edd73",
+        "head_sha": "d4a3e10b07904780cc9b513bf4427e6fca48608d",
         "tracking": null,
         "ahead": null,
         "behind": null,
@@ -2736,11 +2736,13 @@
           {
             "status": "M",
             "path": ".beads/config.yaml"
+          },
+          {
+            "status": "M",
+            "path": ".scripts/talon_snapshot.py"
           }
         ],
-        "untracked_files": [
-          ".scripts/talon_snapshot.py"
-        ],
+        "untracked_files": [],
         "stash_count": 0,
         "is_fork": true,
         "submodules": []
@@ -2966,6 +2968,3236 @@
       "path": "trillium_talon/trillium/mode_indicator/mode_indicator-macbookpro.lan.talon",
       "hostnames_referenced": [
         "macbookpro.lan"
+      ]
+    }
+  ],
+  "collisions": [
+    {
+      "filename": "__init__.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/vendor/__init__.py",
+          "sanitized_filename": "cursorless-talon--src--vendor--__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "copied": true
+        },
+        {
+          "rel_path": "most_recent_command_playback/__init__.py",
+          "sanitized_filename": "most_recent_command_playback--__init__.py",
+          "sha256": "3628487b551b3f70404fba953fe7539ad6ce45f2c27862e660787f1cad4d4382",
+          "copied": true
+        },
+        {
+          "rel_path": "most_recent_command_playback/utils/__init__.py",
+          "sanitized_filename": "most_recent_command_playback--utils--__init__.py",
+          "sha256": "bdf0bcc1e451b416b454c85444223f9594b53ee1102ea3b5053c3e9b7078e56a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/friction/__init__.py",
+          "sanitized_filename": "trillium--friction--__init__.py",
+          "sha256": "ee3f75a1e2b85c9519f7492e3c4de05526f418b55dfc3ee3d2698baf40d950bd",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/ticket/__init__.py",
+          "sanitized_filename": "trillium--ticket--__init__.py",
+          "sha256": "71abdf66ea5330b57855a6f213659b17233f602436b05ee38e13a40eef9ea94d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--__init__.py",
+          "sha256": "029710285a8dbfb2d1fbe513a57002bf28d172127dbce8492646be4b95d0f38a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/core/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--core--__init__.py",
+          "sha256": "3f3e68d753718394044ccdfc2c4b86c3505de2d22a3e4a1070c81245ab731b9f",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/core/geometry/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--core--geometry--__init__.py",
+          "sha256": "db2453dc5d6b65d949aaa84a76ccfaaffcdc373d5b1b9e491cdfd1f1fa6cf55c",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/util/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--util--__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/input/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--input--__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/features/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--features--__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/features/shared/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--features--shared--__init__.py",
+          "sha256": "99c4f30ab1dd501c8a89cd4b2dc3bf77125cdd5466b6da6fd0bd84103caee34b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/features/clock_letters/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--features--clock_letters--__init__.py",
+          "sha256": "f552507054e2d504b96d476320b4228281ebffa0470f81eb433e4e16fe5af9dd",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/talon_integration/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--talon_integration--__init__.py",
+          "sha256": "511b16723606602d206a656d1bf61fc14db5e2b0358dbb692b8d46ae7867b54b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/rendering/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--rendering--__init__.py",
+          "sha256": "9c719e09c72ce3515ae88fbb827ff76d1bdf8b3adcb7f7fe5a2c9124200f1632",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/rendering/drawing/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--rendering--drawing--__init__.py",
+          "sha256": "801c7c966a1c58831665fecddda1bf31639c1627cf74c4fd77a38f0ab29d9214",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/rendering/canvas/__init__.py",
+          "sanitized_filename": "trillium--mouse-clock--src--rendering--canvas--__init__.py",
+          "sha256": "5888abed2080d4dc9c7518176be912cc4e598c1e042805dd1a88ff915090ef3a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/test/stubs/talon/__init__.py",
+          "sanitized_filename": "trillium_talon--test--stubs--talon--__init__.py",
+          "sha256": "d3316d64c69f9ec93b38dee4fa88c53badf89579e48b51bf346f18e0cd4596ff",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/friction/__init__.py",
+          "sanitized_filename": "trillium_talon--trillium--friction--__init__.py",
+          "sha256": "ee3f75a1e2b85c9519f7492e3c4de05526f418b55dfc3ee3d2698baf40d950bd",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/ticket/__init__.py",
+          "sanitized_filename": "trillium_talon--trillium--ticket--__init__.py",
+          "sha256": "71abdf66ea5330b57855a6f213659b17233f602436b05ee38e13a40eef9ea94d",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "_wav.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/utils/_wav.py",
+          "sanitized_filename": "trillium--utils--_wav.py",
+          "sha256": "5abf31b68fcf31151060f877d1883762d6f52b0b03a3d79836375c448e8f06ef",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/utils/_wav.py",
+          "sanitized_filename": "trillium_talon--trillium--utils--_wav.py",
+          "sha256": "5abf31b68fcf31151060f877d1883762d6f52b0b03a3d79836375c448e8f06ef",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "abort.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/core/on_phrase/abort/abort.py",
+          "sanitized_filename": "trillium--core--on_phrase--abort--abort.py",
+          "sha256": "1de79587659ca11104ffd825b81d16941f2cd853d32d3c0bd521d9f0d575bc9e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/core/on_phrase/abort/abort.py",
+          "sanitized_filename": "trillium_talon--trillium--core--on_phrase--abort--abort.py",
+          "sha256": "1de79587659ca11104ffd825b81d16941f2cd853d32d3c0bd521d9f0d575bc9e",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "actions.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/actions/actions.py",
+          "sanitized_filename": "cursorless-talon--src--actions--actions.py",
+          "sha256": "6b84ef2546c2603827982bd8c50d83b8751995bf2289deb430d781a6c7a1c50a",
+          "copied": true
+        },
+        {
+          "rel_path": "cursorless-talon/src/cheatsheet/sections/actions.py",
+          "sanitized_filename": "cursorless-talon--src--cheatsheet--sections--actions.py",
+          "sha256": "d575f4c7110cf2a79eb16759f1417c343e7d0292c88f996d93c94f7c82f5a95d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/talon_integration/actions.py",
+          "sanitized_filename": "trillium--mouse-clock--src--talon_integration--actions.py",
+          "sha256": "664f5570fc854b85b975a146ea3a20e4f1dea990dcfed4dc325a21223bfd15f0",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "agent.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/ticket/agent.py",
+          "sanitized_filename": "trillium--ticket--agent.py",
+          "sha256": "88cabf9ca33fd6ae7643229a371ee75f4b1c72f9d4284d5ed2af101c356a63fb",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/ticket/agent.py",
+          "sanitized_filename": "trillium_talon--trillium--ticket--agent.py",
+          "sha256": "88cabf9ca33fd6ae7643229a371ee75f4b1c72f9d4284d5ed2af101c356a63fb",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "animation.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse-clock/src/core/animation.py",
+          "sanitized_filename": "trillium--mouse-clock--src--core--animation.py",
+          "sha256": "d933a841da9abe73b31887fe00531d7183c2d0110234fd6ae111364057542b5b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/rendering/animation.py",
+          "sanitized_filename": "trillium--mouse-clock--src--rendering--animation.py",
+          "sha256": "0c3ea42eb42cf38a536d0f000b419c048184a3c35fa16eafe52e3c12fe618fc7",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "anki_tools.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/anki_tools.talon",
+          "sanitized_filename": "trillium--anki_tools.talon",
+          "sha256": "370a8ba1401736c789c5bc5c67d645789d261a25ebeabdbb0162e23ab5eb95c8",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/anki_tools.talon",
+          "sanitized_filename": "trillium_talon--trillium--anki_tools.talon",
+          "sha256": "370a8ba1401736c789c5bc5c67d645789d261a25ebeabdbb0162e23ab5eb95c8",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "app_switcher.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_obs/window_management/app_switcher.py",
+          "sanitized_filename": "trillium_obs--window_management--app_switcher.py",
+          "sha256": "5dd7fa9d680a4c3c7f7856df04519c929b18c792489c658ba82eaed1cf0b02c9",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/app_switcher/app_switcher.py",
+          "sanitized_filename": "trillium_talon--core--app_switcher--app_switcher.py",
+          "sha256": "8f9bd44ce2f673f8f0fcc97c568b246b0bc1412cfe04c8dacda0b11f939dd79a",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "bingo.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/hex_grid/bingo.py",
+          "sanitized_filename": "trillium--hex_grid--bingo.py",
+          "sha256": "70c003326e023129a5c06b256196e7f1fd3cf223b9e76765490fba87df16fb65",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/hex_grid/bingo.py",
+          "sanitized_filename": "trillium_talon--trillium--hex_grid--bingo.py",
+          "sha256": "70c003326e023129a5c06b256196e7f1fd3cf223b9e76765490fba87df16fb65",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "bingo.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/hex_grid/bingo.talon",
+          "sanitized_filename": "trillium--hex_grid--bingo.talon",
+          "sha256": "b21c222be9382351a8b5f98e3b021ef8ff641aa1d787904a838c4e630a705466",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/hex_grid/bingo.talon",
+          "sanitized_filename": "trillium_talon--trillium--hex_grid--bingo.talon",
+          "sha256": "b21c222be9382351a8b5f98e3b021ef8ff641aa1d787904a838c4e630a705466",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "boolean_print.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/boolean_print/boolean_print.py",
+          "sanitized_filename": "trillium--boolean_print--boolean_print.py",
+          "sha256": "9f45ee9edd35b414507310894fed83b5ddf5efad328f83eac24cd4c32f24ee8f",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/_boolean_print/boolean_print.py",
+          "sanitized_filename": "trillium_talon--trillium--_boolean_print--boolean_print.py",
+          "sha256": "9f45ee9edd35b414507310894fed83b5ddf5efad328f83eac24cd4c32f24ee8f",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "brightness.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/brightness.talon",
+          "sanitized_filename": "trillium--brightness.talon",
+          "sha256": "0a32d5a3558e46ac66c75086ec6241f446745ad870539aec1bbdd5e860f1e531",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/brightness.talon",
+          "sanitized_filename": "trillium_talon--trillium--brightness.talon",
+          "sha256": "8a83f71d7f4be356076a000541fa1fc6b00e6d52a9668545a778fa043b5d7a44",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "brightness_w_app_vscode.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/brightness_w_app_vscode.talon",
+          "sanitized_filename": "trillium--brightness_w_app_vscode.talon",
+          "sha256": "8b5eaa8f54700b1f0a75bd71cc7ce02dc5305b086aedecb56465ee0022c9e2c5",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/brightness_w_app_vscode.talon",
+          "sanitized_filename": "trillium_talon--trillium--brightness_w_app_vscode.talon",
+          "sha256": "8b5eaa8f54700b1f0a75bd71cc7ce02dc5305b086aedecb56465ee0022c9e2c5",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "cancel_in_flight_phrase.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/cancel_in_flight_phrase.py",
+          "sanitized_filename": "trillium--cancel_in_flight_phrase.py",
+          "sha256": "b1fc260691ed62040b3ef93868cccb8dad4914c38ec750bd9f60e665f49bea57",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/cancel_in_flight_phrase.py",
+          "sanitized_filename": "trillium_talon--core--cancel_in_flight_phrase.py",
+          "sha256": "5422664266c06aded30556ca43581f84b10a4dd7dd21300815258d02a198a707",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "centroid_mouse.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse_grid_centroid/centroid_mouse.talon",
+          "sanitized_filename": "trillium--mouse_grid_centroid--centroid_mouse.talon",
+          "sha256": "72145231bcb3bcbea916c83528b02e9b4f3a08ea391c89edc24b2176db5790b5",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/mouse_grid_centroid/centroid_mouse.talon",
+          "sanitized_filename": "trillium_talon--trillium--mouse_grid_centroid--centroid_mouse.talon",
+          "sha256": "e719e1407c6c7b93cf531e0967aa0a5d64c9bbbb9af1f39e212a1ce9ffeb0e9b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "centroid_mouse_grid.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse_grid_centroid/centroid_mouse_grid.py",
+          "sanitized_filename": "trillium--mouse_grid_centroid--centroid_mouse_grid.py",
+          "sha256": "cd34ae70c6dc027021847abdba9916ab710d25c31edd29607a66d4b011826cf8",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/mouse_grid_centroid/centroid_mouse_grid.py",
+          "sanitized_filename": "trillium_talon--trillium--mouse_grid_centroid--centroid_mouse_grid.py",
+          "sha256": "c174d4d77349e94155c4357e0b43bbdfdaee5ba3d0b8013ac83522f053d1db32",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "centroid_mouse_grid_always.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse_grid_centroid/centroid_mouse_grid_always.talon",
+          "sanitized_filename": "trillium--mouse_grid_centroid--centroid_mouse_grid_always.talon",
+          "sha256": "a55e9f4670a48d6be144211f1b869d16c57f12d20f066929859e4b0e0e52e73d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/mouse_grid_centroid/centroid_mouse_grid_always.talon",
+          "sanitized_filename": "trillium_talon--trillium--mouse_grid_centroid--centroid_mouse_grid_always.talon",
+          "sha256": "a55e9f4670a48d6be144211f1b869d16c57f12d20f066929859e4b0e0e52e73d",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "centroid_mouse_grid_open.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse_grid_centroid/centroid_mouse_grid_open.talon",
+          "sanitized_filename": "trillium--mouse_grid_centroid--centroid_mouse_grid_open.talon",
+          "sha256": "931b124838c6cb0ba8393968ed8034d80c9d4917d079a31aeb416db82ea70636",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/mouse_grid_centroid/centroid_mouse_grid_open.talon",
+          "sanitized_filename": "trillium_talon--trillium--mouse_grid_centroid--centroid_mouse_grid_open.talon",
+          "sha256": "931b124838c6cb0ba8393968ed8034d80c9d4917d079a31aeb416db82ea70636",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "centroid_mouse_grid_settings.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse_grid_centroid/centroid_mouse_grid_settings.talon",
+          "sanitized_filename": "trillium--mouse_grid_centroid--centroid_mouse_grid_settings.talon",
+          "sha256": "91d425222485f28223ffe8cffd941ed49dc2cf953417ab8cf7f1da3f2b8355e2",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/mouse_grid_centroid/centroid_mouse_grid_settings.talon",
+          "sanitized_filename": "trillium_talon--trillium--mouse_grid_centroid--centroid_mouse_grid_settings.talon",
+          "sha256": "91d425222485f28223ffe8cffd941ed49dc2cf953417ab8cf7f1da3f2b8355e2",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "change_mic.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/microphone/change_mic.py",
+          "sanitized_filename": "trillium--microphone--change_mic.py",
+          "sha256": "d8f3d2f259ba5e808ef3f08c869c775b7fb93cec9fe26b508249d0e8c00dc60a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/microphone/change_mic.py",
+          "sanitized_filename": "trillium_talon--trillium--microphone--change_mic.py",
+          "sha256": "d8f3d2f259ba5e808ef3f08c869c775b7fb93cec9fe26b508249d0e8c00dc60a",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "change_mic.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/microphone/change_mic.talon",
+          "sanitized_filename": "trillium--microphone--change_mic.talon",
+          "sha256": "61bea68a923edffbfe96e89d72965b9fd3c5b88e7469ce3d41a74c3b765d93da",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/microphone/change_mic.talon",
+          "sanitized_filename": "trillium_talon--trillium--microphone--change_mic.talon",
+          "sha256": "61bea68a923edffbfe96e89d72965b9fd3c5b88e7469ce3d41a74c3b765d93da",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "check_community_repo.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/check_community_repo.py",
+          "sanitized_filename": "cursorless-talon--src--check_community_repo.py",
+          "sha256": "574a238ad10ff661de501f6b8e539e9a369fc0feedacac4bffdebeb7095f6d63",
+          "copied": true
+        },
+        {
+          "rel_path": "rango-talon/src/check_community_repo.py",
+          "sanitized_filename": "rango-talon--src--check_community_repo.py",
+          "sha256": "005a022aa0497aa4a203a73e9df87e7e3ff1b562981451a9989ef27fafda5d34",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "chrome.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/chrome.talon",
+          "sanitized_filename": "trillium--chrome.talon",
+          "sha256": "2c8a6f8257d4fa27ed0095671fa339bd75d936ebbaea7d33e6c244689f376210",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/chrome.talon",
+          "sanitized_filename": "trillium_talon--trillium--chrome.talon",
+          "sha256": "2c8a6f8257d4fa27ed0095671fa339bd75d936ebbaea7d33e6c244689f376210",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/chrome/chrome.talon",
+          "sanitized_filename": "trillium_talon--apps--chrome--chrome.talon",
+          "sha256": "3ef525c29a7acaa0bef01c486624e333665d7b7c0737c2ea046ee9b252b4b543",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "clear_text_commands.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/clear_text_commands.py",
+          "sanitized_filename": "trillium--clear_text_commands.py",
+          "sha256": "6f1498b72a0c4e8f090751538d4fd8859385da93c8609910d8302b5cbc35c6b4",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/clear_text_commands.py",
+          "sanitized_filename": "trillium_talon--trillium--clear_text_commands.py",
+          "sha256": "f8b1c226a5289b374fb81d8a80639c35ace67d7f22aa4e83d3a049e2709192f3",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "clear_text_commands.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/clear_text_commands.talon",
+          "sanitized_filename": "trillium--clear_text_commands.talon",
+          "sha256": "add05077a0ba9177c4a75f56d54e5af18feeba1aeb5e4ed8324348274c9871ec",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/clear_text_commands.talon",
+          "sanitized_filename": "trillium_talon--trillium--clear_text_commands.talon",
+          "sha256": "44277c7fa307b1c18de3e8053f8b808ada37e5ec5df0ffa6558bf7a11c2e0b73",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "clock.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse-clock/src/core/geometry/clock.py",
+          "sanitized_filename": "trillium--mouse-clock--src--core--geometry--clock.py",
+          "sha256": "b92bf9de73074fb969c190a9c63a68ba2aaa2d5ef3552a2e5236c624d800e78a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/rendering/canvas/clock.py",
+          "sanitized_filename": "trillium--mouse-clock--src--rendering--canvas--clock.py",
+          "sha256": "84c7ca5a39a57f4847eb5861ce18e364374fb5c3ecb34facb19aa61072ea71d5",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "code_common_function.talon-list",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/lang/go/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--go--code_common_function.talon-list",
+          "sha256": "40267942edb0887f17ca8ae1763270fd3f744caf73e61c389ef62ef216f61d6e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/python/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--python--code_common_function.talon-list",
+          "sha256": "3066c4f70c26047d201ea43d67239fecbc609712f293952a5ed567f6f7bb9b3d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/css/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--css--code_common_function.talon-list",
+          "sha256": "02be3cf16ad69340da9e5dc9bfe8d413c03d01ece47039e72199987c9716d915",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/r/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--r--code_common_function.talon-list",
+          "sha256": "6593e67627b926b73d86d383ce7f68cb60f0fce24a40dbfd1d1f9e5aef694086",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/lua/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--lua--code_common_function.talon-list",
+          "sha256": "cf619494fdf71efedc455b5dc380109af3a06309e4c18b8f5f35cb8bc4e2397f",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/cpp/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--cpp--code_common_function.talon-list",
+          "sha256": "bad36974bc98032c9555e226d2d09cbd35120aa8b4b6826b10853d7a0803ff39",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/csharp/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--csharp--code_common_function.talon-list",
+          "sha256": "153cd6d4b9113fc6730b54a18e8b0e021d5e2ab5cfa37a09256d622b67a11544",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/javascript/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--javascript--code_common_function.talon-list",
+          "sha256": "e657435376fe5447cc8fa237cda13de51268e17080451ac05165555d00243d14",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/c/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--c--code_common_function.talon-list",
+          "sha256": "4d579f530590d2f98a2740bf83736c818ffcd521cd55d79d80aabec47e4e1d8c",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/stata/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--stata--code_common_function.talon-list",
+          "sha256": "22cf7f19537f0e65c16ffdeb2fb92b392a34c61aaefa6388a08ad6e53d09cea0",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/sql/code_common_function.talon-list",
+          "sanitized_filename": "trillium_talon--lang--sql--code_common_function.talon-list",
+          "sha256": "0408dbdf3424145ed58616101b90185cc592515d4e41653077161d74767e6f08",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "code_common_method.talon-list",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/lang/python/code_common_method.talon-list",
+          "sanitized_filename": "trillium_talon--lang--python--code_common_method.talon-list",
+          "sha256": "ef0f1747578a79993235d1df2ec3cfe28e8922b9fd674f2c637e903ad34c409d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/java/code_common_method.talon-list",
+          "sanitized_filename": "trillium_talon--lang--java--code_common_method.talon-list",
+          "sha256": "9860fca6772a3afaf3f36bcc6939417cf4cff0b9968f6d5bd691aa23f9540e02",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "code_keyword.talon-list",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/lang/go/code_keyword.talon-list",
+          "sanitized_filename": "trillium_talon--lang--go--code_keyword.talon-list",
+          "sha256": "10207bef37654d471bc777d962f8aa6c2f47568a48da6f56544d54f8a3330a2d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/python/code_keyword.talon-list",
+          "sanitized_filename": "trillium_talon--lang--python--code_keyword.talon-list",
+          "sha256": "6315d6a3f5303dafb9d4362ec3e433d7c700b168eba4a715d67522d57688d181",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/java/code_keyword.talon-list",
+          "sanitized_filename": "trillium_talon--lang--java--code_keyword.talon-list",
+          "sha256": "39fef514dbe16dff8af8067f82313a3f8c0812985d4493213bc1a6b9b338788b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/cpp/code_keyword.talon-list",
+          "sanitized_filename": "trillium_talon--lang--cpp--code_keyword.talon-list",
+          "sha256": "a038e6f8dbd52f3ebb35be53fe5aea5bcf2d481a952038d616e83a6882c3ea88",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/c/code_keyword.talon-list",
+          "sanitized_filename": "trillium_talon--lang--c--code_keyword.talon-list",
+          "sha256": "94407176698e39e6bfbccd6f3dc371e61a0562193a1a660918a9c5b9846b9706",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "code_keyword_unprefixed.talon-list",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/lang/python/code_keyword_unprefixed.talon-list",
+          "sanitized_filename": "trillium_talon--lang--python--code_keyword_unprefixed.talon-list",
+          "sha256": "50d6d50e16d0e2e3f4c650902ee172515818a054c007a3c443ceaebcc1e640ed",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/cpp/code_keyword_unprefixed.talon-list",
+          "sanitized_filename": "trillium_talon--lang--cpp--code_keyword_unprefixed.talon-list",
+          "sha256": "6ab4d4a9318a9a3443bb3400f0a86aa72100bd78da44d756e90949a1f360c358",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/c/code_keyword_unprefixed.talon-list",
+          "sanitized_filename": "trillium_talon--lang--c--code_keyword_unprefixed.talon-list",
+          "sha256": "ca51044a32f697098e4778719dc1c02365feefec00e917f7d2c4bc1be07ca563",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "code_type.talon-list",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/lang/go/code_type.talon-list",
+          "sanitized_filename": "trillium_talon--lang--go--code_type.talon-list",
+          "sha256": "3ccbfa204e8245aa42c5a4c372e368083a5ec88096eda81d22f85a0f6f253aee",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/lang/python/code_type.talon-list",
+          "sanitized_filename": "trillium_talon--lang--python--code_type.talon-list",
+          "sha256": "c253d57f05160d88b158f4fb4fab9306c95b07f3b1268857a8b68a9743aff970",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "command.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/command.py",
+          "sanitized_filename": "cursorless-talon--src--command.py",
+          "sha256": "9051d9489819607ff0b230ee33c7ef3e8ab6ecfb375b00906c36e66cee86ff79",
+          "copied": true
+        },
+        {
+          "rel_path": "rango-talon/src/command.py",
+          "sanitized_filename": "rango-talon--src--command.py",
+          "sha256": "1898e19db51ddeee1f4f6ee157db826db6a35df03c122df7e137c708cfe0650e",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "command_logger.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/command_logger.py",
+          "sanitized_filename": "trillium--plugin--repeater--command_logger.py",
+          "sha256": "6ad45acf128ab9875a023c31dd2664164cce766005c7a7b1e0c19c4a7accc7fe",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/command_logger.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--command_logger.py",
+          "sha256": "d6ac598c9f33337da45f378afdf78fbcb385d34d2d3cfb54c57492e2e09312b2",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "confetti.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/confetti.talon",
+          "sanitized_filename": "trillium--confetti.talon",
+          "sha256": "f820a2a37c4d41f34e39367ec69efe0a47aebae9e6a5dfbe38f2fbf5a033f97b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/confetti.talon",
+          "sanitized_filename": "trillium_talon--trillium--confetti.talon",
+          "sha256": "f820a2a37c4d41f34e39367ec69efe0a47aebae9e6a5dfbe38f2fbf5a033f97b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "config.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse-clock/src/core/config.py",
+          "sanitized_filename": "trillium--mouse-clock--src--core--config.py",
+          "sha256": "773421519176cf864eb904bd5f25b9ad4a3ff043d4d38c33fc86bda3d3cd6436",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/features/clock_letters/config.py",
+          "sanitized_filename": "trillium--mouse-clock--src--features--clock_letters--config.py",
+          "sha256": "cf9190e4b16ab9759b87092e7d4b1acd715e18556180d3de909d143c286e6ee8",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_obs/config.py",
+          "sanitized_filename": "trillium_obs--config.py",
+          "sha256": "694391ad901817e5bf722326c86b3bfbde9a0d869023416a95d525b241ec59d6",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "context.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/friction/context.py",
+          "sanitized_filename": "trillium--friction--context.py",
+          "sha256": "68f99374cd56574ab2343869e65e8da40fef2e638aa5f6f5e3dfa417e2831de6",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/friction/context.py",
+          "sanitized_filename": "trillium_talon--trillium--friction--context.py",
+          "sha256": "68f99374cd56574ab2343869e65e8da40fef2e638aa5f6f5e3dfa417e2831de6",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "cursorless_repeater.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/cursorless_repeater.py",
+          "sanitized_filename": "trillium--plugin--repeater--cursorless_repeater.py",
+          "sha256": "f204ff838d08c0db6a651bad4890af9045a34f9913058700d1da7bb768615b1d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/cursorless_repeater.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--cursorless_repeater.py",
+          "sha256": "f204ff838d08c0db6a651bad4890af9045a34f9913058700d1da7bb768615b1d",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "cursorless_repeater.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/cursorless_repeater.talon",
+          "sanitized_filename": "trillium--plugin--repeater--cursorless_repeater.talon",
+          "sha256": "5d71bcd64ac0d57bf5f7f2f3b065e3f391dbe33b0c46eb1fe14a75db876e7367",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/cursorless_repeater.talon",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--cursorless_repeater.talon",
+          "sha256": "5d71bcd64ac0d57bf5f7f2f3b065e3f391dbe33b0c46eb1fe14a75db876e7367",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "datetimeinsert.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/datetimeinsert/datetimeinsert.py",
+          "sanitized_filename": "trillium--plugin--datetimeinsert--datetimeinsert.py",
+          "sha256": "0de03a902ac666a0d3e3ae5a3164535cc65878fa7fbce6b519a211aa16730ac6",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/datetimeinsert/datetimeinsert.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--datetimeinsert--datetimeinsert.py",
+          "sha256": "0de03a902ac666a0d3e3ae5a3164535cc65878fa7fbce6b519a211aa16730ac6",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "debug.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse_grid_centroid/debug.py",
+          "sanitized_filename": "trillium--mouse_grid_centroid--debug.py",
+          "sha256": "cc0628e4ad0f153d8b0b7639ae9fa7215fa1f187b9c3f337c87e9e536d89590f",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/mouse_grid_centroid/debug.py",
+          "sanitized_filename": "trillium_talon--trillium--mouse_grid_centroid--debug.py",
+          "sha256": "cc0628e4ad0f153d8b0b7639ae9fa7215fa1f187b9c3f337c87e9e536d89590f",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "displayplacer.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/displayplacer.py",
+          "sanitized_filename": "trillium--displayplacer.py",
+          "sha256": "0b613f9d8ae22b76630b5cc3c74c5558e68e05754e7929558d9c2e32eef156a9",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/displayplacer.py",
+          "sanitized_filename": "trillium_talon--trillium--displayplacer.py",
+          "sha256": "0b613f9d8ae22b76630b5cc3c74c5558e68e05754e7929558d9c2e32eef156a9",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "displayplacer.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/displayplacer.talon",
+          "sanitized_filename": "trillium--displayplacer.talon",
+          "sha256": "206fd54ccac16fc52daf871d388677785d4133899242bc16e5d47dccaf64c52e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/displayplacer.talon",
+          "sanitized_filename": "trillium_talon--trillium--displayplacer.talon",
+          "sha256": "206fd54ccac16fc52daf871d388677785d4133899242bc16e5d47dccaf64c52e",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "double_tap.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/hooks/double_tap.py",
+          "sanitized_filename": "trillium--hooks--double_tap.py",
+          "sha256": "e158b640eaf3e0f1b24e8e28b3923c9851cd3f3bc483ec0757702625db6a7bf2",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/hooks/double_tap.py",
+          "sanitized_filename": "trillium_talon--trillium--hooks--double_tap.py",
+          "sha256": "e158b640eaf3e0f1b24e8e28b3923c9851cd3f3bc483ec0757702625db6a7bf2",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "double_tap.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/hooks/double_tap.talon",
+          "sanitized_filename": "trillium--hooks--double_tap.talon",
+          "sha256": "2be13a8f3f9430a7dfbdda0cef21c82c11513f3e71ad0d7f0a7e704bc229b1dd",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/hooks/double_tap.talon",
+          "sanitized_filename": "trillium_talon--trillium--hooks--double_tap.talon",
+          "sha256": "1fed220292963fb8212d2ef15615ea50a67dae1d2f4162dd4fa69e7a8a08021e",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "edge.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse-clock/src/rendering/canvas/edge.py",
+          "sanitized_filename": "trillium--mouse-clock--src--rendering--canvas--edge.py",
+          "sha256": "6fe8ac823126878a89fb2fe0986af711ec157057717939df8e58e6f3804ed357",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/edge/edge.py",
+          "sanitized_filename": "trillium_talon--apps--edge--edge.py",
+          "sha256": "c3a2993029fa3264a95e9e7ee705b753d37d5dbb0c1f4ec4004f324df2edd248",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "edit.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/edit.talon",
+          "sanitized_filename": "trillium--edit.talon",
+          "sha256": "6384feae59656adc033062b06ea8755abb562b25a91ec58a72f91ede9975927b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/edit/edit.talon",
+          "sanitized_filename": "trillium_talon--core--edit--edit.talon",
+          "sha256": "8ee40711636a6a183253cab54dfb5c43708643f1a60824344bd673b5d7b2c256",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/edit.talon",
+          "sanitized_filename": "trillium_talon--trillium--edit.talon",
+          "sha256": "6384feae59656adc033062b06ea8755abb562b25a91ec58a72f91ede9975927b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "emoji.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/emoji/emoji.talon",
+          "sanitized_filename": "trillium--emoji--emoji.talon",
+          "sha256": "3c21970e10e267a0ae36fc3ac7a29de2462518de6fe33a0c592d9599ac008d11",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/tags/emoji/emoji.talon",
+          "sanitized_filename": "trillium_talon--tags--emoji--emoji.talon",
+          "sha256": "f8461e65cc4ae30d91fac1a2c24db6885965577c1dafc11a0e3e00c6477d5fee",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/emoji/emoji.talon",
+          "sanitized_filename": "trillium_talon--trillium--emoji--emoji.talon",
+          "sha256": "3c21970e10e267a0ae36fc3ac7a29de2462518de6fe33a0c592d9599ac008d11",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "excluded_commands_manager.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/excluded_commands_manager.py",
+          "sanitized_filename": "trillium--plugin--repeater--excluded_commands_manager.py",
+          "sha256": "7c0cdf9598a95e2c674bd81d2584addb6cfb3bb95c737056afb1c4141c4e53cb",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/excluded_commands_manager.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--excluded_commands_manager.py",
+          "sha256": "7c0cdf9598a95e2c674bd81d2584addb6cfb3bb95c737056afb1c4141c4e53cb",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "friction.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/friction/friction.py",
+          "sanitized_filename": "trillium--friction--friction.py",
+          "sha256": "fe50289d5797fe9850c1d9fdeea0ca93fd7f42c18a9d4de745b0be637f1bfb5d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/friction/friction.py",
+          "sanitized_filename": "trillium_talon--trillium--friction--friction.py",
+          "sha256": "fe50289d5797fe9850c1d9fdeea0ca93fd7f42c18a9d4de745b0be637f1bfb5d",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "friction.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/friction/friction.talon",
+          "sanitized_filename": "trillium--friction--friction.talon",
+          "sha256": "6fe8af3370237842d53167592c09737d6035879535404777634ba07d80f3d986",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/friction/friction.talon",
+          "sanitized_filename": "trillium_talon--trillium--friction--friction.talon",
+          "sha256": "6fe8af3370237842d53167592c09737d6035879535404777634ba07d80f3d986",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "friction_mode.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/friction/friction_mode.talon",
+          "sanitized_filename": "trillium--friction--friction_mode.talon",
+          "sha256": "7c051b07cb17927f400ad6176adaab5428b123df6cbea1f1d79bb68bb11cb4dd",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/friction/friction_mode.talon",
+          "sanitized_filename": "trillium_talon--trillium--friction--friction_mode.talon",
+          "sha256": "7c051b07cb17927f400ad6176adaab5428b123df6cbea1f1d79bb68bb11cb4dd",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "google_docs.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/google_docs.talon",
+          "sanitized_filename": "trillium--google_docs.talon",
+          "sha256": "b8ea81f829172b4b0cf40b34567d559c4b12ede6a76ce54fc8eea1767bfb5f3b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/google_docs.talon",
+          "sanitized_filename": "trillium_talon--trillium--google_docs.talon",
+          "sha256": "b8ea81f829172b4b0cf40b34567d559c4b12ede6a76ce54fc8eea1767bfb5f3b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "happy_run.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/happy_run.py",
+          "sanitized_filename": "trillium--happy_run--happy_run.py",
+          "sha256": "7c918ae8b9f7b9c0f9b33c838a8985fa673862c671132ae09d2e76508e1eb61b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/happy_run.py",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--happy_run.py",
+          "sha256": "7c918ae8b9f7b9c0f9b33c838a8985fa673862c671132ae09d2e76508e1eb61b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "happy_run.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/happy_run.talon",
+          "sanitized_filename": "trillium--happy_run--happy_run.talon",
+          "sha256": "284830391977ad220966025422b90fbeb3f05728221d88a3760b4da93d9b82c8",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/happy_run.talon",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--happy_run.talon",
+          "sha256": "284830391977ad220966025422b90fbeb3f05728221d88a3760b4da93d9b82c8",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "happy_run_action.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/happy_run_action.py",
+          "sanitized_filename": "trillium--happy_run--happy_run_action.py",
+          "sha256": "5c95fbee4341db46f891ecc7ca9c6963c1da84a0dafc59781745e7899f01d880",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/happy_run_action.py",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--happy_run_action.py",
+          "sha256": "5c95fbee4341db46f891ecc7ca9c6963c1da84a0dafc59781745e7899f01d880",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "hex_grid.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/hex_grid/hex_grid.py",
+          "sanitized_filename": "trillium--hex_grid--hex_grid.py",
+          "sha256": "f69aeb3ba084a8145b8e462724ecbf446ac5226162264de597cb688ac9682dc0",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/hex_grid/hex_grid.py",
+          "sanitized_filename": "trillium_talon--trillium--hex_grid--hex_grid.py",
+          "sha256": "f69aeb3ba084a8145b8e462724ecbf446ac5226162264de597cb688ac9682dc0",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "hex_grid.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/hex_grid/hex_grid.talon",
+          "sanitized_filename": "trillium--hex_grid--hex_grid.talon",
+          "sha256": "a83f9accba3b7e14577502b73ae37464f9f47bf172d18780c789381fbd0f2801",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/hex_grid/hex_grid.talon",
+          "sanitized_filename": "trillium_talon--trillium--hex_grid--hex_grid.talon",
+          "sha256": "a83f9accba3b7e14577502b73ae37464f9f47bf172d18780c789381fbd0f2801",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "holiday.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/holiday.talon",
+          "sanitized_filename": "trillium--holiday.talon",
+          "sha256": "813902858ae6e25104e28fbd87d023915b6e2001fee753e7cc5a3bd30a1c8dc4",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/holiday.talon",
+          "sanitized_filename": "trillium_talon--trillium--holiday.talon",
+          "sha256": "813902858ae6e25104e28fbd87d023915b6e2001fee753e7cc5a3bd30a1c8dc4",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "homophones.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/actions/homophones.py",
+          "sanitized_filename": "cursorless-talon--src--actions--homophones.py",
+          "sha256": "4e0d2d59c467581a67fa93427cd98899b5d7d4635d8953709a2b90def44bdc46",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/homophones/homophones.py",
+          "sanitized_filename": "trillium_talon--core--homophones--homophones.py",
+          "sha256": "36729ceabcf0efab019ede5a0a159524307598755527ea8cbf86d225b7a9298c",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "info.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/info.talon",
+          "sanitized_filename": "trillium--info.talon",
+          "sha256": "1155e3d406c1cb2236d925f7a7b5ca9445a9399bd6331bde0b0e5eed4437164f",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/info.talon",
+          "sanitized_filename": "trillium_talon--trillium--info.talon",
+          "sha256": "1155e3d406c1cb2236d925f7a7b5ca9445a9399bd6331bde0b0e5eed4437164f",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "insert_timestamp.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/insert_timestamp.talon",
+          "sanitized_filename": "trillium--insert_timestamp.talon",
+          "sha256": "827c8c00711dc8ebdac3152dceda37ca8402dd9a443867825f2bce32308b921b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/insert_timestamp.talon",
+          "sanitized_filename": "trillium_talon--trillium--insert_timestamp.talon",
+          "sha256": "71056253b8bbabf6ff96f55d5b2546ff01aed5fce7c7f66b423c706f2198c34f",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "keyboard_mode_all.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/keyboard_mode_all.talon",
+          "sanitized_filename": "trillium--keyboard_mode_all.talon",
+          "sha256": "a7d59b093dcab806f5f8126f288869a01eec591cad976cfab7e82a0984b4ed01",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/keyboard_mode_all.talon",
+          "sanitized_filename": "trillium_talon--trillium--keyboard_mode_all.talon",
+          "sha256": "31982ac9dfbeb2bbb203ef6258ce2e8b4b518dfa2029c6203d5b280dd144aa44",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "keyboard_mode_command.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/keyboard_mode_command.talon",
+          "sanitized_filename": "trillium--keyboard_mode_command.talon",
+          "sha256": "0e74d5bc5bdd2774806f90e12f28aa4dd78de25e40a24ffce5b6efe584a97c7d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/keyboard_mode_command.talon",
+          "sanitized_filename": "trillium_talon--trillium--keyboard_mode_command.talon",
+          "sha256": "59fe37f71b56d21e7b31eb193d8aae81c35222c2f1dab461fc8ab51a17cc8e41",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "keyboard_mode_dictation.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/keyboard_mode_dictation.talon",
+          "sanitized_filename": "trillium--keyboard_mode_dictation.talon",
+          "sha256": "fb80830c5d0bbed4f9437d7951dc5505f68c7f733b01a6f63a85a372c547bbf3",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/keyboard_mode_dictation.talon",
+          "sanitized_filename": "trillium_talon--trillium--keyboard_mode_dictation.talon",
+          "sha256": "e7b611ca65347470b53b9136dc17d6a757b89c69b5cb0377ec8a1e20064200b9",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "keyboard_mode_sleep.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/keyboard_mode_sleep.talon",
+          "sanitized_filename": "trillium--keyboard_mode_sleep.talon",
+          "sha256": "22dcf91c3488a31e3e037a8c3214a5b15bd11f03c50b1a929ae48d8417ba13dc",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/keyboard_mode_sleep.talon",
+          "sanitized_filename": "trillium_talon--trillium--keyboard_mode_sleep.talon",
+          "sha256": "d1ed8adde5f59b0f6d5030dc8b6b61a6e7e21bc98b0d10111d912666863d6af7",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "keys.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/keys.talon",
+          "sanitized_filename": "trillium--keys.talon",
+          "sha256": "e156153da87bafb615f5199cc96f8a16e302d458860b552ab8800e726aecc969",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/keys/keys.talon",
+          "sanitized_filename": "trillium_talon--core--keys--keys.talon",
+          "sha256": "78cd605d0bcca63b6b334a0664e794939fe268c5a2bd5d43a8ecde02a7ac08c5",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/keys.talon",
+          "sanitized_filename": "trillium_talon--trillium--keys.talon",
+          "sha256": "e156153da87bafb615f5199cc96f8a16e302d458860b552ab8800e726aecc969",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "launch_timestamp.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/core/launch_timestamp.py",
+          "sanitized_filename": "trillium--core--launch_timestamp.py",
+          "sha256": "6a34080327a5b8404f4cdd74f27f75d28a762683c3892d486e51deda4a398686",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/core/launch_timestamp.py",
+          "sanitized_filename": "trillium_talon--trillium--core--launch_timestamp.py",
+          "sha256": "6a34080327a5b8404f4cdd74f27f75d28a762683c3892d486e51deda4a398686",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "launcher.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/launcher.py",
+          "sanitized_filename": "trillium--happy_run--launcher.py",
+          "sha256": "47889a3d62e0dbf5bec9df216dc8d2d6f99cdf74e972cf0d2a6418dd3e34d887",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/launcher.py",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--launcher.py",
+          "sha256": "47889a3d62e0dbf5bec9df216dc8d2d6f99cdf74e972cf0d2a6418dd3e34d887",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "layout.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse-clock/src/features/shared/layout.py",
+          "sanitized_filename": "trillium--mouse-clock--src--features--shared--layout.py",
+          "sha256": "a5bdf75f04cd3e10d7a5f68341458341eb4e1963413c14663969b44201cf3271",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/features/clock_letters/layout.py",
+          "sanitized_filename": "trillium--mouse-clock--src--features--clock_letters--layout.py",
+          "sha256": "f3c7dce731cb0e168f012cd777ad145391bf7082d73c68305d646e4453c3746a",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "media.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/media/media.talon",
+          "sanitized_filename": "trillium--plugin--media--media.talon",
+          "sha256": "8cf83a1a353b0990f7f0431d302fe2cadb7d4775285112c657a05e9d6ecd93e2",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/media/media.talon",
+          "sanitized_filename": "trillium_talon--trillium--plugin--media--media.talon",
+          "sha256": "8cf83a1a353b0990f7f0431d302fe2cadb7d4775285112c657a05e9d6ecd93e2",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "messages.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/messages/messages.talon",
+          "sanitized_filename": "trillium--messages--messages.talon",
+          "sha256": "4116429020bdfe68ee3f4ef23f08ef8bf809315a68f116aca36c7076c2757c15",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/messages/messages.talon",
+          "sanitized_filename": "trillium_talon--trillium--messages--messages.talon",
+          "sha256": "4116429020bdfe68ee3f4ef23f08ef8bf809315a68f116aca36c7076c2757c15",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "microphone_selection.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/microphone_selection/microphone_selection.talon",
+          "sanitized_filename": "trillium--plugin--microphone_selection--microphone_selection.talon",
+          "sha256": "f44f8ac088284abb3da1ff3a80cdd77e8dbf8f9f385a947afbbfe2c13e017040",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/microphone_selection/microphone_selection.talon",
+          "sanitized_filename": "trillium_talon--trillium--plugin--microphone_selection--microphone_selection.talon",
+          "sha256": "f44f8ac088284abb3da1ff3a80cdd77e8dbf8f9f385a947afbbfe2c13e017040",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "migrate_parrot_logs.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/migrate_parrot_logs.py",
+          "sanitized_filename": "trillium--plugin--repeater--migrate_parrot_logs.py",
+          "sha256": "f4511052d36c1a57dbb78e93d4ac228d178f5581ac2f3deff645075b34f37a81",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/migrate_parrot_logs.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--migrate_parrot_logs.py",
+          "sha256": "f4511052d36c1a57dbb78e93d4ac228d178f5581ac2f3deff645075b34f37a81",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "mode_indicator.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mode_indicator/mode_indicator.talon",
+          "sanitized_filename": "trillium--mode_indicator--mode_indicator.talon",
+          "sha256": "5b811f1124ff513250209b30f11331fd4eb746d3e72be58a9113ec9595e8ce75",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/mode_indicator/mode_indicator.talon",
+          "sanitized_filename": "trillium_talon--trillium--mode_indicator--mode_indicator.talon",
+          "sha256": "57cb9ed23ca2ca531ff95cd5a1b2410eeec14636e53712c3e1b0df7eed74d91b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "modes.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/core/modes/modes.py",
+          "sanitized_filename": "trillium--core--modes--modes.py",
+          "sha256": "8c5f7a39f4f7a8f37632eefc772d09721e4dead1733c608df9d78d45026e2d3a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/modes/modes.py",
+          "sanitized_filename": "trillium_talon--core--modes--modes.py",
+          "sha256": "07b61a6fefc3502d8082f7ab9b3a2970d0f3b4727bc1610538ff9d2f81622e6e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/core/modes/modes.py",
+          "sanitized_filename": "trillium_talon--trillium--core--modes--modes.py",
+          "sha256": "8c5f7a39f4f7a8f37632eefc772d09721e4dead1733c608df9d78d45026e2d3a",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "modifier_key.talon-list",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/core/keys/win/modifier_key.talon-list",
+          "sanitized_filename": "trillium_talon--core--keys--win--modifier_key.talon-list",
+          "sha256": "011a7d17c0c02f3cb7ffc923c52eb452438a70410ddf952b52e35f07664ee3a5",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/keys/mac/modifier_key.talon-list",
+          "sanitized_filename": "trillium_talon--core--keys--mac--modifier_key.talon-list",
+          "sha256": "7b7e029dd76b1372038de4b66727f62ef955a256db2bf81ee59232eeb06d4796",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "modifiers.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/modifiers/modifiers.py",
+          "sanitized_filename": "cursorless-talon--src--modifiers--modifiers.py",
+          "sha256": "a652a3b3234b3b70d12167e4ea92c414ddc24c3f8bc9dd2880f269ed0ef218ba",
+          "copied": true
+        },
+        {
+          "rel_path": "cursorless-talon/src/cheatsheet/sections/modifiers.py",
+          "sanitized_filename": "cursorless-talon--src--cheatsheet--sections--modifiers.py",
+          "sha256": "7bea599105274c264593b06bc454507f627026d062fb4832eabd1e69f4e2e3a0",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "mouse.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/mouse/mouse.talon",
+          "sanitized_filename": "trillium--plugin--mouse--mouse.talon",
+          "sha256": "091835854639446417f8f768c7838a2585002dc92a62f134a5370336de120af4",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/plugin/mouse/mouse.talon",
+          "sanitized_filename": "trillium_talon--plugin--mouse--mouse.talon",
+          "sha256": "c8425b4655f912d43b6712fabea16661c1f7d35c96040d587b949a6daf3a0908",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "notify.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/notify/notify.py",
+          "sanitized_filename": "trillium--notify--notify.py",
+          "sha256": "263da0f742dfcc8b444f533278f68c6b58bb109f53be0a31ab8a5e70aef14949",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/notify/notify.py",
+          "sanitized_filename": "trillium_talon--trillium--notify--notify.py",
+          "sha256": "263da0f742dfcc8b444f533278f68c6b58bb109f53be0a31ab8a5e70aef14949",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "obs.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/obs.py",
+          "sanitized_filename": "trillium--obs.py",
+          "sha256": "6ed211a277b978a233859f345ede751f126c3334184d65d769d432a8a9ee11b0",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/obs.py",
+          "sanitized_filename": "trillium_talon--trillium--obs.py",
+          "sha256": "6ed211a277b978a233859f345ede751f126c3334184d65d769d432a8a9ee11b0",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "obs.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/obs.talon",
+          "sanitized_filename": "trillium--obs.talon",
+          "sha256": "bb1f353939c00ae6d560d25c224d9cb676792963a349d3a65e2ef7559e7d5b5e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/obs.talon",
+          "sanitized_filename": "trillium_talon--trillium--obs.talon",
+          "sha256": "bb1f353939c00ae6d560d25c224d9cb676792963a349d3a65e2ef7559e7d5b5e",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "opposite_mappings.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/opposite_mappings.py",
+          "sanitized_filename": "trillium--plugin--repeater--opposite_mappings.py",
+          "sha256": "d88c2e5d8a20b1427b82397d53c74b20baca44b6951df9e0fb5ebc99905a65cd",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/opposite_mappings.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--opposite_mappings.py",
+          "sha256": "d12514151e72a7ee4c30ff9522d1f1b943cc19e44b719e3f67e2416d4d50df95",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "ops.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/friction/ops.py",
+          "sanitized_filename": "trillium--friction--ops.py",
+          "sha256": "7970c05d063d2d11a72afeb753ef2c9ffe4108286a5e6c2e0794667232cbed08",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/friction/ops.py",
+          "sanitized_filename": "trillium_talon--trillium--friction--ops.py",
+          "sha256": "7970c05d063d2d11a72afeb753ef2c9ffe4108286a5e6c2e0794667232cbed08",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "parrot.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/parrot/parrot.py",
+          "sanitized_filename": "trillium--plugin--parrot--parrot.py",
+          "sha256": "b748941de35bc5f5346150b72bd2074fce1eeb1662f65845cb2983bc75ee4790",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/parrot/parrot.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--parrot--parrot.py",
+          "sha256": "b748941de35bc5f5346150b72bd2074fce1eeb1662f65845cb2983bc75ee4790",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "parrot.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/parrot/parrot.talon",
+          "sanitized_filename": "trillium--plugin--parrot--parrot.talon",
+          "sha256": "68fa32a9b6a025d74cfd6ebbf54c026deba0a3f6a893540edb0147e8a90a8655",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/parrot/parrot.talon",
+          "sanitized_filename": "trillium_talon--trillium--plugin--parrot--parrot.talon",
+          "sha256": "68fa32a9b6a025d74cfd6ebbf54c026deba0a3f6a893540edb0147e8a90a8655",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "parrot_always.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/parrot/parrot_always.talon",
+          "sanitized_filename": "trillium--plugin--parrot--parrot_always.talon",
+          "sha256": "7cf9157100b34044bb1a9210cb36e922471806522bc8c8818763c69ed203813b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/parrot/parrot_always.talon",
+          "sanitized_filename": "trillium_talon--trillium--plugin--parrot--parrot_always.talon",
+          "sha256": "7cf9157100b34044bb1a9210cb36e922471806522bc8c8818763c69ed203813b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "parrot_integration.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/parrot/parrot_integration.py",
+          "sanitized_filename": "trillium--plugin--parrot--parrot_integration.py",
+          "sha256": "e08c59fd9ef74262d5c162fb134c9ccbb661e1d1594763bf2f1d0ef10bd10c69",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/parrot/parrot_integration.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--parrot--parrot_integration.py",
+          "sha256": "d75c631370c9b7df061b30a738068b06f111218fa445b76eb8e0ea28b31945b4",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "parrot_logger.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/parrot_logger.py",
+          "sanitized_filename": "trillium--plugin--repeater--parrot_logger.py",
+          "sha256": "e9ce695f1437ee8275a44a26be5fadffd94f60e09e3b06a1a6b0c328db310218",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/parrot_logger.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--parrot_logger.py",
+          "sha256": "e9ce695f1437ee8275a44a26be5fadffd94f60e09e3b06a1a6b0c328db310218",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "pomodoro.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/pomodoro/pomodoro.py",
+          "sanitized_filename": "trillium--pomodoro--pomodoro.py",
+          "sha256": "e201ef850f513c7dc17067e5ad368b30221facaf851bdd39e94fd2b4fc727cdc",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/pomodoro/pomodoro.py",
+          "sanitized_filename": "trillium_talon--trillium--pomodoro--pomodoro.py",
+          "sha256": "e201ef850f513c7dc17067e5ad368b30221facaf851bdd39e94fd2b4fc727cdc",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "pomodoro.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/pomodoro/pomodoro.talon",
+          "sanitized_filename": "trillium--pomodoro--pomodoro.talon",
+          "sha256": "c59bf1b017e69639603eec15a7c7ddb9e6f45fb44dc741807cbdda19967cebf9",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/pomodoro/pomodoro.talon",
+          "sanitized_filename": "trillium_talon--trillium--pomodoro--pomodoro.talon",
+          "sha256": "c59bf1b017e69639603eec15a7c7ddb9e6f45fb44dc741807cbdda19967cebf9",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "presentation.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/presentation_files/presentation.py",
+          "sanitized_filename": "trillium--presentation_files--presentation.py",
+          "sha256": "65f70917a7cf4685fb9f498bfa574d0fa630ea8399afaa3c1901240061190ba3",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/presentation_files/presentation.py",
+          "sanitized_filename": "trillium_talon--trillium--presentation_files--presentation.py",
+          "sha256": "65f70917a7cf4685fb9f498bfa574d0fa630ea8399afaa3c1901240061190ba3",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "presentation_files.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/presentation_files/presentation_files.talon",
+          "sanitized_filename": "trillium--presentation_files--presentation_files.talon",
+          "sha256": "fe8dc5dffa0eb1be5fc3cee8959a7ed04a5bb0f2f3fc3378ac0f358759f5828b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/presentation_files/presentation_files.talon",
+          "sanitized_filename": "trillium_talon--trillium--presentation_files--presentation_files.talon",
+          "sha256": "fe8dc5dffa0eb1be5fc3cee8959a7ed04a5bb0f2f3fc3378ac0f358759f5828b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "presentation_files_not_beta.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/presentation_files/presentation_files_not_beta.talon",
+          "sanitized_filename": "trillium--presentation_files--presentation_files_not_beta.talon",
+          "sha256": "a86f041ac531710df0617ea4fb0228e61eb470164b73eb8fca804044f5342ce0",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/presentation_files/presentation_files_not_beta.talon",
+          "sanitized_filename": "trillium_talon--trillium--presentation_files--presentation_files_not_beta.talon",
+          "sha256": "a86f041ac531710df0617ea4fb0228e61eb470164b73eb8fca804044f5342ce0",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "qt.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/getHired/qt.py",
+          "sanitized_filename": "trillium--getHired--qt.py",
+          "sha256": "b4726958c894207df8952192bf720caa6894c1ad292c83ab53f762bce5351d78",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/getHired/qt.py",
+          "sanitized_filename": "trillium_talon--trillium--getHired--qt.py",
+          "sha256": "b4726958c894207df8952192bf720caa6894c1ad292c83ab53f762bce5351d78",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "rapid_delete.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/rapid_delete.py",
+          "sanitized_filename": "trillium--rapid_delete.py",
+          "sha256": "8c18b3f626a1a8a090516456ac0d8323637ad9df02e84de516dc194e300bdf97",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/rapid_delete.py",
+          "sanitized_filename": "trillium_talon--trillium--rapid_delete.py",
+          "sha256": "8c18b3f626a1a8a090516456ac0d8323637ad9df02e84de516dc194e300bdf97",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "rapid_delete.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/rapid_delete.talon",
+          "sanitized_filename": "trillium--rapid_delete.talon",
+          "sha256": "294d83cc15a96226cd165e0e1571f55c03f3d314f53b09229fb8898feb9c0072",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/rapid_delete.talon",
+          "sanitized_filename": "trillium_talon--trillium--rapid_delete.talon",
+          "sha256": "caf66571b2ede897c80330d45fe19c4de4ff1f400a6fbd8ffefbabfecf4573b9",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "ray.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/ray.talon",
+          "sanitized_filename": "trillium--ray.talon",
+          "sha256": "b1fd453893ece4cde6e0cca0bc6b037e030430a63a31b22895dd42b046efc475",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/ray.talon",
+          "sanitized_filename": "trillium_talon--trillium--ray.talon",
+          "sha256": "b1fd453893ece4cde6e0cca0bc6b037e030430a63a31b22895dd42b046efc475",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/raycast/ray.talon",
+          "sanitized_filename": "trillium_talon--apps--raycast--ray.talon",
+          "sha256": "b1fd453893ece4cde6e0cca0bc6b037e030430a63a31b22895dd42b046efc475",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "readiness_poller.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/readiness_poller.py",
+          "sanitized_filename": "trillium--happy_run--readiness_poller.py",
+          "sha256": "e63618fc332dd39748611850367dc35c459323619b61da90bc48ccd115e32c99",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/readiness_poller.py",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--readiness_poller.py",
+          "sha256": "e63618fc332dd39748611850367dc35c459323619b61da90bc48ccd115e32c99",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "rename_recordings.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/rename_recordings.py",
+          "sanitized_filename": "trillium--rename_recordings.py",
+          "sha256": "c9708d7bc02f5858e36074d8c0c58b3d1eca53e6f820b1ca0f675942dc6d8978",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/rename_recordings.py",
+          "sanitized_filename": "trillium_talon--trillium--rename_recordings.py",
+          "sha256": "c9708d7bc02f5858e36074d8c0c58b3d1eca53e6f820b1ca0f675942dc6d8978",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "repeater.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/repeater.py",
+          "sanitized_filename": "trillium--plugin--repeater--repeater.py",
+          "sha256": "b1a058b753024abb8e66cc9c878f644fba7453f053637df8c9d606d9d990b466",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/repeater.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--repeater.py",
+          "sha256": "b10fc0d9e669b6a5dcb7b51545181ce7c282ac8146bf6c39a179fa2451cf2adc",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "repeater.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/plugin/repeater/repeater.talon",
+          "sanitized_filename": "trillium--plugin--repeater--repeater.talon",
+          "sha256": "3b994ac6c26f6263741aecfc5e487048d5f99caa04cdec4545ef7255d252cfc1",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/repeater/repeater.talon",
+          "sanitized_filename": "trillium_talon--trillium--plugin--repeater--repeater.talon",
+          "sha256": "317374e4a0f9b4e8ce5ab431070fa6e03f7ce4b96524e7ab9aa1ee1f0c2fc4b7",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "restart_talon.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/restart_talon.py",
+          "sanitized_filename": "trillium--restart_talon.py",
+          "sha256": "8a956ff9f8735d77187ea7ab26eeacb92daaa0f0032e268fb861372a44a22273",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/restart_talon.py",
+          "sanitized_filename": "trillium_talon--trillium--restart_talon.py",
+          "sha256": "c6d7349161b2e08ffe6a8b4164b82d7862d30aabc7cb286e6f18e13c97deb092",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "restart_talon.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/restart_talon.talon",
+          "sanitized_filename": "trillium--restart_talon.talon",
+          "sha256": "fdbff05b235620f5f5a3fc941b189627a81f41bdee092c73be5d820fdd18e53c",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/restart_talon.talon",
+          "sanitized_filename": "trillium_talon--trillium--restart_talon.talon",
+          "sha256": "fdbff05b235620f5f5a3fc941b189627a81f41bdee092c73be5d820fdd18e53c",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "safari.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "rango-talon/src/overrides/safari.py",
+          "sanitized_filename": "rango-talon--src--overrides--safari.py",
+          "sha256": "08ea4f2eee3c92eeb19c11d493a3ea61d73510529e5efa8c68dd3c0e8c35a72e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/safari/safari.py",
+          "sanitized_filename": "trillium_talon--apps--safari--safari.py",
+          "sha256": "7b561b9556b8cc0db98c7ab0cd25b0fb48cccd71617f1533094033340f848d2c",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "scopes.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/modifiers/scopes.py",
+          "sanitized_filename": "cursorless-talon--src--modifiers--scopes.py",
+          "sha256": "a849a92e3643a3ac580512401bd60c21453ec727fc7e4963ab0c92336e055093",
+          "copied": true
+        },
+        {
+          "rel_path": "cursorless-talon/src/cheatsheet/sections/scopes.py",
+          "sanitized_filename": "cursorless-talon--src--cheatsheet--sections--scopes.py",
+          "sha256": "3c427a3c3ec4584c93648cec3d6cbcb41879e83ae847d7ec7a8e4a7f78e05a5a",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "screenshot.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/screenshot.talon",
+          "sanitized_filename": "trillium--screenshot.talon",
+          "sha256": "f70737d9c23a2399ee005443d3cda72f1802bd7ceda7412b60233a78f289d9e8",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/plugin/screenshot/screenshot.talon",
+          "sanitized_filename": "trillium--plugin--screenshot--screenshot.talon",
+          "sha256": "db94c50b91914a6f0fd8da80471bee3e300e93bc1ba193b9e2c8857ab153ef82",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/screenshot.talon",
+          "sanitized_filename": "trillium_talon--trillium--screenshot.talon",
+          "sha256": "f70737d9c23a2399ee005443d3cda72f1802bd7ceda7412b60233a78f289d9e8",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/plugin/screenshot/screenshot.talon",
+          "sanitized_filename": "trillium_talon--trillium--plugin--screenshot--screenshot.talon",
+          "sha256": "db94c50b91914a6f0fd8da80471bee3e300e93bc1ba193b9e2c8857ab153ef82",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "settings.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "Mouse Control Chicken Data/settings.talon",
+          "sanitized_filename": "Mouse Control Chicken Data--settings.talon",
+          "sha256": "d6947fb6d1c90eabd778600fd634df9432034e16cd7e330ab42095e97f1c34d3",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/settings.talon",
+          "sanitized_filename": "trillium--settings.talon",
+          "sha256": "0e19fb36aa6d15010a3cc52a35c0d7dc9443c935685675958ca3ee358dd14309",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/settings.talon",
+          "sanitized_filename": "trillium_talon--settings.talon",
+          "sha256": "6bfcde5b063408fe4bd3625d94b2bec11fca7d62d32431d7ff05b8cc41543b60",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/settings.talon",
+          "sanitized_filename": "trillium_talon--trillium--settings.talon",
+          "sha256": "ab8f6f95242a005e0e38da6cc39c3f252716c0657c88a565c5639e67d5a731f9",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "slack.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/slack.talon",
+          "sanitized_filename": "trillium--slack.talon",
+          "sha256": "46951bd16eb53a8b38f9d4ec8669cbf08d940de40cca36e2d77a8874bbfd7623",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/slack.talon",
+          "sanitized_filename": "trillium_talon--trillium--slack.talon",
+          "sha256": "46951bd16eb53a8b38f9d4ec8669cbf08d940de40cca36e2d77a8874bbfd7623",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/slack/slack.talon",
+          "sanitized_filename": "trillium_talon--apps--slack--slack.talon",
+          "sha256": "ca5acc4e9ad709089b29d1282d31285e9ad7c54801c98158fa32be2fd3892470",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "slash_command.talon-list",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/trillium/plugin/slash_commands/slash_command.talon-list",
+          "sanitized_filename": "trillium_talon--trillium--plugin--slash_commands--slash_command.talon-list",
+          "sha256": "f40c477b61a39c24c012c7736aaf508499bd3708fe2c0ddd9bc2ebf87af1e2ce",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon_deck/slash_command.talon-list",
+          "sanitized_filename": "trillium_talon_deck--slash_command.talon-list",
+          "sha256": "9bc2522abe067d7577e6fad50321f59af82543e38ad16cde7264a7f5c75c4122",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "slash_commands.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/trillium/plugin/slash_commands/slash_commands.py",
+          "sanitized_filename": "trillium_talon--trillium--plugin--slash_commands--slash_commands.py",
+          "sha256": "df19561d56c2d7fe98085449deed22123d3ee7cc995176b5633eb0b23b43abf4",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon_deck/slash_commands.py",
+          "sanitized_filename": "trillium_talon_deck--slash_commands.py",
+          "sha256": "26879243f5ef541fc47700324a7d7d1281dde21f99134461c2761e434c771601",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "slash_commands.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/trillium/plugin/slash_commands/slash_commands.talon",
+          "sanitized_filename": "trillium_talon--trillium--plugin--slash_commands--slash_commands.talon",
+          "sha256": "ca03ec9bfe4279b8c1b8335036cba7675861e77fffe44e97fb1d933d017de041",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon_deck/slash_commands.talon",
+          "sanitized_filename": "trillium_talon_deck--slash_commands.talon",
+          "sha256": "be048e1305d6639e306524b7aedd2f5a8cff59d399081af51c30d72c2e5e0b00",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "sleep_mode.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/sleep_mode.talon",
+          "sanitized_filename": "trillium--sleep_mode.talon",
+          "sha256": "9ecdad449d84b1c9d343a13869b48944143d3011be654681a16beccea30a548e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/modes/sleep_mode.talon",
+          "sanitized_filename": "trillium_talon--core--modes--sleep_mode.talon",
+          "sha256": "eb04953cbe483ea1efe2abfe25c85390b3b50c26f6f71870d521b26eaf6e1d4c",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "snippet_types.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/snippets/snippet_types.py",
+          "sanitized_filename": "cursorless-talon--src--snippets--snippet_types.py",
+          "sha256": "c17ec7710a06fa1c17c8da4fc300ca67a6f9a43e2ea5af152a9f747c2608a2a7",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/snippets/snippet_types.py",
+          "sanitized_filename": "trillium_talon--core--snippets--snippet_types.py",
+          "sha256": "5b3f0b2f855b7224c1be4e014f8beb4daf8545e91a6fdcd70072d333a6884957",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "snippets.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/snippets/snippets.py",
+          "sanitized_filename": "cursorless-talon--src--snippets--snippets.py",
+          "sha256": "5eb1cb6e95c05d25c686448310e715993cad7e39ff8256da4d6e618a985e4e9e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/snippets/snippets.py",
+          "sanitized_filename": "trillium_talon--core--snippets--snippets.py",
+          "sha256": "b4287fdf91af62986f425f56547c31ae41e32b87d9439836b99428393259edc7",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "sound.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/core/sound/sound.py",
+          "sanitized_filename": "trillium--core--sound--sound.py",
+          "sha256": "ea6d89a9b9a8a2c618f30c3fb2bc627d511448b40ed54bb021b7a4946570c4e6",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/utils/sound.py",
+          "sanitized_filename": "trillium--utils--sound.py",
+          "sha256": "6804f4eeacfb9bdf43ce8c3e7b0794ec1cfa8c77181a0d7eea82cf34759bf12f",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/core/sound/sound.py",
+          "sanitized_filename": "trillium_talon--trillium--core--sound--sound.py",
+          "sha256": "ea6d89a9b9a8a2c618f30c3fb2bc627d511448b40ed54bb021b7a4946570c4e6",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/utils/sound.py",
+          "sanitized_filename": "trillium_talon--trillium--utils--sound.py",
+          "sha256": "6804f4eeacfb9bdf43ce8c3e7b0794ec1cfa8c77181a0d7eea82cf34759bf12f",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "speak_aloud.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/speak_aloud.py",
+          "sanitized_filename": "trillium--speak_aloud.py",
+          "sha256": "4411736caee5d056514dae530bd1aad83478fc279f3594b4bc52fca2b1b33dca",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/speak_aloud.py",
+          "sanitized_filename": "trillium_talon--trillium--speak_aloud.py",
+          "sha256": "4411736caee5d056514dae530bd1aad83478fc279f3594b4bc52fca2b1b33dca",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "speak_aloud.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/speak_aloud.talon",
+          "sanitized_filename": "trillium--speak_aloud.talon",
+          "sha256": "05c9a71b38a665f79d0dfbbb2983c4339d95acbeaa48629a56b81ab30394b711",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/speak_aloud.talon",
+          "sanitized_filename": "trillium_talon--trillium--speak_aloud.talon",
+          "sha256": "05c9a71b38a665f79d0dfbbb2983c4339d95acbeaa48629a56b81ab30394b711",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "special_key.talon-list",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/core/keys/win/special_key.talon-list",
+          "sanitized_filename": "trillium_talon--core--keys--win--special_key.talon-list",
+          "sha256": "5bd4d16cd58d3c119bbabb610df908aabdc3e49eefe9e3cfd942dd3e0a15f66b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/keys/mac/special_key.talon-list",
+          "sanitized_filename": "trillium_talon--core--keys--mac--special_key.talon-list",
+          "sha256": "5defe51a8a0e6829f3c2fc29cbf0ad211c0065a6f4cb6a8f37ed4d52160c9926",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "startup_status.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/core/startup_status.py",
+          "sanitized_filename": "trillium--core--startup_status.py",
+          "sha256": "8e0037cfa85a586c8786f3ead9d7235dc975069a63df7291fd49057685bbe8f7",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/core/startup_status.py",
+          "sanitized_filename": "trillium_talon--trillium--core--startup_status.py",
+          "sha256": "8e0037cfa85a586c8786f3ead9d7235dc975069a63df7291fd49057685bbe8f7",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "stata.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/lang/stata/stata.py",
+          "sanitized_filename": "trillium_talon--lang--stata--stata.py",
+          "sha256": "74f08c0a3b02b5d92072960ce66f1fd1c325903a4e9d6b9cd6d008596e25071d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/stata/stata.py",
+          "sanitized_filename": "trillium_talon--apps--stata--stata.py",
+          "sha256": "52db28a114f87e204c0a3b3f4911cff3644d3a17f00c22323c459df7cb83c9e6",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "state.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/friction/state.py",
+          "sanitized_filename": "trillium--friction--state.py",
+          "sha256": "90236fa873dfce1eaf162a1a0e0e97a20fd9c69d55fa742d5397556bf777f47e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/ticket/state.py",
+          "sanitized_filename": "trillium--ticket--state.py",
+          "sha256": "807a1b96421d21068abc9a3b20898e050a8dca3e673015dd383e70e1c852301a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/friction/state.py",
+          "sanitized_filename": "trillium_talon--trillium--friction--state.py",
+          "sha256": "90236fa873dfce1eaf162a1a0e0e97a20fd9c69d55fa742d5397556bf777f47e",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/ticket/state.py",
+          "sanitized_filename": "trillium_talon--trillium--ticket--state.py",
+          "sha256": "807a1b96421d21068abc9a3b20898e050a8dca3e673015dd383e70e1c852301a",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "system_paths-MacBookPro.lan1.talon-list",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/core/system_paths-MacBookPro.lan1.talon-list",
+          "sanitized_filename": "trillium--core--system_paths-MacBookPro.lan1.talon-list",
+          "sha256": "410b863966ee0cd0043047897d561509ace0125c6c636f2e46a5863cda30c35d",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/core/system_paths-MacBookPro.lan1.talon-list",
+          "sanitized_filename": "trillium_talon--trillium--core--system_paths-MacBookPro.lan1.talon-list",
+          "sha256": "410b863966ee0cd0043047897d561509ace0125c6c636f2e46a5863cda30c35d",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "tags.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "rango-talon/src/tags.py",
+          "sanitized_filename": "rango-talon--src--tags.py",
+          "sha256": "09aa500ce5cad11dec41e492f16bf4f1bcc17af16c98e5bbe0d705b07bec5a14",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/tags.py",
+          "sanitized_filename": "trillium_talon--core--tags.py",
+          "sha256": "2ff2fb8b32b386b40f682a0d455eb2bf94f69ca19c6c89191ff404836d54b0bc",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "talon_debug.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/talon_debug.talon",
+          "sanitized_filename": "trillium--talon_debug.talon",
+          "sha256": "e562e27aa0365a75a2bcbdd4975aab9f53c092e40b2c8668639d3fbe5f38810f",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/talon_debug.talon",
+          "sanitized_filename": "trillium_talon--trillium--talon_debug.talon",
+          "sha256": "2c1a265f6902b4beee0f280d990e0f8645ae583b2c356c1baa5f1c799ecab589",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "talon_helpers.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "rango-talon/src/talon_helpers.talon",
+          "sanitized_filename": "rango-talon--src--talon_helpers.talon",
+          "sha256": "631a08935b88f64cdd22a0387ab5b4c40acf7dfd2718eb61eafeb086af7cb2f7",
+          "copied": true
+        },
+        {
+          "rel_path": "talon-axkit/talon_helpers.talon",
+          "sanitized_filename": "talon-axkit--talon_helpers.talon",
+          "sha256": "c9127d51a2f4d3a0a1380c792ff8400987132635093e8479c78ad557feb10b25",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/plugin/talon_helpers/talon_helpers.talon",
+          "sanitized_filename": "trillium_talon--plugin--talon_helpers--talon_helpers.talon",
+          "sha256": "bdedecd51e59bad40fad96db8d867eb21c0ed994fc5adf8604cb1ed93ec52c46",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "terminal.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/terminal.talon",
+          "sanitized_filename": "trillium--terminal.talon",
+          "sha256": "5c938adbff1c00de5c54ac3e125109cec43b5a954d447dd2b97690cdab1c7472",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/tags/terminal/terminal.talon",
+          "sanitized_filename": "trillium_talon--tags--terminal--terminal.talon",
+          "sha256": "2514e97595e83ffc74964c2b9ecc9b8f50af0659248d648d95707f9bb41cdb03",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/terminal.talon",
+          "sanitized_filename": "trillium_talon--trillium--terminal.talon",
+          "sha256": "5c938adbff1c00de5c54ac3e125109cec43b5a954d447dd2b97690cdab1c7472",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "terraform.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/lang/terraform/terraform.py",
+          "sanitized_filename": "trillium_talon--lang--terraform--terraform.py",
+          "sha256": "c6bf0e91e842c5c2382c9e917972c3024d1f7df76c1c166d5bfc735178ce14f0",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/terraform/terraform.py",
+          "sanitized_filename": "trillium_talon--apps--terraform--terraform.py",
+          "sha256": "ebfab8076e84fc9c4a9ccdcaa78bf1e59e1fb252f49d190513490c00b75cc749",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "terraform.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium_talon/lang/terraform/terraform.talon",
+          "sanitized_filename": "trillium_talon--lang--terraform--terraform.talon",
+          "sha256": "de4ce0a5103941ab180e608df50a5c3409e662e087cd10038a15f56f80980e24",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/terraform/terraform.talon",
+          "sanitized_filename": "trillium_talon--apps--terraform--terraform.talon",
+          "sha256": "976862d80a60b3c304ac6c6f78181fc600884735560b789654a85937d1f80822",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "test.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/test.py",
+          "sanitized_filename": "trillium--test.py",
+          "sha256": "1c5a6756759b19163c5e0866f7c23c36e4b9254bc52e155909efa0d2265c95ed",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/test.py",
+          "sanitized_filename": "trillium_talon--trillium--test.py",
+          "sha256": "1c5a6756759b19163c5e0866f7c23c36e4b9254bc52e155909efa0d2265c95ed",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "test_boolean_print.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/boolean_print/test_boolean_print.py",
+          "sanitized_filename": "trillium--boolean_print--test_boolean_print.py",
+          "sha256": "a2984a26ad7e43c29f2604c95a56509fc5fdbbba1f212231ed415edb70d177bd",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/_boolean_print/test_boolean_print.py",
+          "sanitized_filename": "trillium_talon--trillium--_boolean_print--test_boolean_print.py",
+          "sha256": "a2984a26ad7e43c29f2604c95a56509fc5fdbbba1f212231ed415edb70d177bd",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "test_mode_all.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/test_mode_all.talon",
+          "sanitized_filename": "trillium--test_mode_all.talon",
+          "sha256": "ef24135012b4ceb41e7e9fb54845659036d7a67c8a3d760049c734df9ba50f5b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/test_mode_all.talon",
+          "sanitized_filename": "trillium_talon--trillium--test_mode_all.talon",
+          "sha256": "b8cb0ee392a9c9c696c0e60491e873920dd62c6049cb244dd3f55289c2c9aa0b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "test_mode_command.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/test_mode_command.talon",
+          "sanitized_filename": "trillium--test_mode_command.talon",
+          "sha256": "7444bbb082cd2c435465e4e480ef68b6b3c6575147848f8e01ac81f75b293da6",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/test_mode_command.talon",
+          "sanitized_filename": "trillium_talon--trillium--test_mode_command.talon",
+          "sha256": "7444bbb082cd2c435465e4e480ef68b6b3c6575147848f8e01ac81f75b293da6",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "test_readiness_poller.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/tests/test_readiness_poller.py",
+          "sanitized_filename": "trillium--happy_run--tests--test_readiness_poller.py",
+          "sha256": "2eac5d8fc21846145510e4f3836d8140bc1adabfc3faae311b9477e97d762b18",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/tests/test_readiness_poller.py",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--tests--test_readiness_poller.py",
+          "sha256": "2eac5d8fc21846145510e4f3836d8140bc1adabfc3faae311b9477e97d762b18",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "test_window_tracker.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/tests/test_window_tracker.py",
+          "sanitized_filename": "trillium--happy_run--tests--test_window_tracker.py",
+          "sha256": "9a727ac3400811ffccb72111a7cb4b2b33fbae2db7074e32e1f2e70e04396c06",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/tests/test_window_tracker.py",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--tests--test_window_tracker.py",
+          "sha256": "9a727ac3400811ffccb72111a7cb4b2b33fbae2db7074e32e1f2e70e04396c06",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "text_injector.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/text_injector.py",
+          "sanitized_filename": "trillium--happy_run--text_injector.py",
+          "sha256": "ff16a3ab9c081f94cff1049f5b7201f192135ce173001a83ac700fdee043020b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/text_injector.py",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--text_injector.py",
+          "sha256": "ff16a3ab9c081f94cff1049f5b7201f192135ce173001a83ac700fdee043020b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "then.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/then.talon",
+          "sanitized_filename": "trillium--then.talon",
+          "sha256": "dc59aed37c72b0d91c5ce7e012aded6c488f12908e2867a2e01f3be98d5d443b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/then.talon",
+          "sanitized_filename": "trillium_talon--trillium--then.talon",
+          "sha256": "7f8fc3c53c06550553f46c1dbbe03553c559a9dada2831ef6e8e7f3db5400990",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "ticket.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/ticket/ticket.py",
+          "sanitized_filename": "trillium--ticket--ticket.py",
+          "sha256": "2c3ab6398aa11c8854bc9c1df7f30b102ce6f0e0c4873b4218a46daa966643e0",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/ticket/ticket.py",
+          "sanitized_filename": "trillium_talon--trillium--ticket--ticket.py",
+          "sha256": "2c3ab6398aa11c8854bc9c1df7f30b102ce6f0e0c4873b4218a46daa966643e0",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "to_wake_mode.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/to_wake_mode.talon",
+          "sanitized_filename": "trillium--to_wake_mode.talon",
+          "sha256": "91a76b28dcc4e1b762356656a18f1258820f6906529827b3d8ceb064a039db8b",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/modes/to_wake_mode.talon",
+          "sanitized_filename": "trillium_talon--core--modes--to_wake_mode.talon",
+          "sha256": "8bbc185800c235c361b4bc0bfbcf5229edcc628df20c670df4b1ca09e40982da",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/to_wake_mode.talon",
+          "sanitized_filename": "trillium_talon--trillium--to_wake_mode.talon",
+          "sha256": "91a76b28dcc4e1b762356656a18f1258820f6906529827b3d8ceb064a039db8b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "utils.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/mouse-clock/src/features/shared/utils.py",
+          "sanitized_filename": "trillium--mouse-clock--src--features--shared--utils.py",
+          "sha256": "78fbc456f3a52ebdf7a96b63515a666224d3430a370b45634b19eb9260a5f54a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mouse-clock/src/rendering/canvas/utils.py",
+          "sanitized_filename": "trillium--mouse-clock--src--rendering--canvas--utils.py",
+          "sha256": "ed37470446386cac16910a619327bff684e8def0dc7fa46ea7571581a2c14e33",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "versions.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "cursorless-talon/src/versions.py",
+          "sanitized_filename": "cursorless-talon--src--versions.py",
+          "sha256": "5aaa53483b5a08fd6fe7bb3f746bbe050c144be0088d4240fb8c16c5a27953a8",
+          "copied": true
+        },
+        {
+          "rel_path": "rango-talon/src/versions.py",
+          "sanitized_filename": "rango-talon--src--versions.py",
+          "sha256": "7a41c6e540ab36302c51bc9fa6615872a9bcb4c3eb1a91211a6a470e08b41ebd",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "virtual_coffee_demo.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/virtual_coffee_demo.talon",
+          "sanitized_filename": "trillium--virtual_coffee_demo.talon",
+          "sha256": "d319eeae9e8d1aecb54f3051e75ee3059b4455bc1c1aac6cd12f37f312fd6560",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/virtual_coffee_demo.talon",
+          "sanitized_filename": "trillium_talon--trillium--virtual_coffee_demo.talon",
+          "sha256": "d319eeae9e8d1aecb54f3051e75ee3059b4455bc1c1aac6cd12f37f312fd6560",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "vscode.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/vscode.talon",
+          "sanitized_filename": "trillium--vscode.talon",
+          "sha256": "edfb7500ec174e5b4eb72530dcaf454b0107ab71d6cd99c51742471b12b1960a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/vscode.talon",
+          "sanitized_filename": "trillium_talon--trillium--vscode.talon",
+          "sha256": "edfb7500ec174e5b4eb72530dcaf454b0107ab71d6cd99c51742471b12b1960a",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/vscode/vscode.talon",
+          "sanitized_filename": "trillium_talon--apps--vscode--vscode.talon",
+          "sha256": "ab90cedb4ee7dfd2abbd356dad81f6779c9e3c21fa91082eb1bd9b89372a2fca",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "vscode_bar_copilot.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/vscode_bar_copilot.talon",
+          "sanitized_filename": "trillium--vscode_bar_copilot.talon",
+          "sha256": "bc7df3df0de57b59e351f2934a863b7e4e91b23356de545f533615b5071676e9",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/vscode_bar_copilot.talon",
+          "sanitized_filename": "trillium_talon--trillium--vscode_bar_copilot.talon",
+          "sha256": "bc7df3df0de57b59e351f2934a863b7e4e91b23356de545f533615b5071676e9",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "vscode_chat.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/apps/vscode/vscode_chat.talon",
+          "sanitized_filename": "trillium--apps--vscode--vscode_chat.talon",
+          "sha256": "f2226629fcf0e9d3325d3f3b42b82a0d36ae05eee1767fccc7a85e3f4cb62913",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/apps/vscode/vscode_chat.talon",
+          "sanitized_filename": "trillium_talon--trillium--apps--vscode--vscode_chat.talon",
+          "sha256": "f2226629fcf0e9d3325d3f3b42b82a0d36ae05eee1767fccc7a85e3f4cb62913",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "vscode_empty.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/apps/vscode/vscode_empty.talon",
+          "sanitized_filename": "trillium--apps--vscode--vscode_empty.talon",
+          "sha256": "f248b6e3266003b4f0e8530a52c26fe1b0344248c6b9a6b58f02bac5d32ef876",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/apps/vscode/vscode_empty.talon",
+          "sanitized_filename": "trillium_talon--trillium--apps--vscode--vscode_empty.talon",
+          "sha256": "f248b6e3266003b4f0e8530a52c26fe1b0344248c6b9a6b58f02bac5d32ef876",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "vscode_terminal.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/vscode_terminal.talon",
+          "sanitized_filename": "trillium--vscode_terminal.talon",
+          "sha256": "74c408b48affded8eddc81083512898fa2e0a9b597bb9ddfe4631f330f3a6af3",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/vscode_terminal.talon",
+          "sanitized_filename": "trillium_talon--trillium--vscode_terminal.talon",
+          "sha256": "0f7735580280eca0b9c38b475138502f548ca89f59bbcfcacbc56624f67d5b00",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/apps/vscode/vscode_terminal.talon",
+          "sanitized_filename": "trillium_talon--apps--vscode--vscode_terminal.talon",
+          "sha256": "af06b34f6826f0bb69c90caf889087854a22045763c3ef3a5bc9716936ccd9a9",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "webflow.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/webflow.talon",
+          "sanitized_filename": "trillium--webflow.talon",
+          "sha256": "f02bda9f81741d700a78d19455affece78c7db595ed872e3da9da5f63349fb6f",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/webflow.talon",
+          "sanitized_filename": "trillium_talon--trillium--webflow.talon",
+          "sha256": "f02bda9f81741d700a78d19455affece78c7db595ed872e3da9da5f63349fb6f",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "wifi.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/os_controls/wifi.talon",
+          "sanitized_filename": "trillium--os_controls--wifi.talon",
+          "sha256": "ed8cce1d0b9ec9f9e8a931144c1af92d0c8691fea5acf5d89ff0ae908118d4c9",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/os_controls/wifi.talon",
+          "sanitized_filename": "trillium_talon--trillium--os_controls--wifi.talon",
+          "sha256": "ed8cce1d0b9ec9f9e8a931144c1af92d0c8691fea5acf5d89ff0ae908118d4c9",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "window_focus_announcer.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/window_focus_announcer.py",
+          "sanitized_filename": "trillium--window_focus_announcer.py",
+          "sha256": "ea039027b920a7a572c493eb9a210edaa3bdae3985d4ec48dbd238f614629f36",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/window_focus_announcer.py",
+          "sanitized_filename": "trillium_talon--trillium--window_focus_announcer.py",
+          "sha256": "ea039027b920a7a572c493eb9a210edaa3bdae3985d4ec48dbd238f614629f36",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "window_history.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/window_history/window_history.py",
+          "sanitized_filename": "trillium--window_history--window_history.py",
+          "sha256": "9eed9a512d7c3a674815c33d5ad384479f6dbfc0425fd1d7dff89c07c6c08a28",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/window_history/window_history.py",
+          "sanitized_filename": "trillium_talon--trillium--window_history--window_history.py",
+          "sha256": "9eed9a512d7c3a674815c33d5ad384479f6dbfc0425fd1d7dff89c07c6c08a28",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "window_management.talon",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/window_management.talon",
+          "sanitized_filename": "trillium--window_management.talon",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/core/windows_and_tabs/window_management.talon",
+          "sanitized_filename": "trillium_talon--core--windows_and_tabs--window_management.talon",
+          "sha256": "453296f37e78ce5bf04d342aa9088a402cd5e0546233e291a79f3b69996ab28b",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "window_tracker.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/happy_run/window_tracker.py",
+          "sanitized_filename": "trillium--happy_run--window_tracker.py",
+          "sha256": "d3c8914b866662f9fd806e524c0c79c42305b8e9d0db4c8eb9603aeff83d0f75",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/happy_run/window_tracker.py",
+          "sanitized_filename": "trillium_talon--trillium--happy_run--window_tracker.py",
+          "sha256": "d3c8914b866662f9fd806e524c0c79c42305b8e9d0db4c8eb9603aeff83d0f75",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "window_utils.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/core/app_switcher/window_utils.py",
+          "sanitized_filename": "trillium--core--app_switcher--window_utils.py",
+          "sha256": "bcf61d5388858c1f57f8e946f4d89a869e88868ecf24d4ef2c1870e96ecef1be",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/core/app_switcher/window_utils.py",
+          "sanitized_filename": "trillium_talon--trillium--core--app_switcher--window_utils.py",
+          "sha256": "bcf61d5388858c1f57f8e946f4d89a869e88868ecf24d4ef2c1870e96ecef1be",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "workspace.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/workspace/workspace.py",
+          "sanitized_filename": "trillium--workspace--workspace.py",
+          "sha256": "a048af524ad75d072a9aa7907a9c2d0f54f47cabdf535ecf2de0e51651d418fe",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/workspace/workspace.py",
+          "sanitized_filename": "trillium_talon--trillium--workspace--workspace.py",
+          "sha256": "a048af524ad75d072a9aa7907a9c2d0f54f47cabdf535ecf2de0e51651d418fe",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "workspace.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/workspace/workspace.talon",
+          "sanitized_filename": "trillium--workspace--workspace.talon",
+          "sha256": "4ea264b89e6ce659fa1b7dfafc1f2cd8df7f8f60e3df44f009f5e7b82917c2ad",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/workspace/workspace.talon",
+          "sanitized_filename": "trillium_talon--trillium--workspace--workspace.talon",
+          "sha256": "4ea264b89e6ce659fa1b7dfafc1f2cd8df7f8f60e3df44f009f5e7b82917c2ad",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "workspace_vscode.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/workspace/workspace_vscode.talon",
+          "sanitized_filename": "trillium--workspace--workspace_vscode.talon",
+          "sha256": "4a0d52f983b89512566bc83083e7e017c1b84e1bf0959bcda71a9379c2e06104",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/workspace/workspace_vscode.talon",
+          "sanitized_filename": "trillium_talon--trillium--workspace--workspace_vscode.talon",
+          "sha256": "4a0d52f983b89512566bc83083e7e017c1b84e1bf0959bcda71a9379c2e06104",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "write_the_clipboard.py",
+      "all_identical": false,
+      "copies": [
+        {
+          "rel_path": "trillium/write_the_clipboard/write_the_clipboard.py",
+          "sanitized_filename": "trillium--write_the_clipboard--write_the_clipboard.py",
+          "sha256": "60a9fda3a50acd647b6e7bc82302392a7f6161e3a65d1b8b5a40421b4d08c8c7",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium/mode_indicator/write_the_clipboard.py",
+          "sanitized_filename": "trillium--mode_indicator--write_the_clipboard.py",
+          "sha256": "8096f9f014ea42d128037cec4286ed9eded6de68b42020c22d8c3c5e7e7d2a98",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/write_the_clipboard/write_the_clipboard.py",
+          "sanitized_filename": "trillium_talon--trillium--write_the_clipboard--write_the_clipboard.py",
+          "sha256": "60a9fda3a50acd647b6e7bc82302392a7f6161e3a65d1b8b5a40421b4d08c8c7",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/mode_indicator/write_the_clipboard.py",
+          "sanitized_filename": "trillium_talon--trillium--mode_indicator--write_the_clipboard.py",
+          "sha256": "8096f9f014ea42d128037cec4286ed9eded6de68b42020c22d8c3c5e7e7d2a98",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "write_the_clipboard.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/write_the_clipboard/write_the_clipboard.talon",
+          "sanitized_filename": "trillium--write_the_clipboard--write_the_clipboard.talon",
+          "sha256": "fdc8feaaf723029dc792e9aa27cfbf10193412e368d609ea9cd9dc20ee787217",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/write_the_clipboard/write_the_clipboard.talon",
+          "sanitized_filename": "trillium_talon--trillium--write_the_clipboard--write_the_clipboard.talon",
+          "sha256": "fdc8feaaf723029dc792e9aa27cfbf10193412e368d609ea9cd9dc20ee787217",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "zoom.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/apps/zoom/zoom.py",
+          "sanitized_filename": "trillium--apps--zoom--zoom.py",
+          "sha256": "186a28e51887f27150e567fda78619d5c57e2103250b65e0d197cbf863401b85",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/apps/zoom/zoom.py",
+          "sanitized_filename": "trillium_talon--trillium--apps--zoom--zoom.py",
+          "sha256": "186a28e51887f27150e567fda78619d5c57e2103250b65e0d197cbf863401b85",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "zoom.talon",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/zoom.talon",
+          "sanitized_filename": "trillium--zoom.talon",
+          "sha256": "67ad64f6b3ffaf4212a0bf105e7ca72f33254cf7733da8a9daaf84441e60a290",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/zoom.talon",
+          "sanitized_filename": "trillium_talon--trillium--zoom.talon",
+          "sha256": "67ad64f6b3ffaf4212a0bf105e7ca72f33254cf7733da8a9daaf84441e60a290",
+          "copied": true
+        }
+      ]
+    },
+    {
+      "filename": "zoom_mac.py",
+      "all_identical": true,
+      "copies": [
+        {
+          "rel_path": "trillium/core/zoom/zoom_mac.py",
+          "sanitized_filename": "trillium--core--zoom--zoom_mac.py",
+          "sha256": "c9584a343ed2cf15de11ba3602152191e194daca2ed5114c8ec8cc09fec836b7",
+          "copied": true
+        },
+        {
+          "rel_path": "trillium_talon/trillium/core/zoom/zoom_mac.py",
+          "sanitized_filename": "trillium_talon--trillium--core--zoom--zoom_mac.py",
+          "sha256": "c9584a343ed2cf15de11ba3602152191e194daca2ed5114c8ec8cc09fec836b7",
+          "copied": true
+        }
       ]
     }
   ]

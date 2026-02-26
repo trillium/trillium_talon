@@ -212,6 +212,92 @@ def snapshot_plain_dir(dir_path: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Collision detection
+# ---------------------------------------------------------------------------
+
+COLLISION_EXTENSIONS = {".talon", ".talon-list", ".py"}
+COLLISION_SIZE_LIMIT = 512 * 1024  # 512KB — skip content for large files
+
+
+def _sanitize_path(rel_path: str) -> str:
+    """Turn a relative path into a flat filename using -- as separator."""
+    return rel_path.replace(os.sep, "--").replace("/", "--")
+
+
+def find_collisions(talon_user_path: str) -> dict:
+    """Scan all repos/dirs for files with identical names across different locations.
+
+    Returns a dict mapping bare filename -> list of {rel_path, full_path, sha256}.
+    Only entries with 2+ occurrences are included.
+    """
+    by_name: dict[str, list[dict]] = {}
+
+    for top in sorted(os.listdir(talon_user_path)):
+        top_full = os.path.join(talon_user_path, top)
+        if not os.path.isdir(top_full) or top.startswith("."):
+            continue
+        for root, dirs, files in os.walk(top_full):
+            dirs[:] = [d for d in dirs if d not in (".git", "__pycache__") and not d.startswith(".")]
+            for name in files:
+                if not any(name.endswith(ext) for ext in COLLISION_EXTENSIONS):
+                    continue
+                full = os.path.join(root, name)
+                rel = os.path.relpath(full, talon_user_path)
+                sha = _sha256_file(full)
+                by_name.setdefault(name, []).append({
+                    "rel_path": rel,
+                    "full_path": full,
+                    "sha256": sha,
+                })
+
+    return {name: entries for name, entries in by_name.items() if len(entries) > 1}
+
+
+def dump_collision_files(collisions: dict, script_dir: str) -> list[dict]:
+    """Write each colliding file into .scripts/collisions/ with a sanitized name.
+
+    Returns a list of collision records for the snapshot.
+    """
+    collisions_dir = os.path.join(script_dir, "collisions")
+    os.makedirs(collisions_dir, exist_ok=True)
+
+    records = []
+    for bare_name, entries in sorted(collisions.items()):
+        # Check if all copies are identical
+        shas = {e["sha256"] for e in entries if e["sha256"]}
+        all_identical = len(shas) == 1 and len(entries) > 1
+
+        copies = []
+        for entry in entries:
+            sanitized = _sanitize_path(entry["rel_path"])
+            dest = os.path.join(collisions_dir, sanitized)
+            try:
+                size = os.path.getsize(entry["full_path"])
+                if size <= COLLISION_SIZE_LIMIT:
+                    import shutil
+                    shutil.copy2(entry["full_path"], dest)
+                    copied = True
+                else:
+                    copied = False
+            except OSError:
+                copied = False
+            copies.append({
+                "rel_path": entry["rel_path"],
+                "sanitized_filename": sanitized,
+                "sha256": entry["sha256"],
+                "copied": copied,
+            })
+
+        records.append({
+            "filename": bare_name,
+            "all_identical": all_identical,
+            "copies": copies,
+        })
+
+    return records
+
+
+# ---------------------------------------------------------------------------
 # Hostname file scanner
 # ---------------------------------------------------------------------------
 
@@ -278,6 +364,15 @@ def create_snapshot(talon_user_path: str) -> dict:
 
     snapshot["hostname_files"] = find_hostname_files(talon_user_path)
     return snapshot
+
+
+def run_collision_detection(snapshot: dict, talon_user_path: str, script_dir: str) -> None:
+    """Detect collisions, dump files, and attach results to snapshot in place."""
+    print("Scanning for filename collisions...", file=sys.stderr)
+    collisions = find_collisions(talon_user_path)
+    print(f"  Found {len(collisions)} colliding filenames", file=sys.stderr)
+    records = dump_collision_files(collisions, script_dir)
+    snapshot["collisions"] = records
 
 
 # ---------------------------------------------------------------------------
@@ -760,6 +855,32 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
         w(f"- `{path}` (hostname: {hosts})")
     w("")
 
+    # Collision report
+    collisions_a = {c["filename"]: c for c in snap_a.get("collisions", [])}
+    collisions_b = {c["filename"]: c for c in snap_b.get("collisions", [])}
+    all_collision_names = sorted(set(collisions_a) | set(collisions_b))
+
+    if all_collision_names:
+        w("## Filename Collisions (Consolidation Candidates)")
+        w("")
+        w("These filenames appear in multiple repos/directories on the same machine.")
+        w("Each copy has been written to `.scripts/collisions/` with a sanitized path name.")
+        w("**Action:** Pick a canonical location and naming convention, remove duplicates.")
+        w("")
+        for fname in all_collision_names:
+            ca = collisions_a.get(fname)
+            cb = collisions_b.get(fname)
+            w(f"### `{fname}`")
+            for host, collision in [(host_a, ca), (host_b, cb)]:
+                if not collision:
+                    continue
+                identical = collision.get("all_identical", False)
+                status = "all copies identical" if identical else "**copies differ — review needed**"
+                w(f"**{host}** ({status}):")
+                for copy in collision["copies"]:
+                    w(f"  - `{copy['rel_path']}` → `collisions/{copy['sanitized_filename']}`")
+            w("")
+
     # Summary of all actions
     w("---")
     w("")
@@ -790,12 +911,14 @@ def cmd_snapshot(args):
     print(f"Snapshotting {talon_path}...", file=sys.stderr)
     snap = create_snapshot(talon_path)
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    run_collision_detection(snap, talon_path, script_dir)
+
     if args.output:
         out_path = args.output
     else:
         hostname = snap["hostname"]
         date = datetime.now().strftime("%Y%m%d")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
         out_path = os.path.join(script_dir, f"talon-snapshot-{hostname}-{date}.json")
 
     with open(out_path, "w") as f:
@@ -808,6 +931,8 @@ def cmd_snapshot(args):
     plain_count = sum(1 for d in snap["directories"].values() if d["type"] == "plain")
     print(f"  Git repos: {git_count}, Plain dirs: {plain_count}", file=sys.stderr)
     print(f"  Hostname files found: {len(snap['hostname_files'])}", file=sys.stderr)
+    collision_count = len(snap.get("collisions", []))
+    print(f"  Colliding filenames: {collision_count}", file=sys.stderr)
 
 
 def cmd_diff(args):

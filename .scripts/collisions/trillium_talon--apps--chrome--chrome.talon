@@ -1,0 +1,32 @@
+app: chrome
+-
+tag(): browser
+tag(): user.tabs
+
+profile switch: user.chrome_mod("shift-m")
+
+full screen [switch]:
+    key(fn-f)
+
+(hide bookmarks | toggle bookmarks | bookmarks switch):
+    key(cmd-shift-f)
+
+tab search: user.chrome_mod("shift-a")
+
+tab search <user.text>$:
+    # Fails to clear search box if tab search is already open
+    browser.focus_address()
+    sleep(200ms)
+    user.chrome_mod("shift-a")
+    
+    sleep(200ms)
+    insert("{text}")
+
+toggle dark [mode]:
+    key(alt-shift-d)
+
+move tab (up | left):
+    key(ctrl-shift-pageup)
+
+move tab (down | right):
+    key(ctrl-shift-pagedown)

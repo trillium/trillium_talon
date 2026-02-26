@@ -1,0 +1,7 @@
+volume up: key(volup)
+volume down: key(voldown)
+set volume <number>: user.media_set_volume(number)
+(volume | media) mute: key(mute)
+[media | spotify] play next: key(next)
+[media | spotify] play previous: key(prev)
+media (play | pause): user.play_pause()
