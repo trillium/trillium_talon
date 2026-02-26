@@ -20,7 +20,7 @@ VSCODE_SETTINGS_PATHS = [
     Path.home() / ".config/Code/User/settings.json",  # Linux
 ]
 
-SOURCE = Path(__file__).parent.parent / "cursorless-settings/vscode-settings.jsonc"
+SOURCE = Path(__file__).parent / "vscode-settings.jsonc"
 
 
 def strip_jsonc(text: str) -> str:
