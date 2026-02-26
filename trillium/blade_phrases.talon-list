@@ -1,0 +1,26 @@
+list: user.blade_phrases
+-
+resume: resume
+help: help
+version: version
+verbose: verbose
+force: force
+quiet: quiet
+yes: yes
+no: no
+all: all
+dry run: dry-run
+recursive: recursive
+global: global
+local: local
+save: save
+delete: delete
+install: install
+update: update
+reset: reset
+init: init
+status: status
+config: config
+output: output
+input: input
+debug: debug
