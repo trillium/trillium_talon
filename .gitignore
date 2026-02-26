@@ -19,3 +19,7 @@ __pycache__
 saved_windows.json
 mode_indicator_state.json
 usage_log.csv
+# Snapshot/reconciliation artifacts
+.scripts/collisions/
+.scripts/talon-snapshot-*.json
+.scripts/reconcile-*.md

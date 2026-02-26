@@ -1,6 +1,0 @@
-clear way left: user.rapid_backspace(300)
-clear way right: user.rapid_delete(300)
-nuke right: user.rapid_delete(300)
-(nuke left | new cleft | nu cleft | new left): user.rapid_backspace(300)
-clear way left <number>: user.rapid_backspace(number)
-clear way right <number>: user.rapid_delete(number)

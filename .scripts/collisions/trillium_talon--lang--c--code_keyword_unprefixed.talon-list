@@ -1,7 +1,0 @@
-list: user.code_keyword_unprefixed
-code.language: c
--
-
-register: "register "
-static: "static "
-volatile: "volatile "
