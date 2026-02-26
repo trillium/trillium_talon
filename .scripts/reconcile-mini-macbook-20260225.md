@@ -1,11 +1,11 @@
 # Reconciliation: trillium-mini <-> macbookpro.lan
 
-Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 2026-02-26T05:33:00.982671+00:00
+Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 2026-02-26T05:43:38.602712+00:00
 
 ## Missing Directories
 
 ### `parrot.py` — exists on **trillium-mini** only
-- Type: git repo, branch `master`
+- Type: git repo (plain clone), branch `master`
 - Origin: `https://github.com/trillium/parrot.py.git`
 - **Action on macbookpro.lan:**
   ```bash
@@ -17,7 +17,7 @@ Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 
 - **Action:** Copy from trillium-mini to macbookpro.lan via scp/rsync
 
 ### `talon_mcp` — exists on **trillium-mini** only
-- Type: git repo, branch `main`
+- Type: git repo (plain clone), branch `main`
 - Origin: `https://github.com/trillium/talon_mcp.git`
 - **Action on macbookpro.lan:**
   ```bash
@@ -29,12 +29,8 @@ Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 
 - **Action:** Copy from macbookpro.lan to trillium-mini via scp/rsync
 
 ### `MouseControlChicken` — exists on **macbookpro.lan** only
-- Type: git repo, branch `main` (0 ahead, 42 behind origin)
-- Origin: `https://github.com/FireChickenProductivity/MouseControlChicken/`
-- **Action on trillium-mini:**
-  ```bash
-  cd ~/.talon/user && git clone https://github.com/FireChickenProductivity/MouseControlChicken/ MouseControlChicken
-  ```
+- **Status: CLEAR TO REMOVE** — no longer in use
+- **Action on macbookpro.lan:** `rm -rf ~/.talon/user/MouseControlChicken`
 
 ### `__talon_community` — exists on **macbookpro.lan** only
 - Type: plain directory (1 files)
@@ -45,16 +41,15 @@ Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 
 - **Action:** Copy from macbookpro.lan to trillium-mini via scp/rsync
 
 ### `flex-mouse-grid` — exists on **macbookpro.lan** only
-- Type: git repo, branch `master` (0 ahead, 10 behind origin)
+- Type: git repo (plain clone), branch `master`
 - Origin: `https://github.com/brollin/flex-mouse-grid`
-- Upstream: `https://github.com/tararoys/dense-mouse-grid.git`
 - **Action on trillium-mini:**
   ```bash
   cd ~/.talon/user && git clone https://github.com/brollin/flex-mouse-grid flex-mouse-grid
   ```
 
 ### `most_recent_command_playback` — exists on **macbookpro.lan** only
-- Type: git repo, branch `main` (0 ahead, 0 behind)
+- Type: git repo (fork (owned)), branch `main`
 - Origin: `https://github.com/trillium/most_recent_command_playback.git`
 - **Action on trillium-mini:**
   ```bash
@@ -78,7 +73,7 @@ Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 
 - **Action:** Copy from macbookpro.lan to trillium-mini via scp/rsync
 
 ### `talon-axkit` — exists on **macbookpro.lan** only
-- Type: git repo, branch `main` (0 ahead, 0 behind)
+- Type: git repo (plain clone), branch `main`
 - Origin: `https://github.com/phillco/talon-axkit`
 - **Action on trillium-mini:**
   ```bash
@@ -90,8 +85,12 @@ Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 
 - **Action:** Copy from macbookpro.lan to trillium-mini via scp/rsync
 
 ### `trillium_obs` — exists on **macbookpro.lan** only
-- Type: git repo, branch `main` (no remote configured)
-- **Action on trillium-mini:** Source repo has no remote — obtain from macbookpro.lan directly
+- Type: git repo (plain clone), branch `main`
+- Origin: `unknown`
+- **Action on trillium-mini:**
+  ```bash
+  cd ~/.talon/user && git clone unknown trillium_obs
+  ```
 
 ### `trillium_talon_deck` — exists on **macbookpro.lan** only
 - Type: plain directory (5 files)
@@ -106,40 +105,23 @@ Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 
 ### `cursorless-talon`
 - trillium-mini: branch `main`
 - macbookpro.lan: branch `trillium`
-- Remotes (macbook): origin=`https://github.com/trillium/cursorless-talon.git`, upstream=`https://github.com/cursorless-dev/cursorless-talon.git`
-- **Action:** macbook is on the `trillium` fork branch — likely correct. Switch mini:
-  ```bash
-  # on trillium-mini
-  cd ~/.talon/user/cursorless-talon
-  git fetch origin
-  git checkout trillium
-  ```
+- **Action:** Determine which branch is correct and switch the other machine
 
 ### `rango-talon`
 - trillium-mini: branch `main`
 - macbookpro.lan: branch `trillium`
-- Remotes (macbook): origin=`https://github.com/david-tejada/rango-talon`
-- **Action:** macbook is on `trillium` — switch mini to match:
-  ```bash
-  # on trillium-mini
-  cd ~/.talon/user/rango-talon
-  git fetch origin
-  git checkout trillium
-  ```
+- **Action:** Determine which branch is correct and switch the other machine
 
 ### `talon-gaze-ocr`
 - trillium-mini: branch `trillium`
 - macbookpro.lan: branch `beta`
-- Remotes (macbook): origin=`https://github.com/trillium/talon-gaze-ocr`, upstream=`https://github.com/wolfmanstout/talon-gaze-ocr/`
-- macbook: 2 ahead, 35 behind origin
 - **Action:** Determine which branch is correct and switch the other machine
 
 ### `trillium_talon`
 - trillium-mini: branch `mini`
 - macbookpro.lan: branch `macbook`
-- Remotes (macbook): origin=`https://github.com/trillium/trillium_talon`, upstream=`https://github.com/knausj85/knausj_talon.git`
-- **Expected:** These are hostname-specific branches — this divergence is intentional
-- **Action:** Verify both branches are pushed to origin. Merge shared changes into `main` periodically.
+- **Expected:** These appear to be hostname-specific branches
+- **Action:** Verify both branches are pushed to origin. Consider merging shared changes into a common branch (e.g. `main`)
 
 ## Uncommitted Changes
 
@@ -178,6 +160,8 @@ Snapshots: trillium-mini at 2026-02-26T05:25:39.219800+00:00, macbookpro.lan at 
 **trillium-mini** — Untracked:
   - `core/system_paths-trillium-mini.talon-list`
   - `trillium/blade_phrases.talon-list`
+**macbookpro.lan** — Untracked:
+  - `.scripts/talon_snapshot.py`
 
 ## Config File Differences (Non-Git Directories)
 
@@ -216,24 +200,6 @@ They should exist on **both** machines — Talon's hostname matcher ensures only
 - `trillium_talon/core/system_paths-trilliums-mini.lan.talon-list` (hostname: trilliums-mini.lan)
 - `trillium_talon/trillium/core/system_paths-MacBookPro.lan1.talon-list` (hostname: MacBookPro.lan1)
 - `trillium_talon/trillium/mode_indicator/mode_indicator-macbookpro.lan.talon` (hostname: macbookpro.lan)
-
----
-
-## macbookpro.lan Git Repo Reference
-
-Full state of all git repos on macbookpro.lan at snapshot time. Use this to reconcile on trillium-mini.
-
-| Repo | Branch | Ahead | Behind | Remotes |
-|------|--------|-------|--------|---------|
-| `MouseControlChicken` | `main` | 0 | 42 | origin: https://github.com/FireChickenProductivity/MouseControlChicken/ |
-| `cursorless-talon` | `trillium` | — | — | origin: https://github.com/trillium/cursorless-talon.git, upstream: https://github.com/cursorless-dev/cursorless-talon.git |
-| `flex-mouse-grid` | `master` | 0 | 10 | origin: https://github.com/brollin/flex-mouse-grid, upstream: https://github.com/tararoys/dense-mouse-grid.git |
-| `most_recent_command_playback` | `main` | 0 | 0 | origin: https://github.com/trillium/most_recent_command_playback.git |
-| `rango-talon` | `trillium` | — | — | origin: https://github.com/david-tejada/rango-talon |
-| `talon-axkit` | `main` | 0 | 0 | origin: https://github.com/phillco/talon-axkit |
-| `talon-gaze-ocr` | `beta` | 2 | 35 | origin: https://github.com/trillium/talon-gaze-ocr, upstream: https://github.com/wolfmanstout/talon-gaze-ocr/ |
-| `trillium_obs` | `main` | — | — | *(no remote)* |
-| `trillium_talon` | `macbook` | — | — | origin: https://github.com/trillium/trillium_talon, upstream: https://github.com/knausj85/knausj_talon.git |
 
 ---
 

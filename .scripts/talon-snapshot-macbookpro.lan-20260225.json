@@ -1,0 +1,2972 @@
+{
+  "schema_version": 1,
+  "hostname": "macbookpro.lan",
+  "timestamp": "2026-02-26T05:43:38.602712+00:00",
+  "talon_user_path": "/Users/trilliumsmith/.talon/user",
+  "directories": {
+    "Mouse Control Chicken Data": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "GridOptions.csv",
+          "size": 351,
+          "mtime": "2025-05-17T10:39:45.435326",
+          "sha256": "32d3df5030e14930b2ea9ad6f55370cdce61a24d724c313149df4f1c6efd4feb"
+        },
+        {
+          "path": "settings.talon",
+          "size": 3036,
+          "mtime": "2025-05-17T11:01:13.549310",
+          "sha256": "d6947fb6d1c90eabd778600fd634df9432034e16cd7e330ab42095e97f1c34d3"
+        },
+        {
+          "path": "uppercase_letters.talon-list",
+          "size": 312,
+          "mtime": "2025-05-17T10:39:46.981292",
+          "sha256": "3057a65a549e875ebc50dd3808600f0e592bf474b1e63c76450876c80c7027ba"
+        }
+      ]
+    },
+    "MouseControlChicken": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/FireChickenProductivity/MouseControlChicken/"
+        },
+        "branch": "main",
+        "head_sha": "ecb71faf250b9cd1c815d9aa159cd196bb04ef0d",
+        "tracking": "origin/main",
+        "ahead": 0,
+        "behind": 42,
+        "dirty_files": [
+          {
+            "status": "M",
+            "path": "source/options_dialogue.talon"
+          }
+        ],
+        "untracked_files": [],
+        "stash_count": 0,
+        "is_fork": false,
+        "local_diff": "diff --git a/source/options_dialogue.talon b/source/options_dialogue.talon\nindex 48cf15a..3cd0108 100644\n--- a/source/options_dialogue.talon\n+++ b/source/options_dialogue.talon\n@@ -1,5 +1,5 @@\n tag: user.mouse_control_chicken_options_showing\n -\n \n-choose <number_small>: user.mouse_control_chicken_choose_option_from_dialogue(number_small)\n-options (hide|close|off): user.mouse_control_chicken_hide_options_dialogue()\n\\ No newline at end of file\n+[chicken] choose <number_small>: user.mouse_control_chicken_choose_option_from_dialogue(number_small)\n+options (hide | close | off): user.mouse_control_chicken_hide_options_dialogue()",
+        "submodules": []
+      }
+    },
+    "__talon_community": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "trillium/workspace/workspaces.json",
+          "size": 1427,
+          "mtime": "2026-02-25T12:25:12.919504",
+          "sha256": "0c4644d043273b12b946b14d4970815164f0bbef2e31e4fa5a0a2d3c32dbebf1"
+        }
+      ]
+    },
+    "cursorless-settings": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "actions.csv",
+          "size": 1775,
+          "mtime": "2025-06-23T09:44:24.136700",
+          "sha256": "4b4b8fe53ef07679575ade31e3edb0f4aade7d7c320d406a11594c5c834f4fe3"
+        },
+        {
+          "path": "experimental/actions_custom.csv",
+          "size": 28,
+          "mtime": "2024-03-12T10:49:00.500544",
+          "sha256": "ee735ace542b475856a79a539b49476d73b6db429227d90198990cc016bc98c8"
+        },
+        {
+          "path": "experimental/experimental_actions.csv",
+          "size": 75,
+          "mtime": "2024-03-12T10:49:00.500819",
+          "sha256": "59a4397b238238b5572ea846707cc7e1519be7aa43446e869b01474770bf724e"
+        },
+        {
+          "path": "experimental/insertion_snippets.csv",
+          "size": 99,
+          "mtime": "2024-03-12T10:49:00.500976",
+          "sha256": "b20d8b3e37efafd43d00f49beeacda4a9945e46f856e01dfa9581b66245ea38b"
+        },
+        {
+          "path": "experimental/insertion_snippets_single_phrase.csv",
+          "size": 82,
+          "mtime": "2024-03-12T10:49:00.501169",
+          "sha256": "d88551b129f211b3880f1e03fbb47cc78176195ab3afec379438276b0a790080"
+        },
+        {
+          "path": "experimental/miscellaneous.csv",
+          "size": 58,
+          "mtime": "2024-03-12T10:49:00.501413",
+          "sha256": "4d49c192809718893c8bc36e0eb25b72554b2f5b4cbb4a66da64009773f2e443"
+        },
+        {
+          "path": "experimental/regex_scope_types.csv",
+          "size": 19,
+          "mtime": "2024-03-12T10:49:00.501582",
+          "sha256": "9c51d526d47384ad006f05094093e3e53447bb7dcac1676d07ab3bcf28197d1a"
+        },
+        {
+          "path": "experimental/wrapper_snippets.csv",
+          "size": 209,
+          "mtime": "2024-03-12T10:49:00.501721",
+          "sha256": "2a381a264715d15fa91037a1527a282ce99cd69525ae7befab52c09c7d4e1157"
+        },
+        {
+          "path": "hat_styles.csv",
+          "size": 829,
+          "mtime": "2026-01-24T16:47:47.448577",
+          "sha256": "d6aebc1c856e821bfa83955e4b39b8e5e012d5f09ff0193e382aef5fd26b30d3"
+        },
+        {
+          "path": "modifier_scope_types.csv",
+          "size": 1711,
+          "mtime": "2026-01-22T13:32:51.785874",
+          "sha256": "bfcfd20ba81c39ee7fc9ab52407dcf563c33311f73cd242e3240749db2792f45"
+        },
+        {
+          "path": "modifiers.csv",
+          "size": 704,
+          "mtime": "2026-01-24T15:52:28.447543",
+          "sha256": "a000b0cac7594b6111b2dbfdb98fed4cab7a0837fb92ea15f342ffbc130ff31e"
+        },
+        {
+          "path": "paired_delimiters.csv",
+          "size": 348,
+          "mtime": "2025-06-23T09:43:56.860802",
+          "sha256": "7138a855691d92dfad064790a8b8b3603f611e5b58135b4e0537bf79daf36c10"
+        },
+        {
+          "path": "positions.csv",
+          "size": 91,
+          "mtime": "2024-03-12T10:49:00.502526",
+          "sha256": "0e1ef9a8a31c8e729ffc606e22e897e04254c7f0d2dd6f15a51449dd6e3e769e"
+        },
+        {
+          "path": "scope_visualizer.csv",
+          "size": 143,
+          "mtime": "2024-03-12T10:49:00.502688",
+          "sha256": "1b400769e1bea1bf2e3c72250f4f1873964a90a5b0f2cc89af1bd962fb48e1cb"
+        },
+        {
+          "path": "special_marks.csv",
+          "size": 221,
+          "mtime": "2024-03-12T10:49:00.502879",
+          "sha256": "5715a43d363e69b9077d5c11f5e49cabd0a453542acecdecd86c7ba76ae55dee"
+        },
+        {
+          "path": "target_connectives.csv",
+          "size": 201,
+          "mtime": "2024-03-12T10:49:00.503407",
+          "sha256": "d1df35fe6c0843dd45002b195ae35540f03daba21e8e09296393933e93ca0b81"
+        }
+      ]
+    },
+    "cursorless-talon": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/cursorless-talon.git",
+          "upstream": "https://github.com/cursorless-dev/cursorless-talon.git"
+        },
+        "branch": "trillium",
+        "head_sha": "6165e470b6244d02fdeddc64a587265f12312b17",
+        "tracking": null,
+        "ahead": null,
+        "behind": null,
+        "dirty_files": [],
+        "untracked_files": [
+          "src/vendor/__pycache__/"
+        ],
+        "stash_count": 0,
+        "is_fork": true,
+        "submodules": []
+      }
+    },
+    "docs": {
+      "type": "plain",
+      "files": []
+    },
+    "flex-mouse-grid": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/brollin/flex-mouse-grid",
+          "upstream": "https://github.com/tararoys/dense-mouse-grid.git"
+        },
+        "branch": "master",
+        "head_sha": "5c1b3d9b83e1050a922e9d03073194527945bf6b",
+        "tracking": "origin/master",
+        "ahead": 0,
+        "behind": 10,
+        "dirty_files": [
+          {
+            "status": "M",
+            "path": "flex_mouse_grid.talon"
+          }
+        ],
+        "untracked_files": [],
+        "stash_count": 0,
+        "is_fork": false,
+        "local_diff": "diff --git a/flex_mouse_grid.talon b/flex_mouse_grid.talon\nindex 0923318..e95f99e 100644\n--- a/flex_mouse_grid.talon\n+++ b/flex_mouse_grid.talon\n@@ -1,13 +1,14 @@\n+tag: user.flex_mouse_grid_showing\n -\n \n # Grid\n-flex grid: user.flex_grid_place_window()\n+flex (open | grid open | grid): user.flex_grid_place_window()\n flex grid screen: user.flex_grid_activate()\n flex grid screen <number>: user.flex_grid_select_screen(number)\n-[flex] grid close: user.flex_grid_deactivate()\n+(flex grid | flex | grid) (close | off): user.flex_grid_deactivate()\n \n # Points\n-^points$: user.flex_grid_points_toggle(1)\n+^points [open]$: user.flex_grid_points_toggle(1)\n ^points close$: user.flex_grid_points_toggle(0)\n ^point <user.word> [<number>]$: user.flex_grid_go_to_point(word, number or 1, -1)\n ^point <user.word> next$: user.flex_grid_go_to_point_relative(word, 1)",
+        "submodules": []
+      }
+    },
+    "most_recent_command_playback": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/most_recent_command_playback.git"
+        },
+        "branch": "main",
+        "head_sha": "39dfa37e68213c905e6f4e333c7c1cfa2777a8a4",
+        "tracking": "origin/main",
+        "ahead": 0,
+        "behind": 0,
+        "dirty_files": [],
+        "untracked_files": [],
+        "stash_count": 0,
+        "is_fork": true,
+        "submodules": []
+      }
+    },
+    "notes": {
+      "type": "plain",
+      "files": []
+    },
+    "opposite_actions": {
+      "type": "plain",
+      "files": []
+    },
+    "rango-talon": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/david-tejada/rango-talon"
+        },
+        "branch": "trillium",
+        "head_sha": "157db1f2d9b2bc56a5e06c574fd75adfc6c7fd4b",
+        "tracking": null,
+        "ahead": null,
+        "behind": null,
+        "dirty_files": [],
+        "untracked_files": [],
+        "stash_count": 1,
+        "is_fork": false,
+        "local_diff": null,
+        "submodules": []
+      }
+    },
+    "recordings": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "parrot/repeat_go_lineup_2026-01-29_01-32-26-476785.json",
+          "size": 705,
+          "mtime": "2026-01-29T01:32:26.477678",
+          "sha256": "1351d3fbbceef755589827c35385e154555511b71febb0b9ab8a0f3d475bcc52"
+        },
+        {
+          "path": "parrot/repeat_go_lineup_2026-01-29_01-32-26-829985.json",
+          "size": 705,
+          "mtime": "2026-01-29T01:32:26.831053",
+          "sha256": "00249e34301daa74526b29d3aa9de3d470e2b0e19a71837a6f602d698752ffd7"
+        },
+        {
+          "path": "parrot/repeat_go_lineup_2026-01-29_01-35-19-981044.json",
+          "size": 950,
+          "mtime": "2026-01-29T01:35:19.981730",
+          "sha256": "42d44b55f45c3f14c7eac689e16db05846466541109680f9b72961fe1bf8a98d"
+        },
+        {
+          "path": "parrot/repeat_go_lineup_2026-01-29_01-36-35-966053.json",
+          "size": 979,
+          "mtime": "2026-01-29T01:36:35.966779",
+          "sha256": "4760c6560f1c7747b5a9f35a1b313e0899412e2747cd4c4239425a9c9a7b3e5f"
+        },
+        {
+          "path": "parrot/reverse_go_lineup_2026-01-29_01-32-27-643162.json",
+          "size": 706,
+          "mtime": "2026-01-29T01:32:27.644024",
+          "sha256": "5948d1c39f9f860bc87ed812bf881e83607fef51e2dff9f4f3fa7c2da654e123"
+        },
+        {
+          "path": "parrot/reverse_go_lineup_2026-01-29_01-32-27-857684.json",
+          "size": 706,
+          "mtime": "2026-01-29T01:32:27.858268",
+          "sha256": "d5ee6b07b6535e9c1d96237c8236a0bc45363690b6ec5ebf89327ac006e306a8"
+        },
+        {
+          "path": "parrot/reverse_go_lineup_2026-01-29_01-32-28-193139.json",
+          "size": 706,
+          "mtime": "2026-01-29T01:32:28.193901",
+          "sha256": "87535247c9309b6a5de1e737d5e7d0077a3350e72615572399cd5f073f56f6bf"
+        },
+        {
+          "path": "parrot/reverse_go_lineup_2026-01-29_01-35-23-964108.json",
+          "size": 920,
+          "mtime": "2026-01-29T01:35:23.964708",
+          "sha256": "ea404e7ec3d59700e037d42c0497fbac82f6dc67e3ff74dd42c0cf8fa041d1e4"
+        }
+      ]
+    },
+    "settings": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "abbreviations.csv",
+          "size": 6730,
+          "mtime": "2024-03-12T10:48:21.836547",
+          "sha256": "fa0725bab57b6acb23c57fa990a13b2ec6e0b4ad32e440c654f21471feee1cd3"
+        },
+        {
+          "path": "additional_words.csv",
+          "size": 180,
+          "mtime": "2026-02-04T17:14:21.015239",
+          "sha256": "a8c08e61bd1ecacd7235bcf9e76896a7f6e2213ed75181858541b5ce08d4383b"
+        },
+        {
+          "path": "alphabet.csv",
+          "size": 225,
+          "mtime": "2025-06-19T22:55:17.629586",
+          "sha256": "47b5137f9907ec0ce485b868f76f122f5b828aefd1981aa31b8dc70f7275a74f"
+        },
+        {
+          "path": "file_extensions.csv",
+          "size": 740,
+          "mtime": "2024-03-12T10:48:25.017911",
+          "sha256": "f1acf5db215ed103cf28718abdf4ccb5d51a9b474d2527b2b2a27ca13ccfa486"
+        },
+        {
+          "path": "search_engines.csv",
+          "size": 255,
+          "mtime": "2024-03-12T10:48:22.611397",
+          "sha256": "1939713e2dcefb252a657de6b4950a028a637b96269bf9b868adc923264203ee"
+        },
+        {
+          "path": "system_paths.csv",
+          "size": 460,
+          "mtime": "2024-03-12T10:48:21.977947",
+          "sha256": "bdbd7e6ca20f70ffaf250a53824dfcdba1ee109ab0e7d0621588e0b55e534f18"
+        },
+        {
+          "path": "unix_utilities.csv",
+          "size": 943,
+          "mtime": "2024-03-12T10:48:29.783459",
+          "sha256": "656d568603509e2d394dc1ccf31f3fe9b43e8dfade6896c302422cbb090295b8"
+        },
+        {
+          "path": "websites.csv",
+          "size": 651,
+          "mtime": "2024-03-12T10:48:22.610778",
+          "sha256": "b35669974e92a7a4d3697d43c7408cd93a5ba64b22658db744d002f356aeca1e"
+        },
+        {
+          "path": "words_to_replace.csv",
+          "size": 209,
+          "mtime": "2026-02-08T18:44:11.169451",
+          "sha256": "1c2e433660e43390f6ee7a2327edc13f74489f7ecd8118c35e570e80cf3755d8"
+        }
+      ]
+    },
+    "talon-axkit": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/phillco/talon-axkit"
+        },
+        "branch": "main",
+        "head_sha": "9fc628255f6fc7870a02b107d6eab079531557e1",
+        "tracking": "origin/main",
+        "ahead": 0,
+        "behind": 0,
+        "dirty_files": [],
+        "untracked_files": [],
+        "stash_count": 0,
+        "is_fork": false,
+        "local_diff": null,
+        "submodules": []
+      }
+    },
+    "talon-gaze-ocr": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/talon-gaze-ocr",
+          "upstream": "https://github.com/wolfmanstout/talon-gaze-ocr/"
+        },
+        "branch": "beta",
+        "head_sha": "1f4ca43844094f5da57ef2c15c8fb051b7f41031",
+        "tracking": "upstream/beta",
+        "ahead": 2,
+        "behind": 35,
+        "dirty_files": [
+          {
+            "status": "M",
+            "path": "gaze_ocr_talon.py"
+          }
+        ],
+        "untracked_files": [],
+        "stash_count": 0,
+        "is_fork": true,
+        "submodules": [
+          {
+            "path": ".subtrees/rapidfuzz",
+            "nested_submodules": [
+              {
+                "name": "extern/rapidfuzz-cpp",
+                "path": "extern/rapidfuzz-cpp",
+                "url": "https://github.com/rapidfuzz/rapidfuzz-cpp.git"
+              },
+              {
+                "name": "extern/taskflow",
+                "path": "extern/taskflow",
+                "url": "https://github.com/taskflow/taskflow.git"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "trillium": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "__pycache__/restart_talon.cpython-313.pyc",
+          "size": 6982,
+          "mtime": "2026-02-01T16:23:29.500017",
+          "sha256": "dd324da0976fbd134588a3116cf250096ff252f7ca5459467ab5b2bc442406be"
+        },
+        {
+          "path": "anki_tools.talon",
+          "size": 223,
+          "mtime": "2024-04-24T13:32:19.896218",
+          "sha256": "370a8ba1401736c789c5bc5c67d645789d261a25ebeabdbb0162e23ab5eb95c8"
+        },
+        {
+          "path": "apps/vscode/vscode_chat.talon",
+          "size": 367,
+          "mtime": "2026-02-04T22:46:41.361361",
+          "sha256": "f2226629fcf0e9d3325d3f3b42b82a0d36ae05eee1767fccc7a85e3f4cb62913"
+        },
+        {
+          "path": "apps/vscode/vscode_empty.talon",
+          "size": 321,
+          "mtime": "2025-06-19T14:34:00.795870",
+          "sha256": "f248b6e3266003b4f0e8530a52c26fe1b0344248c6b9a6b58f02bac5d32ef876"
+        },
+        {
+          "path": "apps/zoom/zoom.py",
+          "size": 438,
+          "mtime": "2025-06-05T15:18:58.950916",
+          "sha256": "186a28e51887f27150e567fda78619d5c57e2103250b65e0d197cbf863401b85"
+        },
+        {
+          "path": "assets/sounds/LICENSING.txt",
+          "size": 65,
+          "mtime": "2024-04-18T13:07:26.073777",
+          "sha256": "19ab80fbd5b7983e36c3e16df8451173e231e6bb8681cb267907dff902352cd8"
+        },
+        {
+          "path": "assets/sounds/bike_bell_high.wav",
+          "size": 69312,
+          "mtime": "2024-04-18T13:07:26.073250",
+          "sha256": "1280427ad0dd00a860f180e383fa719cab9cf143aed77917847d8871c3d90aeb"
+        },
+        {
+          "path": "assets/sounds/bike_bell_low.wav",
+          "size": 266712,
+          "mtime": "2024-04-18T13:07:26.074519",
+          "sha256": "18571e5aa36c3f9bb84083e0c516e36be102a3ed2abdd34f927802293abc2100"
+        },
+        {
+          "path": "assets/sounds/error.wav",
+          "size": 125718,
+          "mtime": "2024-04-18T13:07:26.074095",
+          "sha256": "4841c48a02b92531c0271660a2f5284b158e8f4e9e6bda9912e10e7e573c00b5"
+        },
+        {
+          "path": "assets/sounds/failure.wav",
+          "size": 35380,
+          "mtime": "2024-04-18T13:07:26.073605",
+          "sha256": "48364bf7015d2cf4b5f2f82176ab9e093c439020885d0c195376aab3b124a17a"
+        },
+        {
+          "path": "assets/sounds/glass_tap.wav",
+          "size": 44244,
+          "mtime": "2024-04-18T13:07:26.074273",
+          "sha256": "78e11a5e7483426509f4ee603c73de95744ea9bdc864efa6b5e5ddd94305c799"
+        },
+        {
+          "path": "assets/sounds/tap.wav",
+          "size": 7828,
+          "mtime": "2024-04-18T13:07:26.072819",
+          "sha256": "5b9a8e72026bed88274eaa52b5b5cf95ca9b9fb5038d18e893cb054209476402"
+        },
+        {
+          "path": "assets/sounds/thunk.wav",
+          "size": 29318,
+          "mtime": "2024-04-18T13:07:26.073432",
+          "sha256": "0a15320e7a71060d03cb6ca075dfe30d9ffe3628eec98dc643df42ff2e9829ad"
+        },
+        {
+          "path": "assets/sounds/wood_hit.wav",
+          "size": 21586,
+          "mtime": "2024-04-18T13:07:26.073045",
+          "sha256": "9c55dc686d9ab82968959cbb58a10087b3265fe4c5d3d9507084522bd9aa393a"
+        },
+        {
+          "path": "boolean_print/boolean_print.py",
+          "size": 1797,
+          "mtime": "2026-01-09T12:29:44.868484",
+          "sha256": "9f45ee9edd35b414507310894fed83b5ddf5efad328f83eac24cd4c32f24ee8f"
+        },
+        {
+          "path": "boolean_print/debug_ignore_tags.csv",
+          "size": 32,
+          "mtime": "2026-02-05T00:30:37.960267",
+          "sha256": "d70ed3df3955cac4cfffa8507016c38153525e50784597f96af5f39708b1c48b"
+        },
+        {
+          "path": "boolean_print/test_boolean_print.py",
+          "size": 917,
+          "mtime": "2026-01-09T12:30:28.189801",
+          "sha256": "a2984a26ad7e43c29f2604c95a56509fc5fdbbba1f212231ed415edb70d177bd"
+        },
+        {
+          "path": "brightness.talon",
+          "size": 1459,
+          "mtime": "2024-10-12T10:42:27.895519",
+          "sha256": "0a32d5a3558e46ac66c75086ec6241f446745ad870539aec1bbdd5e860f1e531"
+        },
+        {
+          "path": "brightness_w_app_vscode.talon",
+          "size": 102,
+          "mtime": "2024-08-03T19:14:39.538868",
+          "sha256": "8b5eaa8f54700b1f0a75bd71cc7ce02dc5305b086aedecb56465ee0022c9e2c5"
+        },
+        {
+          "path": "cancel_in_flight_phrase.py",
+          "size": 518,
+          "mtime": "2024-03-21T18:59:35.141769",
+          "sha256": "b1fc260691ed62040b3ef93868cccb8dad4914c38ec750bd9f60e665f49bea57"
+        },
+        {
+          "path": "chrome.talon",
+          "size": 72,
+          "mtime": "2025-05-13T18:43:32.068109",
+          "sha256": "2c8a6f8257d4fa27ed0095671fa339bd75d936ebbaea7d33e6c244689f376210"
+        },
+        {
+          "path": "clear_text_commands.py",
+          "size": 1311,
+          "mtime": "2026-02-08T18:41:55.449934",
+          "sha256": "6f1498b72a0c4e8f090751538d4fd8859385da93c8609910d8302b5cbc35c6b4"
+        },
+        {
+          "path": "clear_text_commands.talon",
+          "size": 653,
+          "mtime": "2026-02-08T18:41:59.766056",
+          "sha256": "add05077a0ba9177c4a75f56d54e5af18feeba1aeb5e4ed8324348274c9871ec"
+        },
+        {
+          "path": "clipboard_keyboard.talon",
+          "size": 0,
+          "mtime": "2024-03-12T10:49:00.503849",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "confetti.talon",
+          "size": 58,
+          "mtime": "2025-04-25T12:52:07.139533",
+          "sha256": "f820a2a37c4d41f34e39367ec69efe0a47aebae9e6a5dfbe38f2fbf5a033f97b"
+        },
+        {
+          "path": "core/app_switcher/window_utils.py",
+          "size": 4956,
+          "mtime": "2026-01-09T12:39:16.509139",
+          "sha256": "bcf61d5388858c1f57f8e946f4d89a869e88868ecf24d4ef2c1870e96ecef1be"
+        },
+        {
+          "path": "core/discord/discord_mac_mic.py",
+          "size": 634,
+          "mtime": "2025-05-05T21:41:44.920316",
+          "sha256": "9bbf2790b54f6645f5d8d55ab693c6734bf9a58cc613204a687da5989bbe8fbe"
+        },
+        {
+          "path": "core/launch_timestamp.py",
+          "size": 426,
+          "mtime": "2026-02-01T15:31:02.929509",
+          "sha256": "6a34080327a5b8404f4cdd74f27f75d28a762683c3892d486e51deda4a398686"
+        },
+        {
+          "path": "core/modes/modes.py",
+          "size": 2604,
+          "mtime": "2026-02-01T15:38:48.339983",
+          "sha256": "8c5f7a39f4f7a8f37632eefc772d09721e4dead1733c608df9d78d45026e2d3a"
+        },
+        {
+          "path": "core/on_phrase/abort/abort.py",
+          "size": 4740,
+          "mtime": "2025-03-27T01:49:03.899921",
+          "sha256": "1de79587659ca11104ffd825b81d16941f2cd853d32d3c0bd521d9f0d575bc9e"
+        },
+        {
+          "path": "core/snippets/snippets/detailsBlock.snippet",
+          "size": 84,
+          "mtime": "2025-06-17T10:51:11.773005",
+          "sha256": "82782f52262a28b39369be353d1296c76650c4819d8d7db1eeadbf634f71b5e5"
+        },
+        {
+          "path": "core/snippets/snippets/pythonAdditional.snippet",
+          "size": 271,
+          "mtime": "2025-05-13T10:55:45.550670",
+          "sha256": "14c7a29cb272e148cbed5f85fd1b23bf3516272c2e8645c0f571ef6a126232c9"
+        },
+        {
+          "path": "core/snippets/snippets/row-tracker.snippet",
+          "size": 60,
+          "mtime": "2025-07-13T13:45:36.412877",
+          "sha256": "2a9281ff727d0ae343767f25d3d03d19a2745862a0ba6b195edc7f8ea5598da0"
+        },
+        {
+          "path": "core/sound/sound.py",
+          "size": 1501,
+          "mtime": "2025-05-05T12:22:14.743864",
+          "sha256": "ea6d89a9b9a8a2c618f30c3fb2bc627d511448b40ed54bb021b7a4946570c4e6"
+        },
+        {
+          "path": "core/startup_status.py",
+          "size": 4884,
+          "mtime": "2026-02-01T15:55:47.607677",
+          "sha256": "8e0037cfa85a586c8786f3ead9d7235dc975069a63df7291fd49057685bbe8f7"
+        },
+        {
+          "path": "core/system_paths-MacBookPro.lan1.talon-list",
+          "size": 553,
+          "mtime": "2025-09-08T18:50:46.484397",
+          "sha256": "410b863966ee0cd0043047897d561509ace0125c6c636f2e46a5863cda30c35d"
+        },
+        {
+          "path": "core/zoom/zoom_mac.py",
+          "size": 467,
+          "mtime": "2025-06-06T14:09:32.232363",
+          "sha256": "c9584a343ed2cf15de11ba3602152191e194daca2ed5114c8ec8cc09fec836b7"
+        },
+        {
+          "path": "displayplacer.py",
+          "size": 3639,
+          "mtime": "2026-02-08T22:33:09.923127",
+          "sha256": "0b613f9d8ae22b76630b5cc3c74c5558e68e05754e7929558d9c2e32eef156a9"
+        },
+        {
+          "path": "displayplacer.talon",
+          "size": 336,
+          "mtime": "2026-02-08T22:33:13.128956",
+          "sha256": "206fd54ccac16fc52daf871d388677785d4133899242bc16e5d47dccaf64c52e"
+        },
+        {
+          "path": "edit.talon",
+          "size": 357,
+          "mtime": "2025-05-12T18:32:56.073947",
+          "sha256": "6384feae59656adc033062b06ea8755abb562b25a91ec58a72f91ede9975927b"
+        },
+        {
+          "path": "emoji/emoji.talon",
+          "size": 141,
+          "mtime": "2025-04-27T22:14:11.125869",
+          "sha256": "3c21970e10e267a0ae36fc3ac7a29de2462518de6fe33a0c592d9599ac008d11"
+        },
+        {
+          "path": "friction/__init__.py",
+          "size": 78,
+          "mtime": "2026-02-05T10:11:10.635860",
+          "sha256": "ee3f75a1e2b85c9519f7492e3c4de05526f418b55dfc3ee3d2698baf40d950bd"
+        },
+        {
+          "path": "friction/context.py",
+          "size": 1980,
+          "mtime": "2026-02-05T10:11:19.507253",
+          "sha256": "68f99374cd56574ab2343869e65e8da40fef2e638aa5f6f5e3dfa417e2831de6"
+        },
+        {
+          "path": "friction/friction.py",
+          "size": 3663,
+          "mtime": "2026-02-05T10:11:38.441557",
+          "sha256": "fe50289d5797fe9850c1d9fdeea0ca93fd7f42c18a9d4de745b0be637f1bfb5d"
+        },
+        {
+          "path": "friction/friction.talon",
+          "size": 247,
+          "mtime": "2026-02-04T22:20:52.268296",
+          "sha256": "6fe8af3370237842d53167592c09737d6035879535404777634ba07d80f3d986"
+        },
+        {
+          "path": "friction/friction_mode.talon",
+          "size": 207,
+          "mtime": "2026-02-04T20:26:42.482314",
+          "sha256": "7c051b07cb17927f400ad6176adaab5428b123df6cbea1f1d79bb68bb11cb4dd"
+        },
+        {
+          "path": "friction/ops.py",
+          "size": 1651,
+          "mtime": "2026-02-05T10:11:24.092027",
+          "sha256": "7970c05d063d2d11a72afeb753ef2c9ffe4108286a5e6c2e0794667232cbed08"
+        },
+        {
+          "path": "friction/state.py",
+          "size": 1566,
+          "mtime": "2026-02-05T10:11:14.871618",
+          "sha256": "90236fa873dfce1eaf162a1a0e0e97a20fd9c69d55fa742d5397556bf777f47e"
+        },
+        {
+          "path": "getHired/qt.py",
+          "size": 396,
+          "mtime": "2024-03-12T10:49:00.504054",
+          "sha256": "b4726958c894207df8952192bf720caa6894c1ad292c83ab53f762bce5351d78"
+        },
+        {
+          "path": "google_docs.talon",
+          "size": 115,
+          "mtime": "2025-05-22T12:40:29.076553",
+          "sha256": "b8ea81f829172b4b0cf40b34567d559c4b12ede6a76ce54fc8eea1767bfb5f3b"
+        },
+        {
+          "path": "happy_run/happy_run.py",
+          "size": 8343,
+          "mtime": "2025-11-08T15:10:57.413649",
+          "sha256": "7c918ae8b9f7b9c0f9b33c838a8985fa673862c671132ae09d2e76508e1eb61b"
+        },
+        {
+          "path": "happy_run/happy_run.sh",
+          "size": 161,
+          "mtime": "2026-02-03T01:49:57.960611",
+          "sha256": "44edeb906aeb335c05584d877baddabb29f0bfff1afd1c5af6497cdbd588e71c"
+        },
+        {
+          "path": "happy_run/happy_run.talon",
+          "size": 48,
+          "mtime": "2025-11-08T13:15:10.397709",
+          "sha256": "284830391977ad220966025422b90fbeb3f05728221d88a3760b4da93d9b82c8"
+        },
+        {
+          "path": "happy_run/happy_run_action.py",
+          "size": 4347,
+          "mtime": "2026-02-05T00:29:48.965384",
+          "sha256": "5c95fbee4341db46f891ecc7ca9c6963c1da84a0dafc59781745e7899f01d880"
+        },
+        {
+          "path": "happy_run/launcher.py",
+          "size": 967,
+          "mtime": "2026-02-03T02:33:27.334442",
+          "sha256": "47889a3d62e0dbf5bec9df216dc8d2d6f99cdf74e972cf0d2a6418dd3e34d887"
+        },
+        {
+          "path": "happy_run/readiness_poller.py",
+          "size": 5413,
+          "mtime": "2026-02-03T02:58:51.967392",
+          "sha256": "e63618fc332dd39748611850367dc35c459323619b61da90bc48ccd115e32c99"
+        },
+        {
+          "path": "happy_run/recordings.json",
+          "size": 2057,
+          "mtime": "2026-02-03T02:37:26.265086",
+          "sha256": "6f492e0611732451f2da6df93d17c61db5d16027e3a744423a8850870bad431e"
+        },
+        {
+          "path": "happy_run/tests/__pycache__/test_readiness_poller.cpython-313-pytest-8.4.2.pyc",
+          "size": 12378,
+          "mtime": "2026-02-03T02:18:35.320488",
+          "sha256": "1dbaf5453cdee52759a9f2f9ad80322e93bd6d2cf74f223911da5d4298810f3a"
+        },
+        {
+          "path": "happy_run/tests/__pycache__/test_window_tracker.cpython-313-pytest-8.4.2.pyc",
+          "size": 7465,
+          "mtime": "2026-02-03T02:16:48.055833",
+          "sha256": "97c67ce7b82b975756886a7e30268155ca86ce6a0ee006a5351cdd6a470240b6"
+        },
+        {
+          "path": "happy_run/tests/test_readiness_poller.py",
+          "size": 3184,
+          "mtime": "2026-02-03T02:18:29.188151",
+          "sha256": "2eac5d8fc21846145510e4f3836d8140bc1adabfc3faae311b9477e97d762b18"
+        },
+        {
+          "path": "happy_run/tests/test_window_tracker.py",
+          "size": 938,
+          "mtime": "2026-02-03T02:16:37.357423",
+          "sha256": "9a727ac3400811ffccb72111a7cb4b2b33fbae2db7074e32e1f2e70e04396c06"
+        },
+        {
+          "path": "happy_run/text_injector.py",
+          "size": 1407,
+          "mtime": "2026-02-03T02:22:22.777792",
+          "sha256": "ff16a3ab9c081f94cff1049f5b7201f192135ce173001a83ac700fdee043020b"
+        },
+        {
+          "path": "happy_run/window_tracker.py",
+          "size": 2327,
+          "mtime": "2026-02-03T02:37:16.554991",
+          "sha256": "d3c8914b866662f9fd806e524c0c79c42305b8e9d0db4c8eb9603aeff83d0f75"
+        },
+        {
+          "path": "hex_grid/bingo.py",
+          "size": 1194,
+          "mtime": "2024-03-12T10:49:00.504320",
+          "sha256": "70c003326e023129a5c06b256196e7f1fd3cf223b9e76765490fba87df16fb65"
+        },
+        {
+          "path": "hex_grid/bingo.talon",
+          "size": 565,
+          "mtime": "2024-03-12T10:49:00.504467",
+          "sha256": "b21c222be9382351a8b5f98e3b021ef8ff641aa1d787904a838c4e630a705466"
+        },
+        {
+          "path": "hex_grid/hex_grid.py",
+          "size": 11978,
+          "mtime": "2025-02-19T20:43:10.745152",
+          "sha256": "f69aeb3ba084a8145b8e462724ecbf446ac5226162264de597cb688ac9682dc0"
+        },
+        {
+          "path": "hex_grid/hex_grid.talon",
+          "size": 900,
+          "mtime": "2024-04-17T10:43:29.909734",
+          "sha256": "a83f9accba3b7e14577502b73ae37464f9f47bf172d18780c789381fbd0f2801"
+        },
+        {
+          "path": "holiday.talon",
+          "size": 75,
+          "mtime": "2025-11-26T11:18:49.754697",
+          "sha256": "813902858ae6e25104e28fbd87d023915b6e2001fee753e7cc5a3bd30a1c8dc4"
+        },
+        {
+          "path": "hooks/double_tap.py",
+          "size": 1752,
+          "mtime": "2025-03-13T14:47:43.217116",
+          "sha256": "e158b640eaf3e0f1b24e8e28b3923c9851cd3f3bc483ec0757702625db6a7bf2"
+        },
+        {
+          "path": "hooks/double_tap.talon",
+          "size": 351,
+          "mtime": "2025-05-06T18:07:26.658348",
+          "sha256": "2be13a8f3f9430a7dfbdda0cef21c82c11513f3e71ad0d7f0a7e704bc229b1dd"
+        },
+        {
+          "path": "info.talon",
+          "size": 693,
+          "mtime": "2026-02-01T15:04:59.243715",
+          "sha256": "1155e3d406c1cb2236d925f7a7b5ca9445a9399bd6331bde0b0e5eed4437164f"
+        },
+        {
+          "path": "insert_timestamp.talon",
+          "size": 680,
+          "mtime": "2025-12-13T09:36:12.458997",
+          "sha256": "827c8c00711dc8ebdac3152dceda37ca8402dd9a443867825f2bce32308b921b"
+        },
+        {
+          "path": "keyboard_mode_all.talon",
+          "size": 601,
+          "mtime": "2026-01-15T12:25:26.285947",
+          "sha256": "a7d59b093dcab806f5f8126f288869a01eec591cad976cfab7e82a0984b4ed01"
+        },
+        {
+          "path": "keyboard_mode_command.talon",
+          "size": 193,
+          "mtime": "2025-05-30T09:37:18.974956",
+          "sha256": "0e74d5bc5bdd2774806f90e12f28aa4dd78de25e40a24ffce5b6efe584a97c7d"
+        },
+        {
+          "path": "keyboard_mode_dictation.talon",
+          "size": 238,
+          "mtime": "2025-07-20T18:05:21.703168",
+          "sha256": "fb80830c5d0bbed4f9437d7951dc5505f68c7f733b01a6f63a85a372c547bbf3"
+        },
+        {
+          "path": "keyboard_mode_sleep.talon",
+          "size": 400,
+          "mtime": "2025-09-04T17:53:36.449255",
+          "sha256": "22dcf91c3488a31e3e037a8c3214a5b15bd11f03c50b1a929ae48d8417ba13dc"
+        },
+        {
+          "path": "keys.talon",
+          "size": 118,
+          "mtime": "2026-01-09T10:39:13.649799",
+          "sha256": "e156153da87bafb615f5199cc96f8a16e302d458860b552ab8800e726aecc969"
+        },
+        {
+          "path": "messages/messages.talon",
+          "size": 501,
+          "mtime": "2025-06-23T09:45:28.731760",
+          "sha256": "4116429020bdfe68ee3f4ef23f08ef8bf809315a68f116aca36c7076c2757c15"
+        },
+        {
+          "path": "microphone/change_mic.py",
+          "size": 2904,
+          "mtime": "2025-09-04T17:52:44.251223",
+          "sha256": "d8f3d2f259ba5e808ef3f08c869c775b7fb93cec9fe26b508249d0e8c00dc60a"
+        },
+        {
+          "path": "microphone/change_mic.talon",
+          "size": 177,
+          "mtime": "2025-03-15T16:57:39.542685",
+          "sha256": "61bea68a923edffbfe96e89d72965b9fd3c5b88e7469ce3d41a74c3b765d93da"
+        },
+        {
+          "path": "mode_indicator/mode_indicator.talon",
+          "size": 1237,
+          "mtime": "2025-06-05T22:35:48.950136",
+          "sha256": "5b811f1124ff513250209b30f11331fd4eb746d3e72be58a9113ec9595e8ce75"
+        },
+        {
+          "path": "mode_indicator/write_the_clipboard.py",
+          "size": 401,
+          "mtime": "2024-04-24T13:33:06.837581",
+          "sha256": "8096f9f014ea42d128037cec4286ed9eded6de68b42020c22d8c3c5e7e7d2a98"
+        },
+        {
+          "path": "mouse-clock/DESIGN_DOC.md",
+          "size": 9027,
+          "mtime": "2026-02-07T00:09:19.393552",
+          "sha256": "49e0a362e9bdb81b885ea4beaa280c267b9f9be9224b870a5ab810676c4f89da"
+        },
+        {
+          "path": "mouse-clock/README.md",
+          "size": 1782,
+          "mtime": "2025-05-10T10:31:43.730635",
+          "sha256": "d6c927d5f658e3ca0d516ffb727fed711acea300533870ff04117344b30fe856"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-06_22-04-46.log",
+          "size": 261,
+          "mtime": "2026-02-06T23:22:52.184148",
+          "sha256": "8aa75a0ea2c80326ad5cb0a82f563c62b33c0d2b3f74f259fcc09ec8b4dad004"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-06_23-22-52.log",
+          "size": 2861,
+          "mtime": "2026-02-07T00:13:45.497138",
+          "sha256": "ec0c378d1def387722a1ad2a6d8aa177fce1fbbed6abb47180ccc674a429b716"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-06_23-45-53.log",
+          "size": 225,
+          "mtime": "2026-02-06T23:45:53.836886",
+          "sha256": "7666c13c037a698d5b8d185711071bcd9827f4ee71ad8dedcd4f92b169bcb783"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_00-08-37.log",
+          "size": 225,
+          "mtime": "2026-02-07T00:08:37.825952",
+          "sha256": "8108c0cafe736c20e79c212283f99a2f56b29d019f14a90099e4668e12fe0744"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_00-08-52.log",
+          "size": 4729,
+          "mtime": "2026-02-07T00:08:52.796910",
+          "sha256": "87c92985d882a7430ce91225a82c96f351dd1c0b24ceecea6d54d921c45b8895"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_00-13-45.log",
+          "size": 8957,
+          "mtime": "2026-02-07T00:31:27.589991",
+          "sha256": "11af91ea6de56bf824f1d2d855273d5484a15c4b497ca1697fc8c218d65b3f89"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_00-34-13.log",
+          "size": 261,
+          "mtime": "2026-02-07T00:34:18.242573",
+          "sha256": "1f3e4585295e2ca0ffdf71dd4366a87ed5cf081591fdade3df7aed222cdaf191"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_00-34-18.log",
+          "size": 1698,
+          "mtime": "2026-02-07T00:40:50.765677",
+          "sha256": "b0b88cb45e66d61ecc16cf2ce0d0e45fe252cde91d9286bd5d21eb68b9eb83c2"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_00-44-15.log",
+          "size": 261,
+          "mtime": "2026-02-07T00:44:38.706508",
+          "sha256": "5da73d23d35521b7b1ae014e697ac6a435a161a89779dbcaa079fc8daddeaa9b"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_00-44-38.log",
+          "size": 8511,
+          "mtime": "2026-02-07T08:25:21.659612",
+          "sha256": "300b102b04dcc128cd111ead3a3e5fb248d98a78cc60db3ac6ebcf4e9298e10f"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-25-44.log",
+          "size": 225,
+          "mtime": "2026-02-07T08:25:44.286770",
+          "sha256": "5a6655346c184a9e5960b3ee5eeabd71f6cbda21f673cdac3ba86df130593e0d"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-25-50.log",
+          "size": 2510,
+          "mtime": "2026-02-07T08:31:24.925009",
+          "sha256": "67300210e9f6590df847b0ae1444e410fbba1c29c0f93f7b095bbc77f18316e2"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-31-32.log",
+          "size": 225,
+          "mtime": "2026-02-07T08:31:32.507334",
+          "sha256": "907079f5a4942565d00df1e8a57b2c1d8d9cc4a9de3e2ffdbc51a23b7b6ad214"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-31-36.log",
+          "size": 1130,
+          "mtime": "2026-02-07T08:33:04.412238",
+          "sha256": "a83aff1631c5448abb09372f7182b24703d489f6595eb6b91fdd63616c699746"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-33-04.log",
+          "size": 2255,
+          "mtime": "2026-02-07T08:36:19.200596",
+          "sha256": "f06c6aca8649718c1a1fc763099cc84e28d7b051509af60cf410c04ede50a98d"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-36-19.log",
+          "size": 813,
+          "mtime": "2026-02-07T08:36:55.816237",
+          "sha256": "69bb5338a4eaeba0e9d043036515be1bc0bdffdc9669acdf238dfcde620f528c"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-36-55.log",
+          "size": 830,
+          "mtime": "2026-02-07T08:38:43.384209",
+          "sha256": "ec36cb7fbb7cb10eadbbe769e8e06ae1805bde13e46ddc234b8ce3d50f82591a"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-40-24.log",
+          "size": 261,
+          "mtime": "2026-02-07T08:53:54.800122",
+          "sha256": "6b250551104a09dc2ff617833d915739aecea07b764428ce1d5928f6eaf1ecdc"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_08-53-54.log",
+          "size": 517,
+          "mtime": "2026-02-07T08:53:54.801528",
+          "sha256": "dacf54c29f115eee7b52433594ae254e275aa70bae37265f437923ea9427d5a7"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_09-30-56.log",
+          "size": 261,
+          "mtime": "2026-02-07T12:14:51.205177",
+          "sha256": "201dd70347d324b8d074e1ecf1fe04a7a6b35d0e39843a471a1b031d519d82fd"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_10-10-50.log",
+          "size": 225,
+          "mtime": "2026-02-07T10:10:50.914245",
+          "sha256": "4d1a18eec6cd688cb7ba0fdd712f955913686cf42b49206fef577d5b1e83d328"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_10-10-58.log",
+          "size": 9233,
+          "mtime": "2026-02-07T10:10:58.720686",
+          "sha256": "c24d6b7fd32fdaae380fe07ccc467fe3f3a96218b63de693aea24d61e66df554"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_12-14-51.log",
+          "size": 2210,
+          "mtime": "2026-02-07T14:20:14.586702",
+          "sha256": "912736fc6b6999dd567a8f2208622f2003bb07c643ea7a42027a9e1b3243977b"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_12-33-17.log",
+          "size": 225,
+          "mtime": "2026-02-07T12:33:17.921150",
+          "sha256": "f88c46f3178e3b8c965e64afd6acd026b9baadef1cc42a7d4348d0531ab20f95"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_14-20-14.log",
+          "size": 1878,
+          "mtime": "2026-02-07T15:50:13.465158",
+          "sha256": "d43cf340f1103b9c37de9b84b91fdef0004cf5ae9b5fd52491bfc238d4505750"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_14-37-40.log",
+          "size": 225,
+          "mtime": "2026-02-07T14:37:40.429297",
+          "sha256": "18fef93f1815bcc591d11602f12fde92ede303f3f47f58dffcd31f05af8e5b57"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_15-50-27.log",
+          "size": 225,
+          "mtime": "2026-02-07T15:50:27.804058",
+          "sha256": "e35e41efbd8badf5eade8032c32255227d845da623e030506d3258421da768fa"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_15-50-38.log",
+          "size": 4904,
+          "mtime": "2026-02-07T17:54:13.316981",
+          "sha256": "9e8f8dc1f4d8553cdf7b2cec65829104ebbc89ebb3ffcb2fdaae0bfe11cbee94"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_17-55-37.log",
+          "size": 261,
+          "mtime": "2026-02-07T19:05:15.635220",
+          "sha256": "69d587d684920b67c44f0b99a52f89bf5b044b1b724053f9f5f2b07360d994f9"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_19-05-15.log",
+          "size": 1040,
+          "mtime": "2026-02-07T19:05:33.254172",
+          "sha256": "cc4b4f2fbd1951aea3bc45ba91ca7650425281349e397bcef70a3f928bd7eb52"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_21-04-44.log",
+          "size": 261,
+          "mtime": "2026-02-07T21:10:56.975997",
+          "sha256": "a22f77c4e256f263c1cae9e5885c6c766ed57414a993bf2e8bc28670abcfef84"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_21-10-56.log",
+          "size": 2580,
+          "mtime": "2026-02-07T23:34:05.524103",
+          "sha256": "bd058ead6ab1ccbe60b05a52e38ee12dd645a2fcce76184859a6eedc5ffb9da2"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_23-34-05.log",
+          "size": 4438,
+          "mtime": "2026-02-07T23:47:29.433027",
+          "sha256": "b4c16cded91c0c47e6d6ac8a43e5601679b32165978c2c5f965f72ba7981fafd"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_23-47-29.log",
+          "size": 2191,
+          "mtime": "2026-02-07T23:49:28.038013",
+          "sha256": "77a73096ceb920ce4cc8dacbaf0faa82ad5a11c2786834064847b7b9e9cf3207"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_23-49-28.log",
+          "size": 1229,
+          "mtime": "2026-02-07T23:50:15.971146",
+          "sha256": "4b43c7e889127fc6abd7451f79b7f51184803315e7573dce457de0a2c2de05d7"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-07_23-50-15.log",
+          "size": 1919,
+          "mtime": "2026-02-08T09:31:02.458932",
+          "sha256": "0962b19b6d93f3de503a48cfe0e007640b85610d8546cf47b48c740c0509f102"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-08_08-40-16.log",
+          "size": 225,
+          "mtime": "2026-02-08T08:40:16.498161",
+          "sha256": "f33477f03619dd7dcec1406b4c722b6fe3e1a459c53399c8b2402c382d2d7086"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-08_09-31-02.log",
+          "size": 2491,
+          "mtime": "2026-02-08T09:38:42.674509",
+          "sha256": "f77b3a1bd08fda65a3a5bd17c7e6dc3a196d0cc99722aa6886f1df4888f16339"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-08_09-38-55.log",
+          "size": 261,
+          "mtime": "2026-02-08T09:40:04.247612",
+          "sha256": "7c33a114951a12102cde52530ca8721cdd0062dc9a13911dc0545feb051ceec3"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-08_09-40-04.log",
+          "size": 2044,
+          "mtime": "2026-02-08T09:42:04.235034",
+          "sha256": "b3b193e67c86d0c32bcfbd63a18d6bf682447171f87cf9859cdf8df1306b45ab"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-08_11-23-59.log",
+          "size": 225,
+          "mtime": "2026-02-08T11:23:59.297056",
+          "sha256": "9f30d1f3bd40e4f9d54e2c3d188c88113125483319e17eb877cf10f8ecebe447"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-08_11-24-11.log",
+          "size": 261,
+          "mtime": "2026-02-08T11:28:48.521723",
+          "sha256": "694c59455d398a9a0e69f99abf1259f77a9f564ecfc40212ad79531ea64bf539"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-08_11-28-48.log",
+          "size": 1400,
+          "mtime": "2026-02-08T18:32:47.516516",
+          "sha256": "6e566cef585b12722c255026a73ee3c5b81f583572c7b65982e934f7bccdfe0f"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-08_18-32-47.log",
+          "size": 4734,
+          "mtime": "2026-02-08T23:50:43.840314",
+          "sha256": "2c7f4cdce55a4807f96f9988a26aa24d70aa08d42af20890bd2aa24b146917d3"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-09_00-35-40.log",
+          "size": 261,
+          "mtime": "2026-02-09T01:04:57.268398",
+          "sha256": "a90d66190feac925b8307f4a39622832fe3f93a8545a3531fcbea06dd9fa5886"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-09_01-04-57.log",
+          "size": 17553,
+          "mtime": "2026-02-09T15:27:27.964206",
+          "sha256": "0a0da82d97d69ebef3ac9949ace6ba6109e2d633216799f768fb7912c5896c06"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-10_19-50-12.log",
+          "size": 261,
+          "mtime": "2026-02-10T23:31:22.661003",
+          "sha256": "9b7bcb438ac5d59a4f7a6fd851cf16a3ef53675025e5e63873cb2f498cb9e083"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-10_23-31-22.log",
+          "size": 1958,
+          "mtime": "2026-02-11T10:05:18.837851",
+          "sha256": "3af2c749c2d17303768a39c83dfe474f3299735091fb4278e4e00e32eb2e365a"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-11_11-17-22.log",
+          "size": 225,
+          "mtime": "2026-02-11T11:17:22.298975",
+          "sha256": "216a494366fd74437672e59c8720f65af0a238bf7483ce89974c709e34aa1237"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-11_11-27-44.log",
+          "size": 225,
+          "mtime": "2026-02-11T11:27:44.670897",
+          "sha256": "ff5ae0d6cae74203dea4f94dee695ddd0515958e83f850eca7d67b6d096f4436"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-11_11-47-11.log",
+          "size": 2678,
+          "mtime": "2026-02-11T11:47:17.601623",
+          "sha256": "2c3ff8539b07902f4b9e00b288e7f9e799c2a105fe237258c429194df0873ca2"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-12_13-17-32.log",
+          "size": 225,
+          "mtime": "2026-02-12T13:17:32.320764",
+          "sha256": "8e6f8d73184dc0e032c138edebf8d13a6bb6a5a98d2afe5befad1310c660a3d7"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-22_16-52-37.log",
+          "size": 225,
+          "mtime": "2026-02-22T16:52:37.719064",
+          "sha256": "bf7612fc9690b7b04dee3dddc9eb3cf1a0003ccd5ea0eb7f3ce81e370679769d"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-23_14-54-52.log",
+          "size": 261,
+          "mtime": "2026-02-23T22:25:30.723232",
+          "sha256": "b4231d705d0163fcfbc0457771eb367eb293040da9b0dd4038664791ab024c4e"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-23_22-25-30.log",
+          "size": 1039,
+          "mtime": "2026-02-23T22:25:54.457603",
+          "sha256": "e516fe31fd68eaf0a67ac913454021148ba09424efb1ddffd91a266e17349353"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-23_22-57-04.log",
+          "size": 261,
+          "mtime": "2026-02-24T12:04:52.853923",
+          "sha256": "02b31f913353582a977060d116a8e6115f8bb232712a2c6c281454d4a7841eee"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-24_12-04-52.log",
+          "size": 1040,
+          "mtime": "2026-02-24T12:05:17.546489",
+          "sha256": "06d8a7be85a93c71a5fab54e34acb2e51879372242240f0b72c3a57b2cc3cf68"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-24_12-20-45.log",
+          "size": 225,
+          "mtime": "2026-02-24T12:20:45.919130",
+          "sha256": "3cb6588ac22514485a5a3d1d9487f06b07bd24f18ccfec7907f98529918e5de3"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-24_12-31-31.log",
+          "size": 225,
+          "mtime": "2026-02-24T12:31:31.911719",
+          "sha256": "5001347ee15a687aad81064d9a9d57dd14af312d9b2341028bc3956bb4def233"
+        },
+        {
+          "path": "mouse-clock/logs/mouse_clock_2026-02-25_12-25-38.log",
+          "size": 225,
+          "mtime": "2026-02-25T12:25:38.005461",
+          "sha256": "f1e7036674c7e85cd058c100ffe68acc737f096c8cf4121a8872bc56312fef24"
+        },
+        {
+          "path": "mouse-clock/pyproject.toml",
+          "size": 121,
+          "mtime": "2026-02-03T21:42:39.186600",
+          "sha256": "c70c7cb6ad4bf593f616b26930fee4e462293649ae77996e95cc0ca9ba892087"
+        },
+        {
+          "path": "mouse-clock/src/__init__.py",
+          "size": 134,
+          "mtime": "2026-02-07T09:30:54.216608",
+          "sha256": "029710285a8dbfb2d1fbe513a57002bf28d172127dbce8492646be4b95d0f38a"
+        },
+        {
+          "path": "mouse-clock/src/__pycache__/__init__.cpython-312.pyc",
+          "size": 377,
+          "mtime": "2026-02-04T23:41:04.247556",
+          "sha256": "df2d9aedf270558a0795ac99e738c1b73e924efbea61f39eb76d9abe9ff0ba4c"
+        },
+        {
+          "path": "mouse-clock/src/__pycache__/__init__.cpython-313.pyc",
+          "size": 310,
+          "mtime": "2026-02-07T10:10:44.220478",
+          "sha256": "da25da2be6051542bb3b5f473b3154bde242128adf806820011d3a12aa51c7ce"
+        },
+        {
+          "path": "mouse-clock/src/__pycache__/circle_info.cpython-313.pyc",
+          "size": 29177,
+          "mtime": "2026-02-07T15:58:00.969579",
+          "sha256": "a0e57c7df37c7141e6264d6a2a65241e1b1889de0ec43d191402d027e209b524"
+        },
+        {
+          "path": "mouse-clock/src/circle_info.py",
+          "size": 23847,
+          "mtime": "2026-02-08T11:22:52.032415",
+          "sha256": "bb48887cf9190316270279ae5fd25eec05c82a2a74316e521c98a335b16bd393"
+        },
+        {
+          "path": "mouse-clock/src/circle_info.talon",
+          "size": 134,
+          "mtime": "2026-02-07T15:08:39.429033",
+          "sha256": "3d6f19a1635b8cce7a1de01ba60a9811a465153b5bf253cf69a206852d2ced36"
+        },
+        {
+          "path": "mouse-clock/src/clock_ring.py",
+          "size": 7860,
+          "mtime": "2026-02-08T09:30:05.556743",
+          "sha256": "78d5effe8510bd7f0c26be89e53851ca95c836829001e88d1546dae08be431d1"
+        },
+        {
+          "path": "mouse-clock/src/clock_ring.talon",
+          "size": 132,
+          "mtime": "2026-02-07T12:19:04.519402",
+          "sha256": "6636a57b55484b4964d84235a0dee9ffff3a872ce3719966809bc9e4d16360d9"
+        },
+        {
+          "path": "mouse-clock/src/clock_ring_active.talon",
+          "size": 561,
+          "mtime": "2026-02-08T09:32:06.662321",
+          "sha256": "8494f885edd691020ad1bdcc5f04372edbfe422aa7055456e0e0090caacc196d"
+        },
+        {
+          "path": "mouse-clock/src/core/__init__.py",
+          "size": 746,
+          "mtime": "2026-02-07T09:30:54.217643",
+          "sha256": "3f3e68d753718394044ccdfc2c4b86c3505de2d22a3e4a1070c81245ab731b9f"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/__init__.cpython-312.pyc",
+          "size": 614,
+          "mtime": "2026-02-04T23:41:04.248254",
+          "sha256": "ae29035d272f936b741a6d7910bafe0d32bd8a42afb4ed349a2056292683257a"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/__init__.cpython-313.pyc",
+          "size": 1067,
+          "mtime": "2026-02-07T10:10:44.258651",
+          "sha256": "19e8a35d6e8e3bb42302839da727847fc78ec3c55c86df1296fcf370ba22c0c1"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/animation.cpython-312.pyc",
+          "size": 5402,
+          "mtime": "2026-02-04T23:41:04.248887",
+          "sha256": "0a800880ef2411258c4c2a4c647bd0611771130a1b7b01793a53ca93d8bd71a8"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/animation.cpython-313.pyc",
+          "size": 5128,
+          "mtime": "2026-02-07T10:10:50.894063",
+          "sha256": "5044239982ca709031537b59c3e50d554b7f3c0ff37c80cd3e8d713e01613673"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/config.cpython-312.pyc",
+          "size": 14363,
+          "mtime": "2026-02-05T13:50:50.609109",
+          "sha256": "6bbfd6b0f1d5ef542abbcb59de4f2044736ac81e4d38c83f1d0b338190336d39"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/config.cpython-313.pyc",
+          "size": 10504,
+          "mtime": "2026-02-08T15:27:11.774265",
+          "sha256": "068c3ae8fcd09e08d169bc88928fd3966b4de997a63596edda85c9ad088b9d77"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/constants.cpython-313.pyc",
+          "size": 2797,
+          "mtime": "2026-02-07T14:37:40.418190",
+          "sha256": "63107375eb547cc64551f98d7409f76097d6b950bf8db2d4966e4370630b8bcc"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/logger.cpython-312.pyc",
+          "size": 5440,
+          "mtime": "2026-02-04T23:41:04.266402",
+          "sha256": "aeff2fe6d3a0be68337c8b44bede0e6b6bef7a18ae91487e79ea920808f593f4"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/logger.cpython-313.pyc",
+          "size": 8319,
+          "mtime": "2026-02-07T10:10:50.913209",
+          "sha256": "b7263d6a04d23eca070c9daabe28a7f185cb14015c9e4b9537a95fc8940bc7a2"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/mouse_clock.cpython-312.pyc",
+          "size": 12591,
+          "mtime": "2026-02-04T23:41:04.263013",
+          "sha256": "b85e3e19c0909ca82af6f1dd4b6d1b69ab20eda1373cfe9fcc5bbe193f4c996e"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/mouse_clock.cpython-313.pyc",
+          "size": 11216,
+          "mtime": "2026-02-07T10:10:50.910517",
+          "sha256": "99d12d6b458e0135b6d88888bbba32fef201f117536e1e9ec0298bff7cbf88c6"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/voice_parsing.cpython-312.pyc",
+          "size": 3247,
+          "mtime": "2026-02-04T23:41:04.256716",
+          "sha256": "6e84713e0f98fbcb07961e39765c11949d1267ecb16fdd1812d745bd77c0cc55"
+        },
+        {
+          "path": "mouse-clock/src/core/__pycache__/voice_parsing.cpython-313.pyc",
+          "size": 3772,
+          "mtime": "2026-02-07T10:10:50.922334",
+          "sha256": "d3874b927ce34eedf01111fe90fac3ec99ce9c08eb38e1ef8e64e7a7f67a27c4"
+        },
+        {
+          "path": "mouse-clock/src/core/animation.py",
+          "size": 4683,
+          "mtime": "2026-02-07T09:30:54.218357",
+          "sha256": "d933a841da9abe73b31887fe00531d7183c2d0110234fd6ae111364057542b5b"
+        },
+        {
+          "path": "mouse-clock/src/core/config.py",
+          "size": 8753,
+          "mtime": "2026-02-08T15:25:31.720657",
+          "sha256": "773421519176cf864eb904bd5f25b9ad4a3ff043d4d38c33fc86bda3d3cd6436"
+        },
+        {
+          "path": "mouse-clock/src/core/constants.py",
+          "size": 2851,
+          "mtime": "2026-02-07T14:11:46.973319",
+          "sha256": "ac58bbee0c078904807890aa902dc30e288875f7e983e3724247c87b587c611c"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__init__.py",
+          "size": 814,
+          "mtime": "2026-02-07T09:30:54.221237",
+          "sha256": "db2453dc5d6b65d949aaa84a76ccfaaffcdc373d5b1b9e491cdfd1f1fa6cf55c"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/__init__.cpython-312.pyc",
+          "size": 1252,
+          "mtime": "2026-02-04T23:41:04.263409",
+          "sha256": "f818dfdcd13f784e1fc6cd47fd3ee87ac1eae92decfda6d03e30ddb9dc934a39"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/__init__.cpython-313.pyc",
+          "size": 1154,
+          "mtime": "2026-02-07T10:10:50.861429",
+          "sha256": "4ce533967c7fa4025f067894df0e7ee99ff0ae4e4d610484436f5c9b31a552d2"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/angles.cpython-312.pyc",
+          "size": 2442,
+          "mtime": "2026-02-04T23:41:04.263771",
+          "sha256": "2b4daacf73b0e0db564523f019d73af303e91034c9bcdc664730ab2d8b53085d"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/angles.cpython-313.pyc",
+          "size": 2269,
+          "mtime": "2026-02-06T13:16:52.654848",
+          "sha256": "51b85806179b6e8ce961a6df8ab275b5760d069c3fc7277ab3cabf11878dda19"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/averaging.cpython-312.pyc",
+          "size": 4146,
+          "mtime": "2026-02-04T23:41:04.264668",
+          "sha256": "3fe65a06d30704eda5811911979a2f61ea344d8a484714dbb45c321fd8fb2aa5"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/averaging.cpython-313.pyc",
+          "size": 2296,
+          "mtime": "2026-02-07T10:10:50.876444",
+          "sha256": "dd20c1924d3a51f37dc517c5c37633d8c74fed485affd93149f92a0662888094"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/clock.cpython-312.pyc",
+          "size": 3491,
+          "mtime": "2026-02-04T23:41:04.264128",
+          "sha256": "31db5d6876cb99608ef3b95b66e067161d507bd00180c1fbcb11eb12e589da72"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/clock.cpython-313.pyc",
+          "size": 1357,
+          "mtime": "2026-02-07T10:10:50.881147",
+          "sha256": "254d66d747a2f2d04179d392817bce63bc8f3fc410b12552acb9a5d969caba65"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/coordinates.cpython-312.pyc",
+          "size": 4446,
+          "mtime": "2026-02-04T23:41:04.265143",
+          "sha256": "25552e84cc2d0f38f80cc15dd80c75c4f69183b2628a8585af6892c7070b78f4"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/coordinates.cpython-313.pyc",
+          "size": 1497,
+          "mtime": "2026-02-07T10:10:50.885369",
+          "sha256": "9e373f54cb56f1cfa001a615a29be7010a99954ddce1a666f24642193350dc12"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/intersections.cpython-312.pyc",
+          "size": 4828,
+          "mtime": "2026-02-04T23:41:04.265792",
+          "sha256": "72202de75726078bf6c142c5e07bbf3c0ba70c9bafa0b53a8da44e680aea33da"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/intersections.cpython-313.pyc",
+          "size": 4403,
+          "mtime": "2026-02-06T13:16:52.662715",
+          "sha256": "b70e37a8bf05d692a78bfdde14f12b7a6494e5849989d2f42996cf9fb2f02e00"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/__pycache__/parallel_lines.cpython-313.pyc",
+          "size": 2033,
+          "mtime": "2026-02-06T13:16:52.663467",
+          "sha256": "c4005fafd87f664f528835d2ba291d6caac38491580b0189f1fe5ddecd829fc4"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/averaging.py",
+          "size": 1297,
+          "mtime": "2026-02-07T09:30:54.221481",
+          "sha256": "2a27213965620a03f868d5696acdc337cdaa9a055dd0f930698bc9a0f872a092"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/clock.py",
+          "size": 938,
+          "mtime": "2026-02-07T09:30:54.221637",
+          "sha256": "b92bf9de73074fb969c190a9c63a68ba2aaa2d5ef3552a2e5236c624d800e78a"
+        },
+        {
+          "path": "mouse-clock/src/core/geometry/coordinates.py",
+          "size": 1108,
+          "mtime": "2026-02-07T09:30:54.222008",
+          "sha256": "c592774c7797ad0d215a7140757426efd149bebc1eeb90bfe37a19c367e0df16"
+        },
+        {
+          "path": "mouse-clock/src/core/logger.py",
+          "size": 4914,
+          "mtime": "2026-02-07T09:30:54.219668",
+          "sha256": "bb69de62dee06f0910038423d669a6da184491172904260a1cb8cc7676cd922d"
+        },
+        {
+          "path": "mouse-clock/src/core/mouse_clock.py",
+          "size": 9259,
+          "mtime": "2026-02-07T09:54:28.699604",
+          "sha256": "905e2634f779b485b52884320f04dfc93499dc4ca0d15ad79750af1a42b9da75"
+        },
+        {
+          "path": "mouse-clock/src/core/voice_parsing.py",
+          "size": 3819,
+          "mtime": "2026-02-07T09:30:54.220608",
+          "sha256": "4bbc7ff0ac0449b2f8b7d86a4f3bc58f1f84ca38567154b3ba462eac28323af0"
+        },
+        {
+          "path": "mouse-clock/src/features/__init__.py",
+          "size": 0,
+          "mtime": "2026-02-07T09:30:54.222246",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "mouse-clock/src/features/__pycache__/__init__.cpython-312.pyc",
+          "size": 177,
+          "mtime": "2026-02-05T01:13:16.980603",
+          "sha256": "64c2885e621bfb09d3645e6db92f08c20c7a68ba51561c42d4265b929b515173"
+        },
+        {
+          "path": "mouse-clock/src/features/__pycache__/__init__.cpython-313.pyc",
+          "size": 175,
+          "mtime": "2026-02-07T10:10:50.927457",
+          "sha256": "6ad103b8ac6e42e0cf09ffda52ab6508f826076bd985f4fecc69ba1fdfe63d7e"
+        },
+        {
+          "path": "mouse-clock/src/features/clock_letters/__init__.py",
+          "size": 501,
+          "mtime": "2026-02-07T09:30:54.222829",
+          "sha256": "f552507054e2d504b96d476320b4228281ebffa0470f81eb433e4e16fe5af9dd"
+        },
+        {
+          "path": "mouse-clock/src/features/clock_letters/__pycache__/render.cpython-312.pyc",
+          "size": 3077,
+          "mtime": "2026-02-05T13:50:53.741618",
+          "sha256": "02ea71d79a917c8e30276c68e054a1e64135bbd3040f57639ed8c4792d8e56b3"
+        },
+        {
+          "path": "mouse-clock/src/features/clock_letters/__pycache__/render.cpython-313.pyc",
+          "size": 4423,
+          "mtime": "2026-02-05T20:49:46.798845",
+          "sha256": "f44c555f021efd28c46a9428251cb35ec0d06f96854bbd959d586aab14190c8c"
+        },
+        {
+          "path": "mouse-clock/src/features/clock_letters/__pycache__/targeting.cpython-313.pyc",
+          "size": 2980,
+          "mtime": "2026-02-05T20:49:46.913954",
+          "sha256": "c4bf510cdab7d0492e36b4e936de393a945ecb05d6b76bdd67668f75729985ee"
+        },
+        {
+          "path": "mouse-clock/src/features/clock_letters/config.py",
+          "size": 879,
+          "mtime": "2026-02-07T10:04:12.002309",
+          "sha256": "cf9190e4b16ab9759b87092e7d4b1acd715e18556180d3de909d143c286e6ee8"
+        },
+        {
+          "path": "mouse-clock/src/features/clock_letters/layout.py",
+          "size": 969,
+          "mtime": "2026-02-07T09:30:54.223129",
+          "sha256": "f3c7dce731cb0e168f012cd777ad145391bf7082d73c68305d646e4453c3746a"
+        },
+        {
+          "path": "mouse-clock/src/features/clock_letters/render.py",
+          "size": 4276,
+          "mtime": "2026-02-07T09:30:54.223272",
+          "sha256": "295295ab465d1b84d6850a9b17f757d242b943cc1ce22f5c12e47012ab3a8647"
+        },
+        {
+          "path": "mouse-clock/src/features/clock_letters/targeting.py",
+          "size": 2733,
+          "mtime": "2026-02-07T09:30:54.223433",
+          "sha256": "f323b2d0c1c94b9541c4b43f0a5a775feee6fc960fefc923ec9c7e688bff2344"
+        },
+        {
+          "path": "mouse-clock/src/features/shared/__init__.py",
+          "size": 858,
+          "mtime": "2026-02-08T15:26:20.363311",
+          "sha256": "99c4f30ab1dd501c8a89cd4b2dc3bf77125cdd5466b6da6fd0bd84103caee34b"
+        },
+        {
+          "path": "mouse-clock/src/features/shared/alpha.py",
+          "size": 1331,
+          "mtime": "2026-02-07T09:30:54.223918",
+          "sha256": "d56a15e5a3ae5dd3510ae0763bac2cad6d133baab9b0c58aa70a794b7b134b84"
+        },
+        {
+          "path": "mouse-clock/src/features/shared/layout.py",
+          "size": 1847,
+          "mtime": "2026-02-07T09:30:54.224171",
+          "sha256": "a5bdf75f04cd3e10d7a5f68341458341eb4e1963413c14663969b44201cf3271"
+        },
+        {
+          "path": "mouse-clock/src/features/shared/utils.py",
+          "size": 1444,
+          "mtime": "2026-02-07T09:30:54.224291",
+          "sha256": "78fbc456f3a52ebdf7a96b63515a666224d3430a370b45634b19eb9260a5f54a"
+        },
+        {
+          "path": "mouse-clock/src/hat_shape.talon-list",
+          "size": 140,
+          "mtime": "2026-02-06T19:45:25.654942",
+          "sha256": "ee544cb1067079589f788187402da2e39005ab32eb572972ee2f8737280ae21e"
+        },
+        {
+          "path": "mouse-clock/src/hats_info.py",
+          "size": 4618,
+          "mtime": "2026-02-07T10:01:23.650682",
+          "sha256": "2d82790af7db24673d5e9af70fdf7a5d88d337fdafefadf53440f24b8978b56b"
+        },
+        {
+          "path": "mouse-clock/src/hats_info.talon",
+          "size": 76,
+          "mtime": "2026-02-06T18:52:31.482702",
+          "sha256": "d2ff9277be0fb02049d388a017f63503bc3d500f72640cc2015732f5e73d0802"
+        },
+        {
+          "path": "mouse-clock/src/input/__init__.py",
+          "size": 0,
+          "mtime": "2026-02-07T09:30:54.224496",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "mouse-clock/src/input/__pycache__/__init__.cpython-313.pyc",
+          "size": 172,
+          "mtime": "2026-02-07T10:10:50.936030",
+          "sha256": "bd02fc98c82245829734315ecbd4df55983a42c11ca5f15ccc9fcda00d9f4f72"
+        },
+        {
+          "path": "mouse-clock/src/input/__pycache__/debounce.cpython-313.pyc",
+          "size": 2176,
+          "mtime": "2026-02-07T10:10:50.937135",
+          "sha256": "acc5a000170cd43bffa36aac745f61551da4b593771381b7283f5e42fc304508"
+        },
+        {
+          "path": "mouse-clock/src/input/__pycache__/history.cpython-313.pyc",
+          "size": 3950,
+          "mtime": "2026-02-07T10:10:50.940783",
+          "sha256": "51939271272b575a3ef4970f6d16953b85f063ebdea31a5ca971e09009966cb4"
+        },
+        {
+          "path": "mouse-clock/src/input/debounce.py",
+          "size": 1369,
+          "mtime": "2026-02-07T09:30:54.224679",
+          "sha256": "be4a6cba805a985915d128770842b03e6e39a4e9395ae16a59af0b671385a044"
+        },
+        {
+          "path": "mouse-clock/src/input/guards.py",
+          "size": 2600,
+          "mtime": "2026-02-07T09:59:51.705221",
+          "sha256": "03d98b957d59d8f8806c3d4444efa2fd78b291c409389705591531f50010c943"
+        },
+        {
+          "path": "mouse-clock/src/input/history.py",
+          "size": 2632,
+          "mtime": "2026-02-07T09:54:36.145050",
+          "sha256": "510890951412d5ce0d8109f1cab053ca7df096b4f07b5cb6bd18222444ab0d5d"
+        },
+        {
+          "path": "mouse-clock/src/rendering/__init__.py",
+          "size": 151,
+          "mtime": "2026-02-07T09:30:54.225626",
+          "sha256": "9c719e09c72ce3515ae88fbb827ff76d1bdf8b3adcb7f7fe5a2c9124200f1632"
+        },
+        {
+          "path": "mouse-clock/src/rendering/__pycache__/__init__.cpython-313.pyc",
+          "size": 337,
+          "mtime": "2026-02-07T10:10:44.255695",
+          "sha256": "bec339f35d92a84a77bb6a61181955cdb6224614b79ddc415337789d66033f0b"
+        },
+        {
+          "path": "mouse-clock/src/rendering/__pycache__/svg_loader.cpython-313.pyc",
+          "size": 3447,
+          "mtime": "2026-02-08T09:11:55.961224",
+          "sha256": "785e0329d527852526364a5540caf6981bb83502008019c48845c149638fc14c"
+        },
+        {
+          "path": "mouse-clock/src/rendering/animation.py",
+          "size": 5533,
+          "mtime": "2026-02-08T15:26:06.941654",
+          "sha256": "0c3ea42eb42cf38a536d0f000b419c048184a3c35fa16eafe52e3c12fe618fc7"
+        },
+        {
+          "path": "mouse-clock/src/rendering/canvas/__init__.py",
+          "size": 1012,
+          "mtime": "2026-02-07T09:30:54.226866",
+          "sha256": "5888abed2080d4dc9c7518176be912cc4e598c1e042805dd1a88ff915090ef3a"
+        },
+        {
+          "path": "mouse-clock/src/rendering/canvas/__pycache__/__init__.cpython-313.pyc",
+          "size": 1312,
+          "mtime": "2026-02-07T10:10:44.256472",
+          "sha256": "43e23dbfec06760d70e81a26c478981cb02585630755c55e0f6b7f48c26f3dea"
+        },
+        {
+          "path": "mouse-clock/src/rendering/canvas/__pycache__/rings.cpython-313.pyc",
+          "size": 2583,
+          "mtime": "2026-02-07T10:10:44.350470",
+          "sha256": "5c08c193022c7531dc6744420f7410c3c553ec5228256358e358a50257c76227"
+        },
+        {
+          "path": "mouse-clock/src/rendering/canvas/__pycache__/utils.cpython-313.pyc",
+          "size": 3740,
+          "mtime": "2026-02-07T10:10:44.257366",
+          "sha256": "1a08a3ffc7ea661ae8f7f0e00d09d879c7433cc71f0054aa330b1bfbafa57abb"
+        },
+        {
+          "path": "mouse-clock/src/rendering/canvas/clock.py",
+          "size": 2826,
+          "mtime": "2026-02-07T09:30:54.227002",
+          "sha256": "84c7ca5a39a57f4847eb5861ce18e364374fb5c3ecb34facb19aa61072ea71d5"
+        },
+        {
+          "path": "mouse-clock/src/rendering/canvas/edge.py",
+          "size": 3134,
+          "mtime": "2026-02-07T09:30:54.227419",
+          "sha256": "6fe8ac823126878a89fb2fe0986af711ec157057717939df8e58e6f3804ed357"
+        },
+        {
+          "path": "mouse-clock/src/rendering/canvas/rings.py",
+          "size": 2175,
+          "mtime": "2026-02-07T09:30:54.227761",
+          "sha256": "dfe96d8ac893072da0ba3fa5cac67ea78c9eeb5660ba59fb4ba892559a645066"
+        },
+        {
+          "path": "mouse-clock/src/rendering/canvas/utils.py",
+          "size": 2772,
+          "mtime": "2026-02-07T09:30:54.227899",
+          "sha256": "ed37470446386cac16910a619327bff684e8def0dc7fa46ea7571581a2c14e33"
+        },
+        {
+          "path": "mouse-clock/src/rendering/colors.py",
+          "size": 2182,
+          "mtime": "2026-02-07T09:56:38.978092",
+          "sha256": "15f45ad477f70a7c283c665d93a691f64396e40fd5f853e84d932338be208431"
+        },
+        {
+          "path": "mouse-clock/src/rendering/drawing/__init__.py",
+          "size": 760,
+          "mtime": "2026-02-08T15:26:45.951239",
+          "sha256": "801c7c966a1c58831665fecddda1bf31639c1627cf74c4fd77a38f0ab29d9214"
+        },
+        {
+          "path": "mouse-clock/src/rendering/drawing/__pycache__/__init__.cpython-313.pyc",
+          "size": 1085,
+          "mtime": "2026-02-08T15:27:11.777623",
+          "sha256": "6ebbfc5916d40bb766c5d6ddf6751f39a12c904e8dd01c07ef9384dce54e3a73"
+        },
+        {
+          "path": "mouse-clock/src/rendering/drawing/__pycache__/lines.cpython-313.pyc",
+          "size": 5247,
+          "mtime": "2026-02-07T10:10:44.315143",
+          "sha256": "377130fca1c137de5c2237dd6b01fa7ff7c502906c1c7df247f48db8747dcea1"
+        },
+        {
+          "path": "mouse-clock/src/rendering/drawing/__pycache__/primitives.cpython-313.pyc",
+          "size": 5702,
+          "mtime": "2026-02-08T15:27:11.778629",
+          "sha256": "e10ad821dad53174833eb0f8d3f5daa772de7c45b2d528fad67c466e6d8a4e15"
+        },
+        {
+          "path": "mouse-clock/src/rendering/drawing/primitives.py",
+          "size": 5155,
+          "mtime": "2026-02-08T15:27:02.571738",
+          "sha256": "94d0b9b5ce656391752fcab249769fb1195a1bfbceecb6b441baccc4285ad427"
+        },
+        {
+          "path": "mouse-clock/src/rendering/svg_loader.py",
+          "size": 2691,
+          "mtime": "2026-02-08T09:11:50.549387",
+          "sha256": "aeb3885f9ce42620d32c11a6db8022ac8d8554b3f604233cfa76092c873a4302"
+        },
+        {
+          "path": "mouse-clock/src/settings.json",
+          "size": 890,
+          "mtime": "2026-02-24T12:04:52.913534",
+          "sha256": "eca518f616448fa63f30d130f98d91b78be6d27693ed835f84a9d3aa8dc4f4cc"
+        },
+        {
+          "path": "mouse-clock/src/svg/bolt.svg",
+          "size": 202,
+          "mtime": "2026-02-06T18:30:16.440866",
+          "sha256": "4b333569a28bf27b1cbb77b0b5c8663a245affc4313c0e51273974121306148a"
+        },
+        {
+          "path": "mouse-clock/src/svg/crosshairs.svg",
+          "size": 705,
+          "mtime": "2026-02-06T18:30:16.443519",
+          "sha256": "e1f35e69dd3095b6e1d3378d9c9a2fbed7f30ef773317f7a8967584a3a031291"
+        },
+        {
+          "path": "mouse-clock/src/svg/curve.svg",
+          "size": 244,
+          "mtime": "2026-02-06T18:30:16.446474",
+          "sha256": "0a25c7a515dab530e209177c5dde1d57546e4f67357b37e7864b96a9545a375e"
+        },
+        {
+          "path": "mouse-clock/src/svg/default.svg",
+          "size": 242,
+          "mtime": "2026-02-06T18:30:16.446808",
+          "sha256": "e8bd235c693cb174bb544b3da164d95b0522fdfcb5bb26923339814701865974"
+        },
+        {
+          "path": "mouse-clock/src/svg/ex.svg",
+          "size": 391,
+          "mtime": "2026-02-06T18:30:16.447063",
+          "sha256": "bb1871139e005e66a96fdaea401e8e8e3830d8c6c777c70aafcb5c3a3c1cbe28"
+        },
+        {
+          "path": "mouse-clock/src/svg/eye.svg",
+          "size": 270,
+          "mtime": "2026-02-06T18:30:16.447456",
+          "sha256": "6951c24e66fea377a00f7e20e25e5383ccef72b7eb107d0de9eca8d08bb7369f"
+        },
+        {
+          "path": "mouse-clock/src/svg/fox.svg",
+          "size": 203,
+          "mtime": "2026-02-06T18:30:16.447644",
+          "sha256": "5404a16b961324dab753663f5f38b381156c61c395816578cdbcef7d7a22ca3b"
+        },
+        {
+          "path": "mouse-clock/src/svg/frame.svg",
+          "size": 213,
+          "mtime": "2026-02-06T18:30:16.447819",
+          "sha256": "50d34a511dfa1a6da29ce0463a281582a290e452cc15b4f9553c4ed8f2f52f78"
+        },
+        {
+          "path": "mouse-clock/src/svg/hole.svg",
+          "size": 278,
+          "mtime": "2026-02-06T18:30:16.448166",
+          "sha256": "282218d6d044d978093c975e7ab3e09b5c6e6e75ace14ad6d8b0964eed7c03ba"
+        },
+        {
+          "path": "mouse-clock/src/svg/play.svg",
+          "size": 202,
+          "mtime": "2026-02-06T18:30:16.448539",
+          "sha256": "caa3733fade5588450cd71545786a5f5d190db8a5911d6ef7cb536ae552debe1"
+        },
+        {
+          "path": "mouse-clock/src/svg/wing.svg",
+          "size": 231,
+          "mtime": "2026-02-06T18:30:16.448758",
+          "sha256": "598491210145cf809ddcc7d0e8fa2fac4fe286ab3f9472953f97a589ff348f13"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__init__.py",
+          "size": 238,
+          "mtime": "2026-02-07T09:30:54.229062",
+          "sha256": "511b16723606602d206a656d1bf61fc14db5e2b0358dbb692b8d46ae7867b54b"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/__init__.cpython-312.pyc",
+          "size": 1104,
+          "mtime": "2026-02-04T23:41:04.248013",
+          "sha256": "239193d78da39d940d328a72b6748bdfd4f3bdeb34bbce9fad6355a7966a5ec0"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/__init__.cpython-313.pyc",
+          "size": 1111,
+          "mtime": "2026-02-06T12:01:33.524763",
+          "sha256": "8e7a1d85976696a0eb38184f484d747be44eeebc7fa29567f3162b2445b35e78"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/actions.cpython-313.pyc",
+          "size": 4088,
+          "mtime": "2026-02-05T20:58:57.579064",
+          "sha256": "ef6f376b8c59413935c2f26b6309c80116450dfcab5cef6c446d1d024a69b3f9"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/actions_core.cpython-313.pyc",
+          "size": 5540,
+          "mtime": "2026-02-06T11:15:54.490436",
+          "sha256": "cd2e2d4d22b695aabd267b488af3b64e0e38cc4af14db1689e0f83a8f28d542b"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/actions_display.cpython-313.pyc",
+          "size": 14178,
+          "mtime": "2026-02-06T10:32:38.518690",
+          "sha256": "e9c5f7884aeaf2a110f93ccb2762bce59bea0c595bb26a4ea3f44d9809bca500"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/actions_move.cpython-313.pyc",
+          "size": 17547,
+          "mtime": "2026-02-06T11:15:54.489583",
+          "sha256": "0c999a068ea4b76a2848c6930898f968205abf9ada82c14d61cb97758b57fbd2"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/adapter.cpython-312.pyc",
+          "size": 16276,
+          "mtime": "2026-02-05T13:50:50.643003",
+          "sha256": "7c44ee45082c7fcd1b1ff086693c08d9b79070d0fadd75059b75f94818316e46"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/adapter.cpython-313.pyc",
+          "size": 19557,
+          "mtime": "2026-02-06T11:15:54.486747",
+          "sha256": "eb2a1f809c56c723c710b8709aaf0359db85c698f30c619a1fc75c2584fd65af"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/__pycache__/instance.cpython-313.pyc",
+          "size": 2047,
+          "mtime": "2026-02-05T20:46:10.662800",
+          "sha256": "0ba7a85f8f5f1df9e29386576a0ada5180e68c93fa59eb6d2a80b48ccb072c3e"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/actions.py",
+          "size": 2983,
+          "mtime": "2026-02-07T09:30:54.229188",
+          "sha256": "664f5570fc854b85b975a146ea3a20e4f1dea990dcfed4dc325a21223bfd15f0"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/actions_core.py",
+          "size": 3306,
+          "mtime": "2026-02-07T10:05:34.805971",
+          "sha256": "3aeabebee699b0950d0e48e71f174769d387d6ec759df893c772cd246f300cc7"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/actions_debug.py",
+          "size": 2491,
+          "mtime": "2026-02-07T10:03:09.638880",
+          "sha256": "e6b9d253ca1f36a9abf1b27262e0b2f196419db6c46d15bcc9081d6e4020a32c"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/actions_display.py",
+          "size": 2152,
+          "mtime": "2026-02-07T10:03:07.364834",
+          "sha256": "3d66220c7b8d042c17f4ca2938ba28975c10d7505eb41ddf712137b48d03c9bb"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/actions_mode_config.py",
+          "size": 2776,
+          "mtime": "2026-02-07T10:03:10.537116",
+          "sha256": "8d72945bd2ba2e2e3f5b7155af45efe5662c1a51a5a77a21970795510fb91a24"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/actions_move.py",
+          "size": 9175,
+          "mtime": "2026-02-08T15:25:39.672051",
+          "sha256": "59df2ea45f66091fadee8e004a41a9b9603ede157cd24c77f35278424e4b2f30"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/adapter.py",
+          "size": 8338,
+          "mtime": "2026-02-08T09:30:05.557993",
+          "sha256": "90f254d8d3a1dee1633715c881dfb465dfab57f98207c453063d000f420ffc42"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/adapter_canvas.py",
+          "size": 2114,
+          "mtime": "2026-02-07T09:30:54.230764",
+          "sha256": "4ab71c77f8c91c982adfcd2a90d9a0cc7102402f786e69d848b799ec22db1fcf"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/adapter_draw.py",
+          "size": 1604,
+          "mtime": "2026-02-07T09:33:05.375467",
+          "sha256": "a94357b2d356a66c136f66433eca87990591902f01f1d227f72004b45be734f6"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/clock_face.talon-list",
+          "size": 273,
+          "mtime": "2026-02-06T13:19:53.297093",
+          "sha256": "53986debed442ee4e7a840d24e507d985f3702fec398a40d8a7c325db6fa32d5"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/color.talon-list",
+          "size": 156,
+          "mtime": "2026-02-05T21:49:10.078861",
+          "sha256": "836e477004825c331e6205a64d48898fba5eb8e42f2b7ceb00af739c8f365910"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/direction.talon-list",
+          "size": 92,
+          "mtime": "2026-02-05T18:23:35.894350",
+          "sha256": "e6f3bb82d12ef184e4fd36f4512a952b77b546c962a0231ddd494c15656ead30"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/event_capture.py",
+          "size": 2834,
+          "mtime": "2026-02-07T09:30:54.231243",
+          "sha256": "0a2eb2fe91752eab65dddb7b8b4c8d9e9fb177df9a66ee541388dbfd5daa08df"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/event_capture.talon",
+          "size": 208,
+          "mtime": "2026-02-05T16:58:35.755946",
+          "sha256": "1997a5b63431b4af0d0213e698c5a57d6150bf6779722117dcbb1f681baf580d"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/instance.py",
+          "size": 2498,
+          "mtime": "2026-02-07T09:30:54.231353",
+          "sha256": "03fca83fb4c31cc8be1aab637a0dee32e8261d463e14bdd78a586fb3e74efd52"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/line_style.talon-list",
+          "size": 237,
+          "mtime": "2026-02-05T01:29:35.591519",
+          "sha256": "4ceb9fee756ce2a9c5189c84eed12f19d88d2c6098b86507395d2c89b9d77d22"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/mode_config.talon",
+          "size": 623,
+          "mtime": "2026-02-06T23:42:05.048806",
+          "sha256": "7097c153fd0f769781537841b08c8541e44f1cbd9dffc9c1ba3f3d71817ffaae"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/mouse_clock_active.talon",
+          "size": 2843,
+          "mtime": "2026-02-08T09:30:05.558172",
+          "sha256": "93733ee8981e08dd859de52d4ec3e9cf9169aeb2ae9ab0067ec1372ad8a02e16"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/mouse_clock_always.talon",
+          "size": 1115,
+          "mtime": "2026-02-06T23:10:43.477313",
+          "sha256": "2e80c3ae2af9a0cd344eecfe9ee80ea7b20ccbe99f60fddc4aab18d43416d910"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/mouse_clock_settings.talon",
+          "size": 28,
+          "mtime": "2025-12-10T10:38:00.836042",
+          "sha256": "9b123a2a946b43e4cea141ee35aa3efc589f9eec11e96579219b22974078ac66"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/parrot_actions.py",
+          "size": 1650,
+          "mtime": "2026-02-07T09:54:38.591867",
+          "sha256": "b039beee0de2734a0634ea434879223c7e17091f76b93599b1e1642f28ddc27c"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/parrot_config.py",
+          "size": 1357,
+          "mtime": "2026-02-07T09:30:54.231676",
+          "sha256": "b932c642017e1d71a275cba2e2b2f5f5f331b6013109ad133a6e4c8c95f8077c"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/parrot_config.talon",
+          "size": 119,
+          "mtime": "2026-02-07T09:22:22.250185",
+          "sha256": "e5faa7a21585eb102d430f8a22b35d63192b65a4310fdcfe6fa6d7694d4e9ba2"
+        },
+        {
+          "path": "mouse-clock/src/talon_integration/parrot_handlers.py",
+          "size": 2741,
+          "mtime": "2026-02-08T15:25:31.722434",
+          "sha256": "83f8bb29426fdaeb3cf2b2b3f35e0688aeba64c7ece8b272fc6fab3e332bb06b"
+        },
+        {
+          "path": "mouse-clock/src/util/__init__.py",
+          "size": 0,
+          "mtime": "2026-02-07T09:30:54.232321",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "mouse_grid_centroid/centroid_mouse.talon",
+          "size": 1987,
+          "mtime": "2026-02-06T20:08:18.479472",
+          "sha256": "72145231bcb3bcbea916c83528b02e9b4f3a08ea391c89edc24b2176db5790b5"
+        },
+        {
+          "path": "mouse_grid_centroid/centroid_mouse_grid.py",
+          "size": 15945,
+          "mtime": "2025-05-14T10:08:21.322967",
+          "sha256": "cd34ae70c6dc027021847abdba9916ab710d25c31edd29607a66d4b011826cf8"
+        },
+        {
+          "path": "mouse_grid_centroid/centroid_mouse_grid_always.talon",
+          "size": 592,
+          "mtime": "2024-05-08T10:05:15.494329",
+          "sha256": "a55e9f4670a48d6be144211f1b869d16c57f12d20f066929859e4b0e0e52e73d"
+        },
+        {
+          "path": "mouse_grid_centroid/centroid_mouse_grid_open.talon",
+          "size": 940,
+          "mtime": "2025-05-17T10:54:17.988159",
+          "sha256": "931b124838c6cb0ba8393968ed8034d80c9d4917d079a31aeb416db82ea70636"
+        },
+        {
+          "path": "mouse_grid_centroid/centroid_mouse_grid_settings.talon",
+          "size": 36,
+          "mtime": "2025-05-13T09:28:29.881436",
+          "sha256": "91d425222485f28223ffe8cffd941ed49dc2cf953417ab8cf7f1da3f2b8355e2"
+        },
+        {
+          "path": "mouse_grid_centroid/debug.py",
+          "size": 75,
+          "mtime": "2024-04-24T14:38:16.440164",
+          "sha256": "cc0628e4ad0f153d8b0b7639ae9fa7215fa1f187b9c3f337c87e9e536d89590f"
+        },
+        {
+          "path": "mouse_grid_centroid/debug.talon",
+          "size": 0,
+          "mtime": "2024-04-24T14:37:55.195809",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "mouse_grid_centroid/narrow.txt",
+          "size": 1174,
+          "mtime": "2025-03-26T19:17:29.172201",
+          "sha256": "b9b36bd05f344eaf5558915909632caa422dbab89b42f70e86fa430e11818233"
+        },
+        {
+          "path": "notify/notify.py",
+          "size": 3106,
+          "mtime": "2025-11-03T12:57:38.416338",
+          "sha256": "263da0f742dfcc8b444f533278f68c6b58bb109f53be0a31ab8a5e70aef14949"
+        },
+        {
+          "path": "obs.py",
+          "size": 1143,
+          "mtime": "2026-02-06T15:46:04.525238",
+          "sha256": "6ed211a277b978a233859f345ede751f126c3334184d65d769d432a8a9ee11b0"
+        },
+        {
+          "path": "obs.talon",
+          "size": 162,
+          "mtime": "2026-02-06T15:45:54.306484",
+          "sha256": "bb1f353939c00ae6d560d25c224d9cb676792963a349d3a65e2ef7559e7d5b5e"
+        },
+        {
+          "path": "os_controls/wifi.py",
+          "size": 0,
+          "mtime": "2025-08-10T15:35:00.479080",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "os_controls/wifi.talon",
+          "size": 347,
+          "mtime": "2025-08-25T23:36:45.836148",
+          "sha256": "ed8cce1d0b9ec9f9e8a931144c1af92d0c8691fea5acf5d89ff0ae908118d4c9"
+        },
+        {
+          "path": "plugin/datetimeinsert/datetimeinsert.py",
+          "size": 1302,
+          "mtime": "2025-05-31T14:03:07.892750",
+          "sha256": "0de03a902ac666a0d3e3ae5a3164535cc65878fa7fbce6b519a211aa16730ac6"
+        },
+        {
+          "path": "plugin/media/media.talon",
+          "size": 254,
+          "mtime": "2025-07-05T23:12:13.391032",
+          "sha256": "8cf83a1a353b0990f7f0431d302fe2cadb7d4775285112c657a05e9d6ecd93e2"
+        },
+        {
+          "path": "plugin/microphone_selection/microphone_selection.talon",
+          "size": 198,
+          "mtime": "2025-10-31T13:09:58.370740",
+          "sha256": "f44f8ac088284abb3da1ff3a80cdd77e8dbf8f9f385a947afbbfe2c13e017040"
+        },
+        {
+          "path": "plugin/mode_indicator/mode_indicator.py.disabled",
+          "size": 9321,
+          "mtime": "2026-02-07T23:18:31.504046",
+          "sha256": "ef5df7bb9169557a6a90af3ef2212969a0fcc39093351471b28b76a5375426b8"
+        },
+        {
+          "path": "plugin/mouse/mouse.talon",
+          "size": 4488,
+          "mtime": "2026-02-06T20:07:34.188851",
+          "sha256": "091835854639446417f8f768c7838a2585002dc92a62f134a5370336de120af4"
+        },
+        {
+          "path": "plugin/parrot/README.md",
+          "size": 377,
+          "mtime": "2026-01-04T17:47:48.500889",
+          "sha256": "637bd78cbda535ff12bca9a38724333399d7a5aae950875d391d9cd0a2df78a8"
+        },
+        {
+          "path": "plugin/parrot/model.pkl",
+          "size": 40242410,
+          "mtime": "2026-01-04T16:51:24.560149"
+        },
+        {
+          "path": "plugin/parrot/model_backup_2026-01-04.pkl",
+          "size": 24121828,
+          "mtime": "2026-01-04T16:50:48.850450"
+        },
+        {
+          "path": "plugin/parrot/model_backup_2026-01-04_1.pkl",
+          "size": 24146100,
+          "mtime": "2026-01-04T16:51:24.537598"
+        },
+        {
+          "path": "plugin/parrot/october-3.pkl",
+          "size": 24121828,
+          "mtime": "2025-10-31T23:46:28.446485"
+        },
+        {
+          "path": "plugin/parrot/parrot.py",
+          "size": 2056,
+          "mtime": "2026-02-01T01:25:02.763954",
+          "sha256": "b748941de35bc5f5346150b72bd2074fce1eeb1662f65845cb2983bc75ee4790"
+        },
+        {
+          "path": "plugin/parrot/parrot.talon",
+          "size": 447,
+          "mtime": "2026-01-04T17:51:27.438581",
+          "sha256": "68fa32a9b6a025d74cfd6ebbf54c026deba0a3f6a893540edb0147e8a90a8655"
+        },
+        {
+          "path": "plugin/parrot/parrot_always.talon",
+          "size": 150,
+          "mtime": "2026-01-09T10:05:23.807539",
+          "sha256": "7cf9157100b34044bb1a9210cb36e922471806522bc8c8818763c69ed203813b"
+        },
+        {
+          "path": "plugin/parrot/parrot_integration.py",
+          "size": 16758,
+          "mtime": "2026-02-01T01:25:12.417166",
+          "sha256": "e08c59fd9ef74262d5c162fb134c9ccbb661e1d1594763bf2f1d0ef10bd10c69"
+        },
+        {
+          "path": "plugin/parrot/patterns.bak.json",
+          "size": 0,
+          "mtime": "2025-11-01T00:06:18.310400",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "plugin/parrot/patterns.json",
+          "size": 1828,
+          "mtime": "2026-01-31T16:26:40.327744",
+          "sha256": "202d682b41db04cbbf89d3bf53c32f837d2fa2119eff0333ec41f761579067cf"
+        },
+        {
+          "path": "plugin/repeater/EXPLORE.md",
+          "size": 5167,
+          "mtime": "2025-11-03T12:01:10.260649",
+          "sha256": "73ec3d156deb41f764f516e3abf710eb53b224bc7be7910b4ed4381de1a8128f"
+        },
+        {
+          "path": "plugin/repeater/__pycache__/cursorless_repeater.cpython-313.pyc",
+          "size": 2587,
+          "mtime": "2026-01-28T11:28:19.880093",
+          "sha256": "0927bca8b6e7e0839fe0cd67a829eff9c1cb4454db07ab9805ff8f1a3f29ce35"
+        },
+        {
+          "path": "plugin/repeater/__pycache__/repeater.cpython-313.pyc",
+          "size": 22922,
+          "mtime": "2026-02-01T16:27:32.121071",
+          "sha256": "51ab71eb6252c470a653363700c25e44f2eb0ca72443ccbc224da2fb70af547a"
+        },
+        {
+          "path": "plugin/repeater/command_logger.py",
+          "size": 8014,
+          "mtime": "2026-02-01T16:10:28.673074",
+          "sha256": "6ad45acf128ab9875a023c31dd2664164cce766005c7a7b1e0c19c4a7accc7fe"
+        },
+        {
+          "path": "plugin/repeater/cursorless_repeater.py",
+          "size": 5301,
+          "mtime": "2026-01-30T00:27:52.467937",
+          "sha256": "f204ff838d08c0db6a651bad4890af9045a34f9913058700d1da7bb768615b1d"
+        },
+        {
+          "path": "plugin/repeater/cursorless_repeater.talon",
+          "size": 106,
+          "mtime": "2026-01-28T11:24:56.828850",
+          "sha256": "5d71bcd64ac0d57bf5f7f2f3b065e3f391dbe33b0c46eb1fe14a75db876e7367"
+        },
+        {
+          "path": "plugin/repeater/excluded_commands.csv",
+          "size": 668,
+          "mtime": "2026-02-10T23:22:48.241300",
+          "sha256": "a2aae92d35791476492f007fa40603a52928fa44daa9048f1790f13407518c0c"
+        },
+        {
+          "path": "plugin/repeater/excluded_commands_manager.py",
+          "size": 3667,
+          "mtime": "2026-01-09T12:39:51.032301",
+          "sha256": "7c0cdf9598a95e2c674bd81d2584addb6cfb3bb95c737056afb1c4141c4e53cb"
+        },
+        {
+          "path": "plugin/repeater/migrate_parrot_logs.py",
+          "size": 4186,
+          "mtime": "2026-02-01T16:12:54.785328",
+          "sha256": "f4511052d36c1a57dbb78e93d4ac228d178f5581ac2f3deff645075b34f37a81"
+        },
+        {
+          "path": "plugin/repeater/opposite_mappings.py",
+          "size": 6296,
+          "mtime": "2026-02-08T23:15:25.544284",
+          "sha256": "d88c2e5d8a20b1427b82397d53c74b20baca44b6951df9e0fb5ebc99905a65cd"
+        },
+        {
+          "path": "plugin/repeater/parrot_logger.py",
+          "size": 8963,
+          "mtime": "2026-02-01T16:10:06.003352",
+          "sha256": "e9ce695f1437ee8275a44a26be5fadffd94f60e09e3b06a1a6b0c328db310218"
+        },
+        {
+          "path": "plugin/repeater/repeater.py",
+          "size": 23881,
+          "mtime": "2026-02-05T00:09:16.652858",
+          "sha256": "b1a058b753024abb8e66cc9c878f644fba7453f053637df8c9d606d9d990b466"
+        },
+        {
+          "path": "plugin/repeater/repeater.talon",
+          "size": 765,
+          "mtime": "2026-02-09T13:29:51.570141",
+          "sha256": "3b994ac6c26f6263741aecfc5e487048d5f99caa04cdec4545ef7255d252cfc1"
+        },
+        {
+          "path": "plugin/screenshot/screenshot.talon",
+          "size": 502,
+          "mtime": "2025-11-10T18:05:14.713510",
+          "sha256": "db94c50b91914a6f0fd8da80471bee3e300e93bc1ba193b9e2c8857ab153ef82"
+        },
+        {
+          "path": "pomodoro/pomodoro.py",
+          "size": 5265,
+          "mtime": "2025-12-12T13:13:23.735351",
+          "sha256": "e201ef850f513c7dc17067e5ad368b30221facaf851bdd39e94fd2b4fc727cdc"
+        },
+        {
+          "path": "pomodoro/pomodoro.talon",
+          "size": 1047,
+          "mtime": "2025-05-12T16:59:27.229089",
+          "sha256": "c59bf1b017e69639603eec15a7c7ddb9e6f45fb44dc741807cbdda19967cebf9"
+        },
+        {
+          "path": "presentation_files/presentation.py",
+          "size": 1434,
+          "mtime": "2025-05-27T15:17:56.773863",
+          "sha256": "65f70917a7cf4685fb9f498bfa574d0fa630ea8399afaa3c1901240061190ba3"
+        },
+        {
+          "path": "presentation_files/presentation_files.talon",
+          "size": 192,
+          "mtime": "2025-05-26T13:18:25.166917",
+          "sha256": "fe8dc5dffa0eb1be5fc3cee8959a7ed04a5bb0f2f3fc3378ac0f358759f5828b"
+        },
+        {
+          "path": "presentation_files/presentation_files_not_beta.talon",
+          "size": 344,
+          "mtime": "2025-05-27T12:39:49.101233",
+          "sha256": "a86f041ac531710df0617ea4fb0228e61eb470164b73eb8fca804044f5342ce0"
+        },
+        {
+          "path": "rapid_delete.py",
+          "size": 413,
+          "mtime": "2026-01-06T17:43:55.918958",
+          "sha256": "8c18b3f626a1a8a090516456ac0d8323637ad9df02e84de516dc194e300bdf97"
+        },
+        {
+          "path": "rapid_delete.talon",
+          "size": 260,
+          "mtime": "2026-02-06T13:05:39.617935",
+          "sha256": "294d83cc15a96226cd165e0e1571f55c03f3d314f53b09229fb8898feb9c0072"
+        },
+        {
+          "path": "ray.talon",
+          "size": 69,
+          "mtime": "2024-03-21T18:54:13.222275",
+          "sha256": "b1fd453893ece4cde6e0cca0bc6b037e030430a63a31b22895dd42b046efc475"
+        },
+        {
+          "path": "rename_recordings.py",
+          "size": 588,
+          "mtime": "2024-03-12T10:49:00.506798",
+          "sha256": "c9708d7bc02f5858e36074d8c0c58b3d1eca53e6f820b1ca0f675942dc6d8978"
+        },
+        {
+          "path": "restart_talon.py",
+          "size": 5675,
+          "mtime": "2026-02-06T16:08:36.439245",
+          "sha256": "8a956ff9f8735d77187ea7ab26eeacb92daaa0f0032e268fb861372a44a22273"
+        },
+        {
+          "path": "restart_talon.talon",
+          "size": 80,
+          "mtime": "2026-02-01T15:03:22.027840",
+          "sha256": "fdbff05b235620f5f5a3fc941b189627a81f41bdee092c73be5d820fdd18e53c"
+        },
+        {
+          "path": "screenshot.talon",
+          "size": 295,
+          "mtime": "2025-11-08T10:02:26.506657",
+          "sha256": "f70737d9c23a2399ee005443d3cda72f1802bd7ceda7412b60233a78f289d9e8"
+        },
+        {
+          "path": "settings.talon",
+          "size": 3297,
+          "mtime": "2025-06-23T09:46:49.651167",
+          "sha256": "0e19fb36aa6d15010a3cc52a35c0d7dc9443c935685675958ca3ee358dd14309"
+        },
+        {
+          "path": "shift_commands.talon",
+          "size": 0,
+          "mtime": "2024-04-07T13:21:05.069627",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "slack.talon",
+          "size": 64,
+          "mtime": "2024-03-21T18:55:42.802423",
+          "sha256": "46951bd16eb53a8b38f9d4ec8669cbf08d940de40cca36e2d77a8874bbfd7623"
+        },
+        {
+          "path": "sleep_mode.talon",
+          "size": 390,
+          "mtime": "2025-03-16T17:39:47.657026",
+          "sha256": "9ecdad449d84b1c9d343a13869b48944143d3011be654681a16beccea30a548e"
+        },
+        {
+          "path": "speak_aloud.py",
+          "size": 2415,
+          "mtime": "2025-12-08T12:58:49.053001",
+          "sha256": "4411736caee5d056514dae530bd1aad83478fc279f3594b4bc52fca2b1b33dca"
+        },
+        {
+          "path": "speak_aloud.talon",
+          "size": 138,
+          "mtime": "2025-12-08T12:26:15.856550",
+          "sha256": "05c9a71b38a665f79d0dfbbb2983c4339d95acbeaa48629a56b81ab30394b711"
+        },
+        {
+          "path": "talon_debug.talon",
+          "size": 778,
+          "mtime": "2025-05-15T10:18:43.246785",
+          "sha256": "e562e27aa0365a75a2bcbdd4975aab9f53c092e40b2c8668639d3fbe5f38810f"
+        },
+        {
+          "path": "terminal.talon",
+          "size": 608,
+          "mtime": "2025-11-26T22:24:49.261164",
+          "sha256": "5c938adbff1c00de5c54ac3e125109cec43b5a954d447dd2b97690cdab1c7472"
+        },
+        {
+          "path": "test.py",
+          "size": 40,
+          "mtime": "2025-02-20T19:31:36.201215",
+          "sha256": "1c5a6756759b19163c5e0866f7c23c36e4b9254bc52e155909efa0d2265c95ed"
+        },
+        {
+          "path": "test_mode_all.talon",
+          "size": 311,
+          "mtime": "2025-07-10T09:21:51.119097",
+          "sha256": "ef24135012b4ceb41e7e9fb54845659036d7a67c8a3d760049c734df9ba50f5b"
+        },
+        {
+          "path": "test_mode_command.talon",
+          "size": 850,
+          "mtime": "2026-02-07T16:07:11.474098",
+          "sha256": "7444bbb082cd2c435465e4e480ef68b6b3c6575147848f8e01ac81f75b293da6"
+        },
+        {
+          "path": "then.talon",
+          "size": 111,
+          "mtime": "2025-04-14T16:09:51.055165",
+          "sha256": "dc59aed37c72b0d91c5ce7e012aded6c488f12908e2867a2e01f3be98d5d443b"
+        },
+        {
+          "path": "ticket/__init__.py",
+          "size": 88,
+          "mtime": "2026-02-07T20:24:30.958509",
+          "sha256": "71abdf66ea5330b57855a6f213659b17233f602436b05ee38e13a40eef9ea94d"
+        },
+        {
+          "path": "ticket/agent.py",
+          "size": 3513,
+          "mtime": "2026-02-07T20:25:32.729465",
+          "sha256": "88cabf9ca33fd6ae7643229a371ee75f4b1c72f9d4284d5ed2af101c356a63fb"
+        },
+        {
+          "path": "ticket/state.py",
+          "size": 478,
+          "mtime": "2026-02-07T20:24:33.158891",
+          "sha256": "807a1b96421d21068abc9a3b20898e050a8dca3e673015dd383e70e1c852301a"
+        },
+        {
+          "path": "ticket/ticket.py",
+          "size": 2280,
+          "mtime": "2026-02-07T20:24:49.944045",
+          "sha256": "2c3ab6398aa11c8854bc9c1df7f30b102ce6f0e0c4873b4218a46daa966643e0"
+        },
+        {
+          "path": "ticket/ticket.talon",
+          "size": 117,
+          "mtime": "2026-02-07T20:24:56.415576",
+          "sha256": "87f2aa343f34053665b5fb5d28f8f9eb9c9cc9fef7bc02de08c923c710aba648"
+        },
+        {
+          "path": "ticket/ticket_mode.talon",
+          "size": 194,
+          "mtime": "2026-02-07T20:24:58.250586",
+          "sha256": "ccd14499453ab6800b250d199ec5a74b7a6961c25ab50abba43292c2132567a1"
+        },
+        {
+          "path": "to_sleep_mode.talon",
+          "size": 0,
+          "mtime": "2024-03-21T19:05:45.916791",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "to_wake_mode.talon",
+          "size": 76,
+          "mtime": "2025-05-29T16:08:37.448530",
+          "sha256": "91a76b28dcc4e1b762356656a18f1258820f6906529827b3d8ceb064a039db8b"
+        },
+        {
+          "path": "utils/_wav.py",
+          "size": 2776,
+          "mtime": "2024-04-18T13:09:54.983196",
+          "sha256": "5abf31b68fcf31151060f877d1883762d6f52b0b03a3d79836375c448e8f06ef"
+        },
+        {
+          "path": "utils/sound.py",
+          "size": 2256,
+          "mtime": "2024-04-18T13:20:21.633493",
+          "sha256": "6804f4eeacfb9bdf43ce8c3e7b0794ec1cfa8c77181a0d7eea82cf34759bf12f"
+        },
+        {
+          "path": "virtual_coffee_demo.talon",
+          "size": 66,
+          "mtime": "2025-04-25T12:22:33.508160",
+          "sha256": "d319eeae9e8d1aecb54f3051e75ee3059b4455bc1c1aac6cd12f37f312fd6560"
+        },
+        {
+          "path": "vscode.talon",
+          "size": 2396,
+          "mtime": "2026-02-07T16:07:09.841879",
+          "sha256": "edfb7500ec174e5b4eb72530dcaf454b0107ab71d6cd99c51742471b12b1960a"
+        },
+        {
+          "path": "vscode_bar_copilot.talon",
+          "size": 708,
+          "mtime": "2026-02-04T22:46:37.851112",
+          "sha256": "bc7df3df0de57b59e351f2934a863b7e4e91b23356de545f533615b5071676e9"
+        },
+        {
+          "path": "vscode_terminal.talon",
+          "size": 76,
+          "mtime": "2026-02-04T23:05:45.071057",
+          "sha256": "74c408b48affded8eddc81083512898fa2e0a9b597bb9ddfe4631f330f3a6af3"
+        },
+        {
+          "path": "webflow.talon",
+          "size": 2036,
+          "mtime": "2025-02-24T15:58:45.214623",
+          "sha256": "f02bda9f81741d700a78d19455affece78c7db595ed872e3da9da5f63349fb6f"
+        },
+        {
+          "path": "window_focus_announcer.py",
+          "size": 877,
+          "mtime": "2026-01-09T12:38:50.997673",
+          "sha256": "ea039027b920a7a572c493eb9a210edaa3bdae3985d4ec48dbd238f614629f36"
+        },
+        {
+          "path": "window_history/window_history.py",
+          "size": 2557,
+          "mtime": "2026-01-15T12:27:15.815234",
+          "sha256": "9eed9a512d7c3a674815c33d5ad384479f6dbfc0425fd1d7dff89c07c6c08a28"
+        },
+        {
+          "path": "window_management.talon",
+          "size": 0,
+          "mtime": "2024-03-21T19:10:37.277614",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "workspace/workspace.py",
+          "size": 10842,
+          "mtime": "2026-02-08T12:29:09.069578",
+          "sha256": "a048af524ad75d072a9aa7907a9c2d0f54f47cabdf535ecf2de0e51651d418fe"
+        },
+        {
+          "path": "workspace/workspace.talon",
+          "size": 427,
+          "mtime": "2026-02-08T09:10:24.648260",
+          "sha256": "4ea264b89e6ce659fa1b7dfafc1f2cd8df7f8f60e3df44f009f5e7b82917c2ad"
+        },
+        {
+          "path": "workspace/workspace_vscode.talon",
+          "size": 210,
+          "mtime": "2026-02-06T14:14:15.526214",
+          "sha256": "4a0d52f983b89512566bc83083e7e017c1b84e1bf0959bcda71a9379c2e06104"
+        },
+        {
+          "path": "workspace/workspaces.json",
+          "size": 1427,
+          "mtime": "2026-02-09T13:26:22.367795",
+          "sha256": "0c4644d043273b12b946b14d4970815164f0bbef2e31e4fa5a0a2d3c32dbebf1"
+        },
+        {
+          "path": "write_the_clipboard/write_the_clipboard.py",
+          "size": 907,
+          "mtime": "2026-02-07T16:05:24.657340",
+          "sha256": "60a9fda3a50acd647b6e7bc82302392a7f6161e3a65d1b8b5a40421b4d08c8c7"
+        },
+        {
+          "path": "write_the_clipboard/write_the_clipboard.talon",
+          "size": 52,
+          "mtime": "2024-03-12T10:49:00.507404",
+          "sha256": "fdc8feaaf723029dc792e9aa27cfbf10193412e368d609ea9cd9dc20ee787217"
+        },
+        {
+          "path": "zoom.talon",
+          "size": 49,
+          "mtime": "2026-01-09T10:40:07.430640",
+          "sha256": "67ad64f6b3ffaf4212a0bf105e7ca72f33254cf7733da8a9daaf84441e60a290"
+        }
+      ]
+    },
+    "trillium_obs": {
+      "type": "git",
+      "git": {
+        "remotes": {},
+        "branch": "main",
+        "head_sha": "b2872457949fe522c041ad2edcb4494abba653d9",
+        "tracking": null,
+        "ahead": null,
+        "behind": null,
+        "dirty_files": [
+          {
+            "status": "M",
+            "path": "config.py"
+          },
+          {
+            "status": "M",
+            "path": "streaming/box_border.py"
+          },
+          {
+            "status": "M",
+            "path": "streaming/focus_streaming.talon"
+          },
+          {
+            "status": "M",
+            "path": "streaming/obs_scene_change.py"
+          },
+          {
+            "status": "M",
+            "path": "streaming/streaming.py"
+          }
+        ],
+        "untracked_files": [
+          "bug.md",
+          "planning.md",
+          "streaming/create_safety_mask.py",
+          "streaming/keyboard_blurr_on_window_change.talon",
+          "streaming/red_flash_test.py",
+          "streaming/wip_testing_file.py",
+          "window_management/"
+        ],
+        "stash_count": 0,
+        "is_fork": false,
+        "local_diff": "diff --git a/config.py b/config.py\nindex 4116e77..6fdca21 100644\n--- a/config.py\n+++ b/config.py\n@@ -1,3 +1,6 @@\n+import os\n+os.environ[\"PATH\"] += os.pathsep + \"/opt/homebrew/bin\"\n+\n SAFE_APPS = [\n     \"Code\",\n     \"Google Chrome\",\n@@ -6,6 +9,7 @@ SAFE_APPS = [\n     \"Talon\",\n     \"Terminal\",\n     \"Slack\",\n+    \"System Settings\",\n ]\n \n mask_path = \"/Users/trilliumsmith/Downloads/left_mask.png\"\n@@ -15,5 +19,8 @@ nextjsWebsocketURL = \"http://localhost:7328/api/obs-scene-safety\"\n GREEN = (0, 255, 0, 255)\n RED = (255, 0, 0, 255)\n \n+COLOR_MASK_DANGER = \"white\"\n+COLOR_MASK_SAFE = \"black\"\n+\n COLOR_SAFE = GREEN\n COLOR_DANGER = RED\n\\ No newline at end of file\ndiff --git a/streaming/box_border.py b/streaming/box_border.py\nindex b763e2d..dd07ed1 100644\n--- a/streaming/box_border.py\n+++ b/streaming/box_border.py\n@@ -67,11 +67,13 @@ class Actions:\n         app = app_name or active.app.name\n \n         if active:\n-            print(\"[draw_box_border_active_window]\", active.rect, app)\n-            color = COLOR_SAFE if app and app in SAFE_APPS else COLOR_DANGER\n-            box_border.show(active.rect, color, thickness)\n+            # print(\"[draw_box_border_active_window]\", active.rect, app)\n+            # color = COLOR_SAFE if app and app in SAFE_APPS else COLOR_DANGER\n+            # box_border.show(active.rect, color, thickness)\n+            pass\n         else:\n-            print(\"[draw_box_border_active_window] No active window found\")\n+            # print(\"[draw_box_border_active_window] No active window found\")\n+            pass\n \n     def close_box_border():\n         \"\"\"Close the box border overlay if it is showing.\"\"\"\ndiff --git a/streaming/focus_streaming.talon b/streaming/focus_streaming.talon\nindex 232277c..eef8d6b 100644\n--- a/streaming/focus_streaming.talon\n+++ b/streaming/focus_streaming.talon\n@@ -3,16 +3,16 @@ get big:\n     user.press_obs_key(\"f16\")\n \n get blurry:\n-    # SUPER F13 - BLURRY fullscreen\n-    # user.press_obs_key(\"f13\")\n-    user.press_obs_blurry()\n-    print(\"get blurry\")\n+    user.obs_get_blurry()\n+    print(\"[focus_streaming.talon] get blurry\")\n \n get clear:\n-    # SUPER F13 - BLURRY fullscreen\n-    # user.press_obs_key(\"f17\")\n-    user.press_obs_clear()\n-    print(\"get clear\")\n+    user.obs_get_clear()\n+    print(\"[focus_streaming.talon] get clear\")\n+\n+get partial:\n+    user.obs_partial_blurry_mask()\n+    print(\"[focus_streaming.talon] get partial\")\n \n which windows:\n     print(user.windows_in_viewport())\n@@ -26,5 +26,21 @@ window order list:\n border active window:\n     user.draw_box_border_active_window()\n \n-border (clear | close):\n+(clear | close) border | border (clear | close):\n     user.close_box_border()\n+\n+(mask focused app | mask this):\n+    print(\"[mask this]\")\n+    user.draw_mask_via_focused_app()\n+\n+create [default] safety mask:\n+    print(\"[create safety mask]\")\n+    user.whole_screen_single_color()\n+\n+create [default] danger mask:\n+    print(\"[create danger mask]\")\n+    user.whole_screen_single_color(\"black\")\n+\n+app mask:\n+    print(\"[app mask]\")\n+    user.draw_rect_over_image_in_place(\"red\")\ndiff --git a/streaming/obs_scene_change.py b/streaming/obs_scene_change.py\nindex 7834d2e..ee9e4ec 100644\n--- a/streaming/obs_scene_change.py\n+++ b/streaming/obs_scene_change.py\n@@ -1,4 +1,4 @@\n-from .config import nextjsWebsocketURL\n+from ..config import nextjsWebsocketURL\n from .urllib_request import send_urllib_request\n from talon import actions, Module\n \n@@ -15,23 +15,24 @@ def send_obs_request(data, method):\n class Actions:\n     def obs_get_blurry():\n         \"\"\"Change scene to blurry state - requires OBS-listener to be running\"\"\"\n-        data = {\"safeToDisplay\": False}\n+        data = {\"safeToDisplay\": True}\n+        method = \"POST\"\n+        success = send_obs_request(data, method)\n+        print(\"[obs_get_blurry]\")\n+        return success\n+    \n+    def obs_partial_blurry_mask():\n+        \"\"\"Change scene to blurry state - requires OBS-listener to be running\"\"\"\n+        data = {\"safeToDisplay\": True, \"safeScene\": \"BLURY_partial_masked\"}\n         method = \"POST\"\n         success = send_obs_request(data, method)\n+        print(\"[obs_partial_blurry_mask]\")\n         return success\n \n     def obs_get_clear():\n-        data = {\"safeToDisplay\": True}\n+        \"\"\"Change scene to clear state - requires OBS-listener to be running\"\"\"\n+        data = {\"safeToDisplay\": False}\n         method = \"POST\"\n         success = send_obs_request(data, method)\n-        \"\"\"Change scene to clear state - requires OBS-listener to be running\"\"\"\n+        print(\"[obs_get_clear]\")\n         return success\n-\n-    def execute_obs_action(is_safe_app: bool, app_name: str) -> None:\n-        \"\"\"Execute appropriate OBS action based on app safety\"\"\"\n-        if is_safe_app:\n-            print(f\"App {app_name} is safe - display CLEAR \")\n-            actions.user.obs_get_clear()\n-        else:\n-            print(f\"App {app_name} is not safe - display BLURRY\")\n-            actions.user.obs_get_blurry()\ndiff --git a/streaming/streaming.py b/streaming/streaming.py\nindex 38885ed..a95dc8d 100644\n--- a/streaming/streaming.py\n+++ b/streaming/streaming.py\n@@ -2,7 +2,7 @@ import time\n from talon import Context, Module, actions, app, fs, imgui, ui, ctrl\n from typing import Callable, Any, TypeVar\n from .urllib_request import send_urllib_request\n-from ..config import SAFE_APPS, nextjsWebsocketURL\n+from ..config import SAFE_APPS, nextjsWebsocketURL, COLOR_MASK_DANGER, COLOR_MASK_SAFE\n \n mod = Module()\n \n@@ -28,20 +28,36 @@ def conditional_callback(\n def check_app_safety(name: str) -> bool:\n     \"\"\"Check if the app is in the safe apps list\"\"\"\n     is_safe = name in SAFE_APPS\n-    print(f\"{name} {'in' if is_safe else 'not in'} SAFE_APPS\")\n+    print(\"[check_app_safety]\", f\"{name} {'in' if is_safe else 'not in'} SAFE_APPS\")\n     return is_safe\n \n-def execute_obs_action(is_safe_app: bool, app_name: str) -> None:\n-    \"\"\"Execute appropriate OBS action based on app safety\"\"\"\n-    if is_safe_app:\n-        print(f\"App {app_name} is safe - display CLEAR \")\n-        actions.user.obs_get_clear()\n+# def execute_obs_action(is_safe_app: bool, app_name: str) -> None:\n+#     \"\"\"Execute appropriate OBS action based on app safety\"\"\"\n+#     print(\"[execute_obs_action]\", is_safe_app, app_name)\n+#     if is_safe_app:\n+#         actions.user.obs_get_clear()\n+#     else:\n+#         actions.user.obs_get_blurry()\n+\n+def get_mask_color(app_name: str):\n+    print(\"[get_mask_color]\", app_name)\n+    safe = check_app_safety(app_name)\n+    if safe:\n+        print(f\"[get_mask_color] {COLOR_MASK_SAFE}\")\n+        return COLOR_MASK_SAFE\n     else:\n-        print(f\"App {app_name} is not safe - display BLURRY\")\n-        actions.user.obs_get_blurry()\n+        print(f\"[get_mask_color] {COLOR_MASK_DANGER}\")\n+        return COLOR_MASK_DANGER \n+\n+### This isn't being run, figure out why later\n+\n \n @mod.action_class\n class Actions:\n+    def get_mask_color(app_name: str):\n+        \"\"\"returns mask color as string\"\"\"\n+        return get_mask_color(app_name)\n+\n     def swtich_app_by_name(name: str):\n         \"\"\"Focus a specific app by a name string\"\"\"\n         actions.user.switcher_focus(name)\n@@ -75,35 +91,6 @@ class Actions:\n         \"\"\"Send cmd-ctrl-alt-option-f17 to OBS\"\"\"\n         ctrl.key_press(\"f17\", app=ui.apps(bundle=\"com.obsproject.obs-studio\")[0], super=True, shift=True, ctrl=True, alt=True)\n \n-    def switcher_focus(name: str):\n-        \"\"\"Focus a new application by name\"\"\"\n-        print(\"[switcher_focus]\",name)\n-        \n-        conditional_callback(\n-            action=lambda is_safe: execute_obs_action(is_safe, name),\n-            condition=lambda: check_app_safety(name)\n-        )\n-        \n-        \n-        app = actions.user.get_running_app(name)\n-\n-        # Focus next window on same app\n-        if app == ui.active_app():\n-            actions.app.window_next()\n-        # Focus new app\n-        else:\n-            actions.user.switcher_focus_app(app)\n-\n-    def obs_get_clear():\n-        \"\"\"Change scene to clear state\n-            - requires OBS-listener to be running\n-        \"\"\"\n-        url = nextjsWebsocketURL\n-        data = {\"safeToDisplay\": False}\n-        method = \"POST\"\n-        status, response, success = send_urllib_request(url, data, method)\n-        return success\n-\n     def safe_mask_app_switch(name: str):\n         \"\"\"Focus a new application by name\"\"\"\n         app = actions.user.get_running_app(name)",
+        "submodules": []
+      }
+    },
+    "trillium_talon": {
+      "type": "git",
+      "git": {
+        "remotes": {
+          "origin": "https://github.com/trillium/trillium_talon",
+          "upstream": "https://github.com/knausj85/knausj_talon.git"
+        },
+        "branch": "macbook",
+        "head_sha": "d08b381eb63f5c7aeb74ea63a992e452696edd73",
+        "tracking": null,
+        "ahead": null,
+        "behind": null,
+        "dirty_files": [
+          {
+            "status": "M",
+            "path": ".beads/config.yaml"
+          }
+        ],
+        "untracked_files": [
+          ".scripts/talon_snapshot.py"
+        ],
+        "stash_count": 0,
+        "is_fork": true,
+        "submodules": []
+      }
+    },
+    "trillium_talon_deck": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "slash_command.talon-list",
+          "size": 521,
+          "mtime": "2026-02-12T12:55:06.870676",
+          "sha256": "9bc2522abe067d7577e6fad50321f59af82543e38ad16cde7264a7f5c75c4122"
+        },
+        {
+          "path": "slash_commands.py",
+          "size": 210,
+          "mtime": "2026-02-09T00:43:02.047662",
+          "sha256": "26879243f5ef541fc47700324a7d7d1281dde21f99134461c2761e434c771601"
+        },
+        {
+          "path": "slash_commands.talon",
+          "size": 168,
+          "mtime": "2026-02-09T00:43:02.055157",
+          "sha256": "be048e1305d6639e306524b7aedd2f5a8cff59d399081af51c30d72c2e5e0b00"
+        },
+        {
+          "path": "talon_deck_buttons.py",
+          "size": 4201,
+          "mtime": "2026-02-09T00:43:02.062739",
+          "sha256": "5951c1ca88238720fd3eec908786183bf559d3f26d597ff1f0285c2d53bd8693"
+        },
+        {
+          "path": "talon_deck_integrations.py",
+          "size": 3913,
+          "mtime": "2026-02-09T00:43:02.069804",
+          "sha256": "22b0f42621e8f502ed472800c36750a55cfde86a5e0f29e3d9d1d6c2121b0561"
+        }
+      ]
+    },
+    "voice_over": {
+      "type": "plain",
+      "files": [
+        {
+          "path": "LLM_INFO.md",
+          "size": 1420,
+          "mtime": "2025-10-07T13:05:10.362443",
+          "sha256": "18cf9c69e9c58c8d8a1832889c5aaaf57e51dfef99cb27d252f85b4f3b0dd840"
+        },
+        {
+          "path": "MACOS_DOCS.md",
+          "size": 4848,
+          "mtime": "2025-10-07T11:47:12.612828",
+          "sha256": "9f1a4242f7ed3b3341f9617fe5241e8b8c78e1af955ff3d9d2b8fb59216977f5"
+        },
+        {
+          "path": "MACOS_URL_general_commands.md",
+          "size": 3078,
+          "mtime": "2025-10-07T11:53:12.460746",
+          "sha256": "d5a25762820e9e52e886bd47a865b09315c9bd42cd9befb63db947e7574587c0"
+        },
+        {
+          "path": "MACOS_URL_interaction_commands.md",
+          "size": 3980,
+          "mtime": "2025-10-07T11:53:14.151975",
+          "sha256": "887c6bb886614aa36c5791bdbc43aa64d5871bd235b02ea8728b18f9493fa720"
+        },
+        {
+          "path": "MACOS_URL_navigation_commands.md",
+          "size": 4184,
+          "mtime": "2025-10-07T11:53:14.986677",
+          "sha256": "cf65d057a117656d6fd43b519c79655be7e6e6a8daa5d33c1505a7040c083d7c"
+        },
+        {
+          "path": "MACOS_URL_orientation_commands.md",
+          "size": 1900,
+          "mtime": "2025-10-07T11:53:15.547857",
+          "sha256": "ee11bf512ac65e4894493c3f79127f2f2ba71644c65d74851e27963dfa719b37"
+        },
+        {
+          "path": "MACOS_URL_search_commands.md",
+          "size": 3280,
+          "mtime": "2025-10-07T11:53:15.769588",
+          "sha256": "27a64936d85041db29f6cb8dedbab9cf4d6c66a32fbce4c443c59b2f18e97a94"
+        },
+        {
+          "path": "MACOS_URL_text_commands.md",
+          "size": 2901,
+          "mtime": "2025-10-07T11:53:15.778388",
+          "sha256": "a185e494a9d85d4dc6f99f38412679b72d6ccd085ad763ef2f308f535854cc04"
+        },
+        {
+          "path": "MACOS_URL_trackpad_gestures.md",
+          "size": 1797,
+          "mtime": "2025-10-07T11:57:18.011896",
+          "sha256": "dd359b3835c38e87225c11485f0d92de897cbe2c2b7cb9030107ac06ad2fb600"
+        },
+        {
+          "path": "MACOS_URL_web_commands.md",
+          "size": 1438,
+          "mtime": "2025-10-07T11:53:15.925494",
+          "sha256": "bb74e007e47078727258ffcc24676d8d3c0a056c3917b2414f7770eb05b61f47"
+        },
+        {
+          "path": "PLAN.md",
+          "size": 8911,
+          "mtime": "2025-10-07T11:57:49.433934",
+          "sha256": "15f0f5db059ac158d993dc8f1bc3183642511532eb56ff143d5b80abac1ae3e0"
+        },
+        {
+          "path": "commands/vo_commands_active.talon",
+          "size": 1763,
+          "mtime": "2025-10-17T22:11:27.671560",
+          "sha256": "ad54a436049fec0f29ebe7697bbf6f1116555531c06fb61f69c48218b5a3fe46"
+        },
+        {
+          "path": "commands/vo_toggle.talon",
+          "size": 129,
+          "mtime": "2025-10-07T12:49:59.038086",
+          "sha256": "b917b5d012db6cc5e357b3189031d723f2373f4ef9111c102d47e18e2cb7eb75"
+        },
+        {
+          "path": "test.talon",
+          "size": 44,
+          "mtime": "2025-10-07T12:57:46.676256",
+          "sha256": "1a2a4b2eb8ac29f9ace74841881283c9371d4abd8f2239ea3d0b827ce4ecea4e"
+        },
+        {
+          "path": "vo_is_running.py",
+          "size": 1432,
+          "mtime": "2025-10-07T12:53:54.813656",
+          "sha256": "4ca1de7574f3b75c7a7db1ffc17102673d2b82df3fa08147344d048c8929bbfc"
+        }
+      ]
+    }
+  },
+  "hostname_files": [
+    {
+      "path": "trillium/core/system_paths-MacBookPro.lan1.talon-list",
+      "hostnames_referenced": [
+        "MacBookPro.lan1"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/modes/modes_laptop.talon",
+      "hostnames_referenced": [
+        "MacBookPro.localdomain"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/modes/modes_mini.talon",
+      "hostnames_referenced": [
+        "trillium-mini"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/modes/sleep_mode_laptop.talon",
+      "hostnames_referenced": [
+        "MacBookPro.localdomain"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/modes/sleep_mode_mini.talon",
+      "hostnames_referenced": [
+        "trillium-mini"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-MacBookPro.localdomain.talon-list",
+      "hostnames_referenced": [
+        "MacBookPro.localdomain"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-laptop.talon-list",
+      "hostnames_referenced": [
+        "laptop"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-mac-mini.lan.talon-list",
+      "hostnames_referenced": [
+        "mac-mini.lan"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-macbookpro.lan.talon-list",
+      "hostnames_referenced": [
+        "macbookpro.lan"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-mini.talon-list",
+      "hostnames_referenced": [
+        "mini"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-trilliums-MacBook-Pro.talon-list",
+      "hostnames_referenced": [
+        "trilliums-MacBook-Pro"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-trilliums-mbp.lan.talon-list",
+      "hostnames_referenced": [
+        "trilliums-mbp.lan"
+      ]
+    },
+    {
+      "path": "trillium_talon/core/system_paths-trilliums-mini.lan.talon-list",
+      "hostnames_referenced": [
+        "trilliums-mini.lan"
+      ]
+    },
+    {
+      "path": "trillium_talon/trillium/core/system_paths-MacBookPro.lan1.talon-list",
+      "hostnames_referenced": [
+        "MacBookPro.lan1"
+      ]
+    },
+    {
+      "path": "trillium_talon/trillium/mode_indicator/mode_indicator-macbookpro.lan.talon",
+      "hostnames_referenced": [
+        "macbookpro.lan"
+      ]
+    }
+  ]
+}
