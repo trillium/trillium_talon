@@ -1,4 +1,7 @@
 settings():
+    # Store cursorless spoken-form overrides inside trillium_talon so they're version controlled
+    user.cursorless_settings_directory = "trillium_talon/cursorless-settings"
+
     # Adjust the scale of the imgui
     imgui.scale = 1.3
 
