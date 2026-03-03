@@ -32,20 +32,20 @@ _state = {
 
 
 def _week_bounds():
-    """Return (last_wed_7pm, next_wed_7pm) bracketing now."""
+    """Return (last_thu_7pm, next_thu_7pm) bracketing now."""
     now = datetime.now()
-    days_since_wed = (now.weekday() - 2) % 7
-    last_wed_7pm = now.replace(hour=19, minute=0, second=0, microsecond=0) - timedelta(
-        days=days_since_wed
+    days_since_thu = (now.weekday() - 3) % 7
+    last_thu_7pm = now.replace(hour=19, minute=0, second=0, microsecond=0) - timedelta(
+        days=days_since_thu
     )
-    if last_wed_7pm > now:
-        last_wed_7pm -= timedelta(weeks=1)
-    next_wed_7pm = last_wed_7pm + timedelta(weeks=1)
-    return last_wed_7pm, next_wed_7pm
+    if last_thu_7pm > now:
+        last_thu_7pm -= timedelta(weeks=1)
+    next_thu_7pm = last_thu_7pm + timedelta(weeks=1)
+    return last_thu_7pm, next_thu_7pm
 
 
 def get_week_percent() -> int:
-    """Get percentage of week elapsed since last Wednesday 7pm to next Wednesday 7pm."""
+    """Get percentage of week elapsed since last Thursday 7pm to next Thursday 7pm."""
     now = datetime.now()
     start, end = _week_bounds()
     elapsed = (now - start).total_seconds()
@@ -54,7 +54,7 @@ def get_week_percent() -> int:
 
 
 def get_week_remaining() -> str:
-    """Get remaining time until next Wednesday 7pm as 'Xd Yh' or 'Xh Ym'."""
+    """Get remaining time until next Thursday 7pm as 'Xd Yh' or 'Xh Ym'."""
     now = datetime.now()
     _, end = _week_bounds()
     remaining = int((end - now).total_seconds())
