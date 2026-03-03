@@ -1,3 +1,26 @@
+"""Talon API stubs for testing.
+
+This module mocks the core Talon runtime so that plugins can be tested
+without the Talon application running. Import paths mirror the real Talon API:
+
+    from talon import Module, Context, actions, app, ui, clip, cron
+    from talon.canvas import Canvas
+    from talon.skia import Paint, Rect
+    from talon.types.point import Point2d
+    from talon.experimental.parrot import ParrotSystem
+
+Sub-modules:
+    talon.canvas        - Canvas overlay API
+    talon.screen        - Screen enumeration
+    talon.skia          - Skia 2D graphics (Paint, Rect, Path, Canvas)
+    talon.types         - Type definitions (Point2d, Rect)
+    talon.ui            - Window/screen management, Rect, events
+    talon.grammar       - Speech grammar types (Phrase, Capture)
+    talon.debug         - Logging/debugging utilities
+    talon.experimental  - Experimental APIs (parrot, textarea)
+    talon.scripting     - Scripting type introspection
+"""
+
 import inspect
 from typing import Callable
 
@@ -127,6 +150,9 @@ class Context:
     """
 
     lists = {}
+    tags = set()
+    settings = {}
+    matches = ""
 
     def action_class(self, path=None):
         def __funcwrapper(clazz):
@@ -161,25 +187,60 @@ class ImgUI:
         return __funcwrapper
 
 
-class UI:
-    """
-    Stub out UI so we don't get crashes
-    """
-
-    def register(*args, **kwargs):
-        pass
-
-
 class Settings:
+    """Mock talon.settings — global settings accessor.
+
+    In real Talon, settings are declared via Module.setting() and
+    read via settings.get("user.my_setting", default).
     """
-    Implements something like talon.settings
-    """
+
+    _values = {}
+
+    def get(self, name, default=None):
+        return self._values.get(name, default)
+
+    def __getitem__(self, name):
+        return self._values[name]
+
+    def __contains__(self, name):
+        return name in self._values
+
+    # Test helpers
+
+    @classmethod
+    def set(cls, name, value):
+        """Test helper: set a setting value."""
+        cls._values[name] = value
+
+    @classmethod
+    def reset(cls):
+        """Test helper: clear all settings."""
+        cls._values.clear()
 
 
 class Registry:
+    """Mock Talon registry — tracks all loaded modules, contexts, actions, lists.
+
+    In real Talon, registry provides introspection over everything loaded.
     """
-    Implements something like Talon's registry
-    """
+
+    lists = {}
+    tags = set()
+    commands = {}
+    contexts = []
+    decls = type("decls", (), {"lists": {}, "tags": set()})()
+
+    def __init__(self):
+        self._callbacks = {}
+
+    def register(self, event, callback):
+        self._callbacks.setdefault(event, []).append(callback)
+
+    def unregister(self, event, callback):
+        if event in self._callbacks:
+            self._callbacks[event] = [
+                cb for cb in self._callbacks[event] if cb != callback
+            ]
 
 
 class Resource:
@@ -201,15 +262,216 @@ class App:
 
     platform = "mac"
 
+    @staticmethod
+    def notify(title="", body="", sound=False):
+        """Show a notification. Noop in tests."""
+        pass
 
+    @staticmethod
+    def register(event, callback):
+        """Register app event callback (launch, ready, etc.)."""
+        pass
+
+    @staticmethod
+    def unregister(event, callback):
+        """Unregister app event callback."""
+        pass
+
+
+class Clip:
+    """Mock clipboard API.
+
+    Usage:
+        clip.set_text("hello")
+        text = clip.text()
+    """
+
+    _text = ""
+    _image = None
+
+    @classmethod
+    def text(cls):
+        return cls._text
+
+    @classmethod
+    def set_text(cls, text):
+        cls._text = text
+
+    @classmethod
+    def image(cls):
+        return cls._image
+
+    @classmethod
+    def set_image(cls, image):
+        cls._image = image
+
+    @classmethod
+    def clear(cls):
+        cls._text = ""
+        cls._image = None
+
+    # Context manager for clipboard revert
+    def __enter__(self):
+        self._saved_text = self._text
+        return self
+
+    def __exit__(self, *args):
+        type(self)._text = self._saved_text
+
+
+class Cron:
+    """Mock cron (timer) API.
+
+    Usage:
+        job = cron.interval("500ms", callback)
+        cron.cancel(job)
+    """
+
+    _jobs = []
+    _next_id = 0
+
+    @classmethod
+    def interval(cls, period, callback):
+        """Schedule repeating callback. Returns job handle."""
+        cls._next_id += 1
+        job = cls._next_id
+        cls._jobs.append({"id": job, "type": "interval", "callback": callback})
+        return job
+
+    @classmethod
+    def after(cls, delay, callback):
+        """Schedule one-shot callback. Returns job handle."""
+        cls._next_id += 1
+        job = cls._next_id
+        cls._jobs.append({"id": job, "type": "after", "callback": callback})
+        return job
+
+    @classmethod
+    def cancel(cls, job):
+        """Cancel a scheduled job."""
+        cls._jobs = [j for j in cls._jobs if j["id"] != job]
+
+    # Test helpers
+
+    @classmethod
+    def trigger(cls, job_id=None):
+        """Test helper: fire a job's callback. If no id, fires all."""
+        for j in cls._jobs:
+            if job_id is None or j["id"] == job_id:
+                j["callback"]()
+
+    @classmethod
+    def reset(cls):
+        """Test helper: cancel all jobs."""
+        cls._jobs.clear()
+        cls._next_id = 0
+
+
+class Ctrl:
+    """Mock keyboard/mouse control API."""
+
+    @staticmethod
+    def mouse_click(button=0, hold=None, times=1):
+        pass
+
+    @staticmethod
+    def mouse_scroll(x=0, y=0):
+        pass
+
+    @staticmethod
+    def mouse_move(x, y):
+        pass
+
+    @staticmethod
+    def key_press(key, modifiers=None):
+        pass
+
+
+class Noise:
+    """Mock noise detection API (hiss, pop).
+
+    This is the simpler noise API. For advanced noise detection,
+    see talon.experimental.parrot.
+    """
+
+    _callbacks = {}
+
+    @classmethod
+    def register(cls, noise_name, callback):
+        cls._callbacks.setdefault(noise_name, []).append(callback)
+
+    @classmethod
+    def unregister(cls, noise_name, callback):
+        if noise_name in cls._callbacks:
+            cls._callbacks[noise_name] = [
+                cb for cb in cls._callbacks[noise_name] if cb != callback
+            ]
+
+    # Test helpers
+
+    @classmethod
+    def simulate(cls, noise_name, active=True):
+        """Test helper: simulate a noise event."""
+        for cb in cls._callbacks.get(noise_name, []):
+            cb(active)
+
+    @classmethod
+    def reset(cls):
+        cls._callbacks.clear()
+
+
+class Scope:
+    """Mock scope — provides current context state (modes, tags, etc.)."""
+
+    _data = {}
+
+    @classmethod
+    def get(cls, key, default=None):
+        return cls._data.get(key, default)
+
+    @classmethod
+    def update(cls, data):
+        cls._data.update(data)
+
+    @classmethod
+    def reset(cls):
+        cls._data.clear()
+
+
+class Fs:
+    """Mock filesystem watcher."""
+
+    _callbacks = {}
+
+    @classmethod
+    def watch(cls, path, callback):
+        cls._callbacks[path] = callback
+
+    @classmethod
+    def unwatch(cls, path, callback=None):
+        cls._callbacks.pop(path, None)
+
+    # Test helper
+    @classmethod
+    def simulate_change(cls, path, flags=None):
+        """Test helper: simulate a file change event."""
+        if path in cls._callbacks:
+            cls._callbacks[path](path, flags or set())
+
+
+# Module-level singletons
 actions = Actions()
 app = App
-clip = None
+clip = Clip()
+cron = Cron
+ctrl = Ctrl
 imgui = ImgUI()
-ui = UI()
+noise = Noise
+scope = Scope
 settings = Settings()
 resource = Resource()
 registry = Registry()
+fs = Fs
 
 # Indicate to test files that they should load since we're running in test mode
 test_mode = True
