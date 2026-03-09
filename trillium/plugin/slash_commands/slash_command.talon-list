@@ -42,6 +42,7 @@ M C P: /mcp
 # Session
 exit: /exit
 clear: /clear
+new: /new
 
 # Memory
 memory: /memory
