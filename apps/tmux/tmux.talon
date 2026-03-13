@@ -18,3 +18,9 @@ tag(): user.tabs
 go split <user.arrow_key>: user.tmux_keybind(arrow_key)
 #Say a number after this command to switch to pane
 go split: user.tmux_execute_command("display-panes -d 0")
+
+# Scrolling - mimics mouse wheel: copy-mode -e auto-exits at bottom
+scroll up: user.tmux_scroll_up(5)
+scroll up <number_small>: user.tmux_scroll_up(number_small)
+scroll down: user.tmux_scroll_down(5)
+scroll down <number_small>: user.tmux_scroll_down(number_small)

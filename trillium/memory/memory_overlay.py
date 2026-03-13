@@ -3,7 +3,7 @@ Memory Overlay - Full-screen panel showing saved personal command reference
 
 Dim backdrop with a centered panel listing command/description pairs.
 Follows the recall help overlay visual patterns (navy/blue palette).
-No auto-hide — stays until dismissed.
+Supports pages for grouped display. No auto-hide — stays until dismissed.
 """
 
 from talon import skia, ui
@@ -14,6 +14,8 @@ from talon.ui import Rect
 
 _canvas: Canvas = None
 _entries: list[dict] = []
+_page: str = ""
+_available_pages: list[str] = []
 
 # ── Color palette (matches recall help overlay) ──
 
@@ -97,6 +99,9 @@ def _on_draw(c: SkiaCanvas):
     else:
         panel_h += EMPTY_SIZE + 20             # empty state message
 
+    if not _page and _available_pages:
+        panel_h += 20 + HINT_SIZE + 8 + HINT_SIZE  # pages footer
+
     panel_h += PANEL_PAD                       # bottom padding
 
     panel_w = sr.width * 0.50
@@ -123,7 +128,8 @@ def _on_draw(c: SkiaCanvas):
     # ── Header ──
     c.paint.textsize = HEADER_SIZE
     c.paint.color = TEXT_COLOR
-    c.draw_text("Memory", cx, cy + HEADER_SIZE)
+    title = f"Memory \u203a {_page}" if _page else "Memory"
+    c.draw_text(title, cx, cy + HEADER_SIZE)
 
     _draw_close_hint(c, panel_x, panel_y, panel_w)
 
@@ -151,13 +157,31 @@ def _on_draw(c: SkiaCanvas):
 
             cy += ROW_CMD_SIZE + ROW_PAD
 
+    # ── Pages footer (default view only) ──
+    if not _page and _available_pages:
+        cy += 8
+        c.paint.color = LINE_COLOR
+        c.paint.style = c.paint.Style.STROKE
+        c.paint.stroke_width = 1
+        c.draw_line(cx, cy, cx + content_w, cy)
+        c.paint.style = c.paint.Style.FILL
+        cy += 12
+        c.paint.textsize = HINT_SIZE
+        c.paint.color = DIM_COLOR
+        pages_text = "Pages: " + ", ".join(_available_pages)
+        c.draw_text(pages_text, cx, cy + HINT_SIZE)
+        cy += HINT_SIZE + 8
+        c.draw_text('Say "memory show <page>" to view', cx, cy + HINT_SIZE)
+
     c.restore()
 
 
-def update(entries: list[dict]):
+def update(entries: list[dict], page: str = "", available_pages: list[str] = None):
     """Update overlay entries and re-freeze the canvas."""
-    global _entries
+    global _entries, _page, _available_pages
     _entries = entries
+    _page = page
+    _available_pages = available_pages or []
     if _canvas:
         _canvas.freeze()
 
