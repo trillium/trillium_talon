@@ -7,7 +7,7 @@ Supports pages for grouped display. No auto-hide — stays until dismissed.
 """
 
 from talon import registry, skia, ui
-from talon.canvas import Canvas
+from talon.canvas import Canvas, MouseEvent
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
@@ -17,6 +17,7 @@ _entries: list[dict] = []
 _page: str = ""
 _available_pages: list[str] = []
 _context_tag: str = ""
+_panel_rect: Rect = None
 
 # ── Color palette (matches recall help overlay) ──
 
@@ -115,7 +116,9 @@ def _on_draw(c: SkiaCanvas):
     panel_y = sr.y + (sr.height - panel_h) / 2
 
     # Draw panel frame
+    global _panel_rect
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
+    _panel_rect = panel_rect
     _draw_panel_frame(c, panel_rect)
 
     # Clip to panel
@@ -202,6 +205,14 @@ def update(entries: list[dict], page: str = "", available_pages: list[str] = Non
         _canvas.freeze()
 
 
+def _on_mouse(e: MouseEvent):
+    """Dismiss overlay when clicking outside the panel."""
+    if e.event == "mousedown" and e.button == 0:
+        if _panel_rect and not _panel_rect.contains(e.gpos):
+            from . import memory as mem
+            mem.Actions.memory_hide()
+
+
 def show():
     """Create and show the overlay canvas."""
     global _canvas
@@ -209,7 +220,9 @@ def show():
         hide()
     screen: Screen = ui.main_screen()
     _canvas = Canvas.from_screen(screen)
+    _canvas.blocks_mouse = True
     _canvas.register("draw", _on_draw)
+    _canvas.register("mouse", _on_mouse)
     _canvas.freeze()
 
 
@@ -218,6 +231,7 @@ def hide():
     global _canvas
     if _canvas:
         _canvas.unregister("draw", _on_draw)
+        _canvas.unregister("mouse", _on_mouse)
         _canvas.close()
         _canvas = None
 
