@@ -23,10 +23,3 @@ class Actions:
             return future.replace(microsecond=0).isoformat()
         return future.strftime(fmt)
 
-    def time_format_utc_future(minutes: int = 1, fmt: str = None) -> str:
-        """Return the current UTC time + number minutes in the future, formatted.
-        fmt: strftime()-style format string, defaults to ISO format."""
-        future = datetime.datetime.utcnow() + datetime.timedelta(minutes=minutes)
-        if fmt is None:
-            return future.replace(microsecond=0).isoformat()
-        return future.strftime(fmt)
