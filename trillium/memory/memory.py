@@ -58,7 +58,13 @@ def _show_filtered(entries: list[dict], page: str):
     else:
         filtered = [e for e in entries if not e.get("page")]
     pages = sorted(set(e.get("page", "") for e in entries if e.get("page", "")))
-    overlay.update(filtered, page=page, available_pages=pages)
+    # Extract context tag from the first entry that has one
+    context_tag = ""
+    for e in filtered:
+        if e.get("context"):
+            context_tag = e["context"]
+            break
+    overlay.update(filtered, page=page, available_pages=pages, context_tag=context_tag)
 
 
 def _refresh_if_visible(entries: list[dict]):

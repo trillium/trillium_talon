@@ -6,7 +6,7 @@ Follows the recall help overlay visual patterns (navy/blue palette).
 Supports pages for grouped display. No auto-hide — stays until dismissed.
 """
 
-from talon import skia, ui
+from talon import registry, skia, ui
 from talon.canvas import Canvas
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
@@ -16,6 +16,7 @@ _canvas: Canvas = None
 _entries: list[dict] = []
 _page: str = ""
 _available_pages: list[str] = []
+_context_tag: str = ""
 
 # ── Color palette (matches recall help overlay) ──
 
@@ -131,6 +132,20 @@ def _on_draw(c: SkiaCanvas):
     title = f"Memory \u203a {_page}" if _page else "Memory"
     c.draw_text(title, cx, cy + HEADER_SIZE)
 
+    # ── Context status badge ──
+    if _context_tag:
+        title_w = c.paint.measure_text(title)[1].width
+        active = _context_tag in registry.tags
+        badge_color = "44cc44" if active else "cc4444"
+        badge_label = "Active" if active else "Inactive"
+        dot_r = 5
+        dot_x = cx + title_w + 16 + dot_r
+        dot_cy = cy + HEADER_SIZE - HINT_SIZE / 2
+        c.paint.color = badge_color
+        c.draw_circle(dot_x, dot_cy, dot_r)
+        c.paint.textsize = HINT_SIZE
+        c.draw_text(badge_label, dot_x + dot_r + 6, cy + HEADER_SIZE)
+
     _draw_close_hint(c, panel_x, panel_y, panel_w)
 
     cy += HEADER_SIZE + 20
@@ -176,12 +191,13 @@ def _on_draw(c: SkiaCanvas):
     c.restore()
 
 
-def update(entries: list[dict], page: str = "", available_pages: list[str] = None):
+def update(entries: list[dict], page: str = "", available_pages: list[str] = None, context_tag: str = ""):
     """Update overlay entries and re-freeze the canvas."""
-    global _entries, _page, _available_pages
+    global _entries, _page, _available_pages, _context_tag
     _entries = entries
     _page = page
     _available_pages = available_pages or []
+    _context_tag = context_tag
     if _canvas:
         _canvas.freeze()
 
@@ -204,3 +220,12 @@ def hide():
         _canvas.unregister("draw", _on_draw)
         _canvas.close()
         _canvas = None
+
+
+def _on_update_contexts():
+    """Re-render overlay when contexts change so the status badge stays current."""
+    if _canvas and _context_tag:
+        _canvas.freeze()
+
+
+registry.register("update_contexts", _on_update_contexts)
