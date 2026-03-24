@@ -28,6 +28,7 @@ _state = {
     "cpu_per_core": [],
     "mem_percent": 0,
     "mem_pressure": 0,
+    "pondering_seconds": None,
 }
 
 
@@ -204,3 +205,11 @@ class Actions:
     def mode_indicator_clear_color():
         """Clear the bar color override and return to normal mode-based coloring"""
         update(bar_color_override=None)
+
+    def mode_indicator_set_pondering(seconds: int):
+        """Set the pondering timer display in the circle"""
+        update(pondering_seconds=seconds)
+
+    def mode_indicator_clear_pondering():
+        """Clear the pondering timer from the circle"""
+        update(pondering_seconds=None)

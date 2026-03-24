@@ -304,8 +304,23 @@ def on_draw(c: SkiaCanvas):
         c.paint.color = "aa0000ff"  # Red
     c.draw_circle(circle_x, circle_y, radius)
 
-    # Draw mic name text
-    if settings.get("user.mode_indicator_show_mic_name"):
+    # Draw circle text: pondering timer or mic name
+    pondering_seconds = _state.get("pondering_seconds")
+    if pondering_seconds is not None:
+        c.paint.shader = None
+        c.paint.style = c.paint.Style.FILL
+        c.paint.color = "ffffffff"
+        c.paint.textsize = 16
+        c.paint.font.embolden = True
+        text = str(pondering_seconds)
+        text_rect = c.paint.measure_text(text)[1]
+        c.draw_text(
+            text,
+            circle_x - text_rect.center.x,
+            circle_y - text_rect.center.y,
+        )
+        c.paint.font.embolden = False
+    elif settings.get("user.mode_indicator_show_mic_name"):
         c.paint.shader = None
         c.paint.style = c.paint.Style.FILL
         c.paint.color = text_color
