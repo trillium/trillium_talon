@@ -6,13 +6,17 @@ by momentarily dropping the VAD timeout to near-zero, then restoring it.
 
 Toggle with voice command: "pondering"
 Visual indicator: purple bar header when active.
+
+Pondering never touches parrot on/off or command/dictation mode —
+it only rescopes the tongue-click action and adjusts VAD timeout.
 """
 
-from talon import Module, Context, actions, clip, cron, scope, settings, speech_system
+from talon import Module, Context, actions, clip, cron, settings, speech_system
 
 mod = Module()
 
-mod.tag("pondering", desc="Pondering mode — tongue-click ends the speech listening window")
+mod.tag("pondering", desc="Pondering mode — extended speech listening active")
+mod.tag("pondering_listening", desc="Pondering is listening — tongue-click routes to pondering exit")
 
 mod.setting(
     "pondering_timeout",
@@ -21,17 +25,25 @@ mod.setting(
     desc="Speech timeout when pondering mode is active (seconds).",
 )
 
+mod.setting(
+    "default_speech_timeout",
+    type=float,
+    default=0.5,
+    desc="Default speech timeout to restore after pondering ends (seconds).",
+)
+
 # Pondering mode indicator color (deep purple)
 PONDERING_COLOR = "7b2fff"
 
 # State
 enabled = False
 exiting = False  # True when tongue click initiated exit, prevents double-exit
-parrot_was_on = False
 restore_job = None
 timer_job = None
+safety_job = None  # Fallback to force-clear tags if post:phrase never fires
 pondering_seconds = 0
 toggle_ctx = Context()
+listening_ctx = Context()
 
 # Override dictation_insert in pondering context to use clipboard paste (faster)
 pondering_dictation_ctx = Context()
@@ -55,10 +67,10 @@ class PonderingDictationActions:
         print(f"[pondering] pasted {len(text)} chars via clipboard")
 
 
-# Override noise_tongue_click in pondering context (more specific than parrot_on alone)
+# Override noise_tongue_click when pondering is listening (more specific than parrot_on alone)
 pondering_ctx = Context()
 pondering_ctx.matches = r"""
-tag: user.pondering
+tag: user.pondering_listening
 tag: user.parrot_on
 mode: command
 mode: dictation
@@ -69,16 +81,46 @@ mode: dictation
 class PonderingUserActions:
     def noise_tongue_click():
         """Tongue click exits pondering — slam timeout low to flush speech, then restore normal"""
-        global timer_job, exiting
+        global timer_job, exiting, safety_job
+        if exiting:
+            print("[pondering] click — passing through to repeater")
+            actions.next()
+            return
         print("[pondering] click — exiting pondering mode")
         exiting = True
+        # Immediately release tongue-click back to repeater
+        listening_ctx.tags = []
         speech_system.vad.set_timeout(0.01)
-        # Keep pondering tag active until post:phrase so clipboard paste override stays matched
         if timer_job:
             cron.cancel(timer_job)
             timer_job = None
         actions.user.mode_indicator_clear_pondering()
         actions.user.mode_indicator_clear_color()
+        # Safety net: if post:phrase doesn't fire within 2s, force-clear everything
+        if safety_job:
+            cron.cancel(safety_job)
+        safety_job = cron.after("2s", _safety_cleanup)
+
+
+def _safety_cleanup(_=None):
+    """Fallback: force-clear all pondering state if post:phrase never fired.
+
+    Only clears tags and VAD — never touches parrot or mode.
+    """
+    global enabled, exiting, safety_job
+    safety_job = None
+    if not enabled and not exiting:
+        return
+    print("[pondering] safety net — post:phrase never fired, force-clearing")
+    try:
+        speech_system.unregister("post:phrase", _on_post_phrase)
+    except Exception:
+        pass
+    toggle_ctx.tags = []
+    listening_ctx.tags = []
+    enabled = False
+    exiting = False
+    speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
 
 
 def _tick_timer(_=None):
@@ -93,7 +135,7 @@ _skip_next_post_phrase = False
 
 def _on_post_phrase(d):
     """Handle phrase end during pondering — either from tongue click or natural timeout."""
-    global enabled, exiting, _skip_next_post_phrase
+    global enabled, exiting, _skip_next_post_phrase, safety_job
     if _skip_next_post_phrase:
         _skip_next_post_phrase = False
         print("[pondering] post:phrase — skipped (activation phrase)")
@@ -102,35 +144,43 @@ def _on_post_phrase(d):
         return
     speech_system.unregister("post:phrase", _on_post_phrase)
     toggle_ctx.tags = []
+    listening_ctx.tags = []
     enabled = False
-    speech_system.vad.set_timeout(0.3)
-    if not parrot_was_on:
-        actions.user.parrot_disable()
+    if safety_job:
+        cron.cancel(safety_job)
+        safety_job = None
+    speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
+    # Check if any text was actually captured
+    phrase_words = d.get("phrase", [])
+    has_text = bool(phrase_words)
     if exiting:
-        # Tongue click exit — send enter after paste
         exiting = False
-        actions.key("enter")
-        print("[pondering] post:phrase (click) — pasted, sent enter, restored 0.3s")
+        if has_text:
+            actions.key("enter")
+            print(f"[pondering] post:phrase (click) — pasted, sent enter")
+        else:
+            print("[pondering] post:phrase (click) — no text captured, skipping enter")
     else:
         # Natural timeout — just exit the mode
         actions.user.mode_indicator_clear_pondering()
         actions.user.mode_indicator_clear_color()
         if timer_job:
             cron.cancel(timer_job)
-        actions.key("enter")
-        print("[pondering] post:phrase (timeout) — exited, sent enter, restored 0.3s")
+        if has_text:
+            actions.key("enter")
+            print(f"[pondering] post:phrase (timeout) — sent enter")
+        else:
+            print("[pondering] post:phrase (timeout) — no text captured, skipping enter")
 
 
 def enable():
-    global enabled, exiting, parrot_was_on, timer_job, pondering_seconds, _skip_next_post_phrase
+    global enabled, exiting, timer_job, pondering_seconds, _skip_next_post_phrase
     enabled = True
     exiting = False
     _skip_next_post_phrase = True
     pondering_seconds = 0
-    parrot_was_on = "user.parrot_on" in scope.get("tag", [])
-    if not parrot_was_on:
-        actions.user.parrot_enable()
     toggle_ctx.tags = ["user.pondering"]
+    listening_ctx.tags = ["user.pondering_listening"]
     timeout = settings.get("user.pondering_timeout", 59.0)
     speech_system.vad.set_timeout(timeout)
     actions.user.mode_indicator_set_color(PONDERING_COLOR)
@@ -140,10 +190,14 @@ def enable():
 
 
 def disable():
-    global enabled, exiting, restore_job, timer_job
+    global enabled, exiting, restore_job, timer_job, safety_job
     enabled = False
     exiting = False
     toggle_ctx.tags = []
+    listening_ctx.tags = []
+    if safety_job:
+        cron.cancel(safety_job)
+        safety_job = None
     if restore_job:
         cron.cancel(restore_job)
         restore_job = None
@@ -154,9 +208,7 @@ def disable():
         speech_system.unregister("post:phrase", _on_post_phrase)
     except Exception:
         pass
-    speech_system.vad.set_timeout(0.3)
-    if not parrot_was_on:
-        actions.user.parrot_disable()
+    speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
     actions.user.mode_indicator_clear_pondering()
     actions.user.mode_indicator_clear_color()
 
