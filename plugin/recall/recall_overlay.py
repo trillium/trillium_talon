@@ -10,10 +10,12 @@ their metadata, and a command reference. Auto-hides after 30s.
 """
 
 from talon import cron, registry, skia, ui
-from talon.canvas import Canvas
+from talon.canvas import Canvas, MouseEvent
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
+
+from ...trillium.utils.overlay_kit import draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_rounded_rect, draw_separator
 
 canvas: Canvas = None
 _hide_job = None
@@ -28,10 +30,12 @@ MISSING_GAP = 10  # vertical gap between stacked missing-window labels
 # Status overlay globals
 _status_canvas: Canvas = None
 _status_hide_job = None
+_status_panel_rect: Rect = None
 
 # Help overlay globals
 _help_canvas: Canvas = None
 _help_hide_job = None
+_help_panel_rect: Rect = None
 
 # Help overlay styling
 HELP_BG_COLOR = "000000cc"
@@ -53,14 +57,6 @@ HELP_ROW_PAD = 16
 HELP_CORNER_RADIUS = 16
 PILL_CORNER_RADIUS = 12
 COMBINE_CORNER_RADIUS = 16
-
-
-def _draw_rounded_rect(c: SkiaCanvas, rect: Rect, radius: float):
-    """Draw a rounded rectangle using a Skia path."""
-    r = min(radius, rect.width / 2, rect.height / 2)
-    path = skia.Path()
-    path.add_rounded_rect(rect, r, r, skia.Path.Direction.CW)
-    c.draw_path(path)
 
 
 def _get_saved_windows():
@@ -135,7 +131,10 @@ def on_draw(c: SkiaCanvas):
         pill_h = text_h + PAD_Y * 2
 
         if window is not None:
-            rect = window.rect
+            try:
+                rect = window.rect
+            except AttributeError:
+                continue
             if rect.width <= 0 or rect.height <= 0:
                 continue
 
@@ -186,7 +185,7 @@ def on_draw(c: SkiaCanvas):
     for name, pill_rect, text_x, text_y, bg_color, text_color in pills:
         c.paint.style = c.paint.Style.FILL
         c.paint.color = bg_color
-        _draw_rounded_rect(c, pill_rect, PILL_CORNER_RADIUS)
+        draw_rounded_rect(c, pill_rect, PILL_CORNER_RADIUS)
 
         c.paint.style = c.paint.Style.FILL
         c.paint.color = text_color
@@ -259,40 +258,6 @@ HELP_COMMANDS = [
 ]
 
 
-def _draw_panel_frame(c: SkiaCanvas, rect: Rect):
-    """Draw panel background + border."""
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = HELP_PANEL_COLOR
-    _draw_rounded_rect(c, rect, HELP_CORNER_RADIUS)
-    c.paint.style = c.paint.Style.STROKE
-    c.paint.stroke_width = 2
-    c.paint.color = HELP_PANEL_BORDER
-    _draw_rounded_rect(c, rect, HELP_CORNER_RADIUS)
-    c.paint.style = c.paint.Style.FILL
-
-
-def _draw_close_hint(c: SkiaCanvas, panel_x: float, panel_y: float, panel_w: float):
-    """Draw the close hint text + X in the top-right of a panel."""
-    close_text = '"recall close" or Esc'
-    c.paint.textsize = HELP_DETAIL_SIZE
-    c.paint.color = HELP_DIM_COLOR
-    close_w = c.paint.measure_text(close_text)[1].width
-    x_size = 14
-    gap = 10
-    total_hint_w = close_w + gap + x_size
-    close_x = panel_x + panel_w - HELP_PANEL_PAD - total_hint_w
-    c.draw_text(close_text, close_x, panel_y + HELP_PANEL_PAD + HELP_DETAIL_SIZE)
-
-    x_x = close_x + close_w + gap
-    x_cy = panel_y + HELP_PANEL_PAD + HELP_DETAIL_SIZE / 2
-    c.paint.style = c.paint.Style.STROKE
-    c.paint.stroke_width = 2
-    c.paint.color = HELP_DIM_COLOR
-    c.draw_line(x_x, x_cy - x_size / 2, x_x + x_size, x_cy + x_size / 2)
-    c.draw_line(x_x, x_cy + x_size / 2, x_x + x_size, x_cy - x_size / 2)
-    c.paint.style = c.paint.Style.FILL
-
-
 # ── Status overlay (saved windows panel) ─────────────────────────────
 
 def on_draw_status(c: SkiaCanvas):
@@ -301,9 +266,7 @@ def on_draw_status(c: SkiaCanvas):
     sr = screen.rect
 
     # Full-screen dim background
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = HELP_BG_COLOR
-    c.draw_rect(Rect(sr.x, sr.y, sr.width, sr.height))
+    draw_dim_backdrop(c, sr, HELP_BG_COLOR)
 
     # Centered panel
     panel_w = sr.width * 0.55
@@ -333,8 +296,10 @@ def on_draw_status(c: SkiaCanvas):
     panel_y = sr.y + (sr.height - panel_h) / 2
 
     # Draw panel
+    global _status_panel_rect
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
-    _draw_panel_frame(c, panel_rect)
+    _status_panel_rect = panel_rect
+    draw_panel_frame(c, panel_rect, HELP_CORNER_RADIUS, HELP_PANEL_COLOR, HELP_PANEL_BORDER)
 
     c.save()
     c.clip_rect(panel_rect)
@@ -348,7 +313,7 @@ def on_draw_status(c: SkiaCanvas):
     c.paint.color = HELP_TEXT_COLOR
     c.draw_text("Recall Windows", cx, cy + HELP_HEADER_SIZE)
 
-    _draw_close_hint(c, panel_x, panel_y, panel_w)
+    draw_close_hint(c, '"recall close" or Esc', HELP_DETAIL_SIZE, HELP_DIM_COLOR, panel_x, panel_y, panel_w, HELP_PANEL_PAD)
 
     cy += HELP_HEADER_SIZE + 20
 
@@ -410,11 +375,7 @@ def on_draw_status(c: SkiaCanvas):
         cy += HELP_ROW_PAD
 
         # Separator line
-        c.paint.style = c.paint.Style.STROKE
-        c.paint.stroke_width = 1
-        c.paint.color = HELP_LINE_COLOR
-        c.draw_line(cx, cy - HELP_ROW_PAD / 2, cx + content_w, cy - HELP_ROW_PAD / 2)
-        c.paint.style = c.paint.Style.FILL
+        draw_separator(c, cx, cx + content_w, cy - HELP_ROW_PAD / 2, HELP_LINE_COLOR)
 
     c.restore()
 
@@ -426,9 +387,7 @@ def on_draw_help(c: SkiaCanvas):
     sr = screen.rect
 
     # Full-screen dim background
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = HELP_BG_COLOR
-    c.draw_rect(Rect(sr.x, sr.y, sr.width, sr.height))
+    draw_dim_backdrop(c, sr, HELP_BG_COLOR)
 
     # Centered panel
     panel_w = sr.width * 0.50
@@ -447,8 +406,10 @@ def on_draw_help(c: SkiaCanvas):
     panel_y = sr.y + (sr.height - panel_h) / 2
 
     # Draw panel
+    global _help_panel_rect
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
-    _draw_panel_frame(c, panel_rect)
+    _help_panel_rect = panel_rect
+    draw_panel_frame(c, panel_rect, HELP_CORNER_RADIUS, HELP_PANEL_COLOR, HELP_PANEL_BORDER)
 
     c.save()
     c.clip_rect(panel_rect)
@@ -462,7 +423,7 @@ def on_draw_help(c: SkiaCanvas):
     c.paint.color = HELP_TEXT_COLOR
     c.draw_text("Commands", rx, ry + HELP_HEADER_SIZE)
 
-    _draw_close_hint(c, panel_x, panel_y, panel_w)
+    draw_close_hint(c, '"recall close" or Esc', HELP_DETAIL_SIZE, HELP_DIM_COLOR, panel_x, panel_y, panel_w, HELP_PANEL_PAD)
 
     ry += HELP_HEADER_SIZE + 20
 
@@ -492,6 +453,13 @@ def on_draw_help(c: SkiaCanvas):
     c.restore()
 
 
+def _on_mouse_status(e: MouseEvent):
+    """Dismiss status overlay when clicking outside the panel."""
+    if e.event == "mousedown" and e.button == 0:
+        if _status_panel_rect and not _status_panel_rect.contains(e.gpos):
+            hide_status()
+
+
 def show_status():
     """Show the status overlay with all saved windows."""
     global _status_canvas, _status_hide_job
@@ -504,12 +472,15 @@ def show_status():
 
     if _status_canvas:
         _status_canvas.unregister("draw", on_draw_status)
+        _status_canvas.unregister("mouse", _on_mouse_status)
         _status_canvas.close()
         _status_canvas = None
 
     screen: Screen = ui.main_screen()
     _status_canvas = Canvas.from_screen(screen)
+    _status_canvas.blocks_mouse = True
     _status_canvas.register("draw", on_draw_status)
+    _status_canvas.register("mouse", _on_mouse_status)
     _update_overlay_tag()
 
 
@@ -521,9 +492,17 @@ def hide_status():
         _status_hide_job = None
     if _status_canvas:
         _status_canvas.unregister("draw", on_draw_status)
+        _status_canvas.unregister("mouse", _on_mouse_status)
         _status_canvas.close()
         _status_canvas = None
     _update_overlay_tag()
+
+
+def _on_mouse_help(e: MouseEvent):
+    """Dismiss help overlay when clicking outside the panel."""
+    if e.event == "mousedown" and e.button == 0:
+        if _help_panel_rect and not _help_panel_rect.contains(e.gpos):
+            hide_help()
 
 
 def show_help():
@@ -538,12 +517,15 @@ def show_help():
 
     if _help_canvas:
         _help_canvas.unregister("draw", on_draw_help)
+        _help_canvas.unregister("mouse", _on_mouse_help)
         _help_canvas.close()
         _help_canvas = None
 
     screen: Screen = ui.main_screen()
     _help_canvas = Canvas.from_screen(screen)
+    _help_canvas.blocks_mouse = True
     _help_canvas.register("draw", on_draw_help)
+    _help_canvas.register("mouse", _on_mouse_help)
     _update_overlay_tag()
 
 
@@ -555,6 +537,7 @@ def hide_help():
         _help_hide_job = None
     if _help_canvas:
         _help_canvas.unregister("draw", on_draw_help)
+        _help_canvas.unregister("mouse", _on_mouse_help)
         _help_canvas.close()
         _help_canvas = None
     _update_overlay_tag()
@@ -574,6 +557,7 @@ _prompt_canvas: Canvas = None
 _prompt_hide_job = None
 _prompt_title: str = ""
 _prompt_subtitle: str = ""
+_prompt_panel_rect: Rect = None
 PROMPT_DURATION = "15s"
 PROMPT_CORNER_RADIUS = 16
 
@@ -583,9 +567,7 @@ def on_draw_prompt(c: SkiaCanvas):
     sr = screen.rect
 
     # Dim background
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = HELP_BG_COLOR
-    c.draw_rect(Rect(sr.x, sr.y, sr.width, sr.height))
+    draw_dim_backdrop(c, sr, HELP_BG_COLOR)
 
     # Centered prompt panel
     panel_w = sr.width * 0.4
@@ -593,14 +575,16 @@ def on_draw_prompt(c: SkiaCanvas):
     panel_x = sr.x + (sr.width - panel_w) / 2
     panel_y = sr.y + (sr.height - panel_h) / 2
 
-    c.paint.color = HELP_PANEL_COLOR
+    global _prompt_panel_rect
     prompt_rect = Rect(panel_x, panel_y, panel_w, panel_h)
-    _draw_rounded_rect(c, prompt_rect, PROMPT_CORNER_RADIUS)
+    _prompt_panel_rect = prompt_rect
+    c.paint.color = HELP_PANEL_COLOR
+    draw_rounded_rect(c, prompt_rect, PROMPT_CORNER_RADIUS)
 
     c.paint.style = c.paint.Style.STROKE
     c.paint.stroke_width = 2
     c.paint.color = HELP_ACCENT
-    _draw_rounded_rect(c, prompt_rect, PROMPT_CORNER_RADIUS)
+    draw_rounded_rect(c, prompt_rect, PROMPT_CORNER_RADIUS)
     c.paint.style = c.paint.Style.FILL
 
     cx = panel_x + HELP_PANEL_PAD
@@ -623,6 +607,13 @@ def on_draw_prompt(c: SkiaCanvas):
     c.draw_text('"recall close" to cancel', cx, cy + HELP_DETAIL_SIZE)
 
 
+def _on_mouse_prompt(e: MouseEvent):
+    """Dismiss prompt overlay when clicking outside the panel."""
+    if e.event == "mousedown" and e.button == 0:
+        if _prompt_panel_rect and not _prompt_panel_rect.contains(e.gpos):
+            hide_prompt()
+
+
 def show_prompt(title: str, subtitle: str):
     """Show a prompt overlay with custom title and subtitle."""
     global _prompt_canvas, _prompt_hide_job, _prompt_title, _prompt_subtitle
@@ -635,12 +626,15 @@ def show_prompt(title: str, subtitle: str):
 
     if _prompt_canvas:
         _prompt_canvas.unregister("draw", on_draw_prompt)
+        _prompt_canvas.unregister("mouse", _on_mouse_prompt)
         _prompt_canvas.close()
         _prompt_canvas = None
 
     screen: Screen = ui.main_screen()
     _prompt_canvas = Canvas.from_screen(screen)
+    _prompt_canvas.blocks_mouse = True
     _prompt_canvas.register("draw", on_draw_prompt)
+    _prompt_canvas.register("mouse", _on_mouse_prompt)
     _prompt_canvas.freeze()
 
     _prompt_hide_job = cron.after(PROMPT_DURATION, hide_prompt)
@@ -655,6 +649,7 @@ def hide_prompt():
         _prompt_hide_job = None
     if _prompt_canvas:
         _prompt_canvas.unregister("draw", on_draw_prompt)
+        _prompt_canvas.unregister("mouse", _on_mouse_prompt)
         _prompt_canvas.close()
         _prompt_canvas = None
     from .recall_state import _cancel_pending
@@ -710,13 +705,13 @@ def on_draw_flash(c: SkiaCanvas):
     c.paint.style = c.paint.Style.FILL
     c.paint.color = FLASH_BG
     pill_rect = Rect(pill_x, pill_y, pill_w, pill_h)
-    _draw_rounded_rect(c, pill_rect, FLASH_CORNER)
+    draw_rounded_rect(c, pill_rect, FLASH_CORNER)
 
     # Border
     c.paint.style = c.paint.Style.STROKE
     c.paint.stroke_width = 2
     c.paint.color = FLASH_BORDER
-    _draw_rounded_rect(c, pill_rect, FLASH_CORNER)
+    draw_rounded_rect(c, pill_rect, FLASH_CORNER)
     c.paint.style = c.paint.Style.FILL
 
     # Main text
@@ -818,7 +813,7 @@ def on_draw_highlight(c: SkiaCanvas):
         # Background
         c.paint.color = HIGHLIGHT_COLOR
         pill_rect = Rect(pill_x, pill_y, pill_w, pill_h)
-        _draw_rounded_rect(c, pill_rect, 6)
+        draw_rounded_rect(c, pill_rect, 6)
 
         # Text
         c.paint.color = "ffffffff"
