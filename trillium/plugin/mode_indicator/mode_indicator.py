@@ -29,6 +29,8 @@ _state = {
     "cpu_per_core": [],
     "mem_percent": 0,
     "mem_pressure": 0,
+    "obs_streaming": False,
+    "obs_recording": False,
 }
 
 
@@ -303,6 +305,17 @@ def on_draw(c: SkiaCanvas):
     else:
         c.paint.color = "aa0000ff"  # Red
     c.draw_circle(circle_x, circle_y, radius)
+
+    # Draw outer ring: OBS streaming/recording status
+    # Purple if live, black if not
+    obs_live = _state.get("obs_streaming", False) or _state.get("obs_recording", False)
+    c.paint.style = c.paint.Style.STROKE
+    c.paint.stroke_width = 3
+    if obs_live:
+        c.paint.color = "aa44ffff"  # Purple — streaming/recording
+    else:
+        c.paint.color = "000000ff"  # Black — confirmed not live
+    c.draw_circle(circle_x, circle_y, radius + 3)
 
     # Draw circle text: pondering timer or mic name
     pondering_seconds = _state.get("pondering_seconds")

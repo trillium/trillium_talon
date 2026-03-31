@@ -29,6 +29,8 @@ _state = {
     "mem_percent": 0,
     "mem_pressure": 0,
     "pondering_seconds": None,
+    "obs_streaming": False,
+    "obs_recording": False,
 }
 
 
@@ -158,6 +160,45 @@ def _poll_week_percent():
 
 SYSMON_STATS = Path.home() / "code" / "system-monitor" / "data" / "stats.json"
 
+# ── OBS streaming/recording status ──────────────────────────────────
+
+import subprocess
+
+_OBS_POLL_SCRIPT = '''
+import json, subprocess
+try:
+    pw = subprocess.run(
+        ["security", "find-generic-password", "-s", "obs-websocket", "-w"],
+        capture_output=True, text=True, timeout=3,
+    ).stdout.strip()
+    import obsws_python as obs
+    cl = obs.ReqClient(host="localhost", port=4455, password=pw, timeout=2)
+    s = cl.get_stream_status()
+    r = cl.get_record_status()
+    print(json.dumps({"streaming": s.output_active, "recording": r.output_active}))
+except Exception:
+    print(json.dumps({"streaming": False, "recording": False}))
+'''
+
+
+def _poll_obs_status():
+    """Poll OBS streaming/recording via system Python (obsws_python not in Talon's Python)."""
+    try:
+        result = subprocess.run(
+            ["/Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python3", "-c", _OBS_POLL_SCRIPT],
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            data = json.loads(result.stdout.strip())
+            update(
+                obs_streaming=data.get("streaming", False),
+                obs_recording=data.get("recording", False),
+            )
+        else:
+            update(obs_streaming=False, obs_recording=False)
+    except Exception:
+        update(obs_streaming=False, obs_recording=False)
+
 
 def _poll_sysmon():
     """Read system monitor stats and merge CPU per-core + memory into state."""
@@ -187,6 +228,7 @@ def on_ready():
     cron.interval("500ms", _poll_microphone)
     cron.interval("60s", _poll_week_percent)
     cron.interval("1s", _poll_sysmon)
+    cron.interval("2s", _poll_obs_status)
 
 
 app.register("ready", on_ready)
