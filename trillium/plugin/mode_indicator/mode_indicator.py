@@ -245,6 +245,17 @@ def on_draw(c: SkiaCanvas):
     path.close()
     c.draw_path(path)
 
+    # Draw purple border around bar when OBS is streaming/recording
+    obs_live = _state.get("obs_streaming", False) or _state.get("obs_recording", False)
+    if obs_live:
+        c.paint.style = c.paint.Style.STROKE
+        c.paint.stroke_width = 3
+        c.paint.color = "aa44ffff"  # Purple
+        c.paint.shader = None
+        c.paint.imagefilter = None
+        c.draw_path(path)
+        c.paint.style = c.paint.Style.FILL
+
     # Draw command text on the top line (stacked, smaller text)
     c.paint.shader = None
     c.paint.style = c.paint.Style.FILL
@@ -306,16 +317,6 @@ def on_draw(c: SkiaCanvas):
         c.paint.color = "aa0000ff"  # Red
     c.draw_circle(circle_x, circle_y, radius)
 
-    # Draw outer ring: OBS streaming/recording status
-    # Purple if live, black if not
-    obs_live = _state.get("obs_streaming", False) or _state.get("obs_recording", False)
-    c.paint.style = c.paint.Style.STROKE
-    c.paint.stroke_width = 3
-    if obs_live:
-        c.paint.color = "aa44ffff"  # Purple — streaming/recording
-    else:
-        c.paint.color = "000000ff"  # Black — confirmed not live
-    c.draw_circle(circle_x, circle_y, radius + 3)
 
     # Draw circle text: pondering timer or mic name
     pondering_seconds = _state.get("pondering_seconds")
