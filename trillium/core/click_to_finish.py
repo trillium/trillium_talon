@@ -121,6 +121,7 @@ def _safety_cleanup(_=None):
     enabled = False
     exiting = False
     speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
+    actions.user.mixed_mode()
 
 
 def _tick_timer(_=None):
@@ -150,6 +151,7 @@ def _on_post_phrase(d):
         cron.cancel(safety_job)
         safety_job = None
     speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
+    actions.user.mixed_mode()
     # Check if any text was actually captured
     phrase_words = d.get("phrase", [])
     has_text = bool(phrase_words)
@@ -209,6 +211,7 @@ def disable():
     except Exception:
         pass
     speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
+    actions.user.mixed_mode()
     actions.user.mode_indicator_clear_pondering()
     actions.user.mode_indicator_clear_color()
 
