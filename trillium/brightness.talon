@@ -58,9 +58,9 @@ key(f2:repeat):
 # key(f6): # do not disturb?  
 
 key(f7): key(rewind)
-key(f8): key(play) 
+key(f8): key(play)
 key(f9): key(fast_forward)
-key(f10): key(mute) 
+key(f10): key(mute)
 
 key(f11:down): skip()
 key(f12:down): skip()

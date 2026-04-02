@@ -140,9 +140,9 @@ def update_state(usage):
     runway = estimate_runway(seven_d)
 
     parts = [f"{seven_d}%"]
-    if runway:
-        parts.append(runway)
-    text = " ".join(parts)
+    if cycles:
+        parts.append(cycles)
+    text = "  ".join(parts)
 
     try:
         state = json.loads(STATE_FILE.read_text())

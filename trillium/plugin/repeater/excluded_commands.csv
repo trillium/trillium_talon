@@ -14,3 +14,4 @@ clock off,User excluded command
 friction end,User excluded command
 mouse clock,User excluded command
 hints off [{user.rango_hints_toggle_levels}],User excluded command
+pomodoro start,User excluded command
