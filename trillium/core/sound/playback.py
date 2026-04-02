@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from talon import Module
@@ -52,6 +53,28 @@ def _find_flacs_since(minutes: int) -> list[Path]:
                     flacs.append(full)
     flacs.sort(key=lambda p: p.stat().st_mtime)
     return flacs
+
+
+def _find_flacs_in_range(start: datetime, end: datetime) -> list[Path]:
+    """Find all .flac files with mtime between start and end (inclusive)."""
+    start_ts = start.timestamp()
+    end_ts = end.timestamp()
+    flacs = []
+    for dirpath, _, filenames in os.walk(RECORDINGS_DIR):
+        for f in filenames:
+            if f.endswith(".flac"):
+                full = Path(dirpath) / f
+                mtime = full.stat().st_mtime
+                if start_ts <= mtime <= end_ts:
+                    flacs.append(full)
+    flacs.sort(key=lambda p: p.stat().st_mtime)
+    return flacs
+
+
+# Pagination state for range playback
+_range_files: list[Path] = []
+_range_offset: int = 0
+_range_batch_size: int = 20
 
 
 def _play_files(files: list[Path], start_index: int = 0):
@@ -150,6 +173,21 @@ def _cleanup_progress():
     _progress_file = None
 
 
+def _play_range_batch():
+    """Play the next batch from _range_files starting at _range_offset."""
+    global _range_offset
+    batch = _range_files[_range_offset:_range_offset + _range_batch_size]
+    if not batch:
+        print(f"[playback] All {len(_range_files)} recordings played — no more batches")
+        return
+    batch_start = datetime.fromtimestamp(batch[0].stat().st_mtime).strftime("%H:%M:%S")
+    batch_end = datetime.fromtimestamp(batch[-1].stat().st_mtime).strftime("%H:%M:%S")
+    remaining = len(_range_files) - _range_offset - len(batch)
+    print(f"[playback] Batch {_range_offset + 1}–{_range_offset + len(batch)} of {len(_range_files)} ({batch_start}–{batch_end}), {remaining} remaining")
+    _range_offset += len(batch)
+    _play_files(batch)
+
+
 @mod.action_class
 class Actions:
     def playback(count: int):
@@ -205,3 +243,40 @@ class Actions:
         _cleanup_progress()
         global _current_playlist
         _current_playlist = []
+
+    def playback_range(start_iso: str, end_iso: str, batch_size: int = 20, last: int = 0):
+        """Play .flac recordings between two ISO timestamps in batches.
+
+        Args:
+            start_iso: Start time, e.g. "2026-03-23T12:30:00" or "2026-03-23 12:30"
+            end_iso: End time, same formats
+            batch_size: How many to play before pausing for next batch
+            last: If > 0, only keep the last N recordings from the range
+        """
+        global _range_files, _range_offset, _range_batch_size
+        _kill_process()
+        _cleanup_progress()
+        start = datetime.fromisoformat(start_iso)
+        end = datetime.fromisoformat(end_iso)
+        flacs = _find_flacs_in_range(start, end)
+        if not flacs:
+            print(f"[playback] No recordings between {start_iso} and {end_iso}")
+            return
+        if last > 0:
+            flacs = flacs[-last:]
+        _range_files = flacs
+        _range_offset = 0
+        _range_batch_size = batch_size
+        first_ts = datetime.fromtimestamp(flacs[0].stat().st_mtime).strftime("%H:%M:%S")
+        last_ts = datetime.fromtimestamp(flacs[-1].stat().st_mtime).strftime("%H:%M:%S")
+        print(f"[playback] Found {len(flacs)} recordings ({first_ts}–{last_ts}), batch size {batch_size}")
+        _play_range_batch()
+
+    def playback_next():
+        """Play the next batch from the current range query."""
+        _kill_process()
+        _cleanup_progress()
+        if not _range_files:
+            print("[playback] No range loaded — use playback_range first")
+            return
+        _play_range_batch()
