@@ -6,13 +6,17 @@ history entries, and a smaller command reference panel to the right.
 Reuses the speak_review teal/amber palette.
 """
 
-from talon import skia, ui
-from talon.canvas import Canvas
+from talon import ui
+from talon.canvas import Canvas, MouseEvent
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
+from ...utils.overlay_kit import draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
+
 _canvas: Canvas = None
+_main_rect: Rect = None
+_cmd_rect: Rect = None
 
 # ── Color palette (same teal / amber as speak_review) ──
 
@@ -70,43 +74,6 @@ TEXT_INDENT = 16
 LINE_HEIGHT = ENTRY_TEXT_SIZE + 4
 
 
-def _draw_rounded_rect(c: SkiaCanvas, rect: Rect, radius: float):
-    r = min(radius, rect.width / 2, rect.height / 2)
-    path = skia.Path()
-    path.add_rounded_rect(rect, r, r, skia.Path.Direction.CW)
-    c.draw_path(path)
-
-
-def _draw_panel_frame(c: SkiaCanvas, rect: Rect):
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = PANEL_COLOR
-    _draw_rounded_rect(c, rect, CORNER_RADIUS)
-    c.paint.style = c.paint.Style.STROKE
-    c.paint.stroke_width = 2
-    c.paint.color = PANEL_BORDER
-    _draw_rounded_rect(c, rect, CORNER_RADIUS)
-    c.paint.style = c.paint.Style.FILL
-
-
-def _draw_close_hint(c: SkiaCanvas, panel_x: float, panel_y: float, panel_w: float):
-    close_text = '"spoken close"'
-    c.paint.textsize = HINT_DETAIL_SIZE
-    c.paint.color = DIM_COLOR
-    close_w = c.paint.measure_text(close_text)[1].width
-    x_size = 14
-    gap = 10
-    total_hint_w = close_w + gap + x_size
-    close_x = panel_x + panel_w - PANEL_PAD - total_hint_w
-    c.draw_text(close_text, close_x, panel_y + PANEL_PAD + HINT_DETAIL_SIZE)
-
-    x_x = close_x + close_w + gap
-    x_cy = panel_y + PANEL_PAD + HINT_DETAIL_SIZE / 2
-    c.paint.style = c.paint.Style.STROKE
-    c.paint.stroke_width = 2
-    c.paint.color = DIM_COLOR
-    c.draw_line(x_x, x_cy - x_size / 2, x_x + x_size, x_cy + x_size / 2)
-    c.draw_line(x_x, x_cy + x_size / 2, x_x + x_size, x_cy - x_size / 2)
-    c.paint.style = c.paint.Style.FILL
 
 
 def _wrap_text(c: SkiaCanvas, text: str, max_width: float) -> list[str]:
@@ -157,7 +124,7 @@ def _calc_cmd_panel_size(c: SkiaCanvas) -> tuple[float, float]:
 
 def _draw_cmd_panel(c: SkiaCanvas, rect: Rect):
     """Draw the command reference panel."""
-    _draw_panel_frame(c, rect)
+    draw_panel_frame(c, rect, CORNER_RADIUS, PANEL_COLOR, PANEL_BORDER)
 
     c.save()
     c.clip_rect(rect)
@@ -195,9 +162,7 @@ def _on_draw(c: SkiaCanvas):
     sr = screen.rect
 
     # Full-screen dim backdrop
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = DIM_BG
-    c.draw_rect(Rect(sr.x, sr.y, sr.width, sr.height))
+    draw_dim_backdrop(c, sr, DIM_BG)
 
     entry_count = len(_entries)
 
@@ -245,8 +210,10 @@ def _on_draw(c: SkiaCanvas):
     cmd_y = sr.y + (sr.height - cmd_h) / 2
 
     # ── Draw main panel ──
+    global _main_rect, _cmd_rect
     main_rect = Rect(main_x, main_y, main_w, main_h)
-    _draw_panel_frame(c, main_rect)
+    _main_rect = main_rect
+    draw_panel_frame(c, main_rect, CORNER_RADIUS, PANEL_COLOR, PANEL_BORDER)
 
     c.save()
     c.clip_rect(main_rect)
@@ -259,7 +226,7 @@ def _on_draw(c: SkiaCanvas):
     c.paint.color = TEXT_COLOR
     c.draw_text("Speak History", cx, cy + HEADER_SIZE)
 
-    _draw_close_hint(c, main_x, main_y, main_w)
+    draw_close_hint(c, '"spoken close"', HINT_DETAIL_SIZE, DIM_COLOR, main_x, main_y, main_w, PANEL_PAD)
     cy += HEADER_SIZE + 8
 
     # Subtitle
@@ -310,17 +277,14 @@ def _on_draw(c: SkiaCanvas):
 
             cy += ROW_PAD
 
-            c.paint.style = c.paint.Style.STROKE
-            c.paint.stroke_width = 1
-            c.paint.color = LINE_COLOR
-            c.draw_line(cx, cy, cx + content_w, cy)
-            c.paint.style = c.paint.Style.FILL
+            draw_separator(c, cx, cx + content_w, cy, LINE_COLOR)
             cy += ROW_PAD
 
     c.restore()
 
     # ── Draw command panel ──
     cmd_rect = Rect(cmd_x, cmd_y, cmd_w, cmd_h)
+    _cmd_rect = cmd_rect
     _draw_cmd_panel(c, cmd_rect)
 
 
@@ -342,6 +306,15 @@ def update(
         _canvas.freeze()
 
 
+def _on_mouse(e: MouseEvent):
+    """Dismiss overlay when clicking outside both panels."""
+    if e.event == "mousedown" and e.button == 0:
+        in_main = _main_rect and _main_rect.contains(e.gpos)
+        in_cmd = _cmd_rect and _cmd_rect.contains(e.gpos)
+        if not in_main and not in_cmd:
+            hide()
+
+
 def show():
     """Create and show the overlay canvas."""
     global _canvas
@@ -349,7 +322,9 @@ def show():
         hide()
     screen: Screen = ui.main_screen()
     _canvas = Canvas.from_screen(screen)
+    _canvas.blocks_mouse = True
     _canvas.register("draw", _on_draw)
+    _canvas.register("mouse", _on_mouse)
     _canvas.freeze()
 
 
@@ -358,5 +333,6 @@ def hide():
     global _canvas
     if _canvas:
         _canvas.unregister("draw", _on_draw)
+        _canvas.unregister("mouse", _on_mouse)
         _canvas.close()
         _canvas = None
