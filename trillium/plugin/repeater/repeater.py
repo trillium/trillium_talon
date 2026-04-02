@@ -5,7 +5,7 @@ import csv
 from pathlib import Path
 from .opposite_mappings import REVERSE_MODIFIERS, REVERSE_SPECIAL_KEYS, OPPOSITES
 from . import parrot_logger
-from ...core.on_phrase.command_logger import log_parrot_command
+from ...core.on_phrase.command_logger.command_logger import log_parrot_command
 
 # Import parrot_integration to access confidence score
 try:
