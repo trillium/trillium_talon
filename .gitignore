@@ -23,3 +23,8 @@ usage_log.csv
 .scripts/collisions/
 .scripts/talon-snapshot-*.json
 .scripts/reconcile-*.md
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
