@@ -31,6 +31,11 @@ _state = {
     "mem_pressure": 0,
     "obs_streaming": False,
     "obs_recording": False,
+    "stream_live": False,
+    "stream_viewers": 0,
+    "stream_game": "",
+    "stream_title": "",
+    "stream_uptime": "",
 }
 
 
@@ -118,6 +123,12 @@ mod.setting(
     default=11,
     desc="Bar text top-row Y-position in pixels from screen top",
 )
+mod.setting(
+    "mode_indicator_stream_panel_left_x",
+    type=float,
+    default=0.27,
+    desc="Left edge of streaming info panel (0-1 fraction of screen width)",
+)
 
 setting_paths = {
     "user.mode_indicator_show",
@@ -138,6 +149,7 @@ setting_paths = {
     "user.mode_indicator_text_left_x",
     "user.mode_indicator_text_right_x",
     "user.mode_indicator_text_y",
+    "user.mode_indicator_stream_panel_left_x",
 }
 
 
@@ -221,6 +233,56 @@ def on_draw(c: SkiaCanvas):
     # Anchor graph to right edge of bar
     bar_pad = 8
     graph_start_x = bar_right - graph_total_w - bar_pad
+
+    # --- Draw streaming info panel (to the left of the main bar, only when live) ---
+    if _state.get("stream_live", False):
+        sp_left = rect.width * settings.get("user.mode_indicator_stream_panel_left_x")
+        sp_right = bar_left - 2  # 2px gap between panels
+        sp_w = sp_right - sp_left
+        sp_rad = 8
+
+        # Panel background — dark semi-transparent
+        c.paint.style = c.paint.Style.FILL
+        c.paint.color = "222222cc"
+        sp_rect = skia.RoundRect.from_rect(
+            Rect(sp_left, rect.top, sp_w, bar_height),
+            x=sp_rad, y=sp_rad,
+        )
+        c.draw_rrect(sp_rect)
+
+        # Purple border
+        c.paint.style = c.paint.Style.STROKE
+        c.paint.stroke_width = 2
+        c.paint.color = "aa44ffcc"
+        c.draw_rrect(sp_rect)
+
+        # Stream text — clip to panel bounds
+        c.save()
+        c.clip_rect(Rect(sp_left, rect.top, sp_w, bar_height))
+
+        c.paint.style = c.paint.Style.FILL
+        c.paint.color = "ffffffff"
+        c.paint.textsize = 9
+        sp_text_x = sp_left + 8
+        sp_text_y_top = settings.get("user.mode_indicator_text_y")
+        sp_text_y_bottom = sp_text_y_top + 11
+
+        viewers = _state.get("stream_viewers", 0)
+        title = _state.get("stream_title", "")
+        uptime = _state.get("stream_uptime", "")
+
+        # Top row: viewers + uptime
+        c.paint.color = "cc88ffff"  # Light purple
+        c.draw_text(f"{viewers} viewers", sp_text_x, sp_text_y_top)
+        if uptime:
+            c.paint.color = "aaaaaaff"
+            c.draw_text(uptime, sp_right - 45, sp_text_y_top)
+
+        # Bottom row: stream title
+        c.paint.color = "ccccccff"
+        c.draw_text(title, sp_text_x, sp_text_y_bottom)
+
+        c.restore()
 
     # --- Draw top bar FIRST (so circle renders on top) ---
     bar_color = get_bar_color()

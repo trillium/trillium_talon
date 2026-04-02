@@ -29,5 +29,21 @@
   {"command": "split number <N>", "description": "jump to pane by index", "page": "tmux"},
   {"command": "split maximize", "description": "toggle pane zoom", "page": "tmux"},
   {"command": "split flip", "description": "cycle layouts", "page": "tmux"},
-  {"command": "split clear", "description": "kill pane (with confirmation)", "page": "tmux"}
+  {"command": "split clear", "description": "kill pane (with confirmation)", "page": "tmux"},
+  {"command": "gt rig add", "description": "add a new rig to Gas Town", "page": "gastown", "context": "user.gastown"},
+  {"command": "gt sling", "description": "dispatch agents to perform work across rigs", "page": "gastown"},
+  {"command": "gt status", "description": "show status of all rigs and active agents", "page": "gastown"},
+  {"command": "bd list", "description": "show all beads/issues in current rig", "page": "gastown"},
+  {"command": "bd ready", "description": "show unblocked work ready to start", "page": "gastown"},
+  {"command": "bd search", "description": "search issues by keyword (preferred over grep)", "page": "gastown"},
+  {"command": "bd show <id>", "description": "view full details of an issue with dependencies", "page": "gastown"},
+  {"command": "bd create", "description": "create new beads issue (task/bug/feature)", "page": "gastown"},
+  {"command": "bd update <id>", "description": "update issue fields or claim work", "page": "gastown"},
+  {"command": "bd close <id>", "description": "mark issue complete", "page": "gastown"},
+  {"command": "bd remember", "description": "save persistent knowledge across sessions", "page": "gastown"},
+  {"command": "bd memories <keyword>", "description": "search persistent knowledge", "page": "gastown"},
+  {"command": "timestamp <number> minutes future", "description": "insert local time N minutes from now (also: ahead, from now)"},
+  {"command": "scene list", "description": "show OBS scene overlay with all available scenes", "page": "broadcast"},
+  {"command": "scene <name>", "description": "switch OBS to a named scene (e.g. 'scene camera')", "page": "broadcast"},
+  {"command": "scene close", "description": "dismiss OBS scene overlay", "page": "broadcast"}
 ]

@@ -74,6 +74,10 @@ settings():
     # -width windows are resized to stay full-height/width.
     # user.window_snap_screen = "size aware"
 
+    # Twitch chat integration
+    user.twitch_channel = "trilliumsmith"
+    user.twitch_bot_username = "trilliumsmith"
+
     # Gaze OCR text overlay colors
     user.ocr_light_background_debug_color = "FF4444"
     user.ocr_dark_background_debug_color = "00AA00"

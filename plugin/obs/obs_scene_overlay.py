@@ -1,0 +1,94 @@
+"""OBS scene list overlay — compact panel showing all scenes with current highlighted."""
+from talon import ui
+from talon.skia.canvas import Canvas as SkiaCanvas
+from talon.ui import Rect
+
+from ...trillium.utils.overlay_kit import DismissibleOverlay, draw_panel_frame
+
+from .obs_scene_state import get_scenes, get_current_scene, load_scenes
+
+# Styling
+PANEL_BG = "1a1a2eee"
+PANEL_BORDER = "4a4a8a"
+CORNER_RADIUS = 16
+PANEL_PAD = 40
+ROW_HEIGHT = 40
+FONT_SIZE = 24
+HEADER_SIZE = 36
+CURRENT_COLOR = "aa44ffff"   # Purple for active scene
+INACTIVE_COLOR = "ccccccff"  # Light gray
+HEADER_COLOR = "888888ff"
+DOT_RADIUS = 6
+MIN_PANEL_W = 400
+
+
+def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
+    screen = ui.main_screen()
+    rect = screen.rect
+
+    scenes = get_scenes()
+    current = get_current_scene()
+
+    if not scenes:
+        return
+
+    # Calculate panel dimensions
+    c.paint.textsize = FONT_SIZE
+    max_text_w = max(c.paint.measure_text(s)[1].width for s in scenes)
+    panel_w = max(max_text_w + PANEL_PAD * 2 + DOT_RADIUS * 2 + 16, MIN_PANEL_W)
+    panel_h = PANEL_PAD * 2 + HEADER_SIZE + 8 + ROW_HEIGHT * len(scenes)
+
+    # Position: centered horizontally, upper third vertically
+    panel_x = rect.x + (rect.width - panel_w) / 2
+    panel_y = rect.y + rect.height * 0.25
+
+    panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
+    overlay.set_panel_rect(panel_rect)
+
+    # Panel frame
+    draw_panel_frame(c, panel_rect, CORNER_RADIUS, PANEL_BG, PANEL_BORDER)
+
+    # Header
+    c.paint.textsize = HEADER_SIZE
+    c.paint.color = HEADER_COLOR
+    c.draw_text("OBS Scenes", panel_x + PANEL_PAD, panel_y + PANEL_PAD + HEADER_SIZE)
+
+    # Close hint
+    overlay.draw_close_hint(c, panel_x, panel_y, panel_w, PANEL_PAD)
+
+    # Scene rows
+    y = panel_y + PANEL_PAD + HEADER_SIZE + 8
+    for scene in scenes:
+        is_current = scene == current
+        row_y = y + ROW_HEIGHT * 0.7
+
+        # Active dot
+        if is_current:
+            c.paint.color = CURRENT_COLOR
+            c.draw_circle(panel_x + PANEL_PAD + DOT_RADIUS, row_y - FONT_SIZE * 0.3, DOT_RADIUS)
+
+        # Scene name
+        c.paint.textsize = FONT_SIZE
+        c.paint.color = CURRENT_COLOR if is_current else INACTIVE_COLOR
+        if is_current:
+            c.paint.font.embolden = True
+        c.draw_text(scene, panel_x + PANEL_PAD + DOT_RADIUS * 2 + 10, row_y)
+        c.paint.font.embolden = False
+
+        y += ROW_HEIGHT
+
+
+_overlay = DismissibleOverlay(on_draw=_on_draw, auto_hide="10s")
+
+
+def show():
+    load_scenes()  # Refresh from disk before showing
+    _overlay.show()
+
+
+def hide():
+    _overlay.hide()
+
+
+def is_showing() -> bool:
+    return _overlay.is_showing
