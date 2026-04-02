@@ -13,8 +13,16 @@ from pathlib import Path
 import json
 import re
 
+# Modes where commands should be logged
+_LOGGABLE_MODES = {"command", "dictation"}
+
 
 COMMANDS_RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "commands"
+COMMANDS_JSONL = Path.home() / ".talon" / "recordings" / "command_history.jsonl"
+
+# Dedup: skip logging when last_command() hasn't changed
+_last_logged_trigger = ""
+_last_logged_timestamp = ""
 
 # Schema version - bump when format changes
 SCHEMA_VERSION = "1.2"
@@ -208,6 +216,11 @@ def check_opposite_exists(command_trigger):
 def log_command(phrase_info):
     """Log a command execution to JSON file"""
     try:
+        # Only log in command or mixed mode (command+dictation), skip sleep
+        modes = scope.get("mode", set())
+        if not (_LOGGABLE_MODES & set(modes)):
+            return
+
         # Get the last executed command
         try:
             last_cmd, capture = actions.core.last_command()
@@ -219,6 +232,14 @@ def log_command(phrase_info):
 
         command_trigger = last_cmd.trigger
         timestamp = datetime.now()
+
+        # Skip if last_command() hasn't changed — same trigger + same phrase text
+        phrase_text = get_phrase_text() or ""
+        dedup_key = f"{command_trigger}|{phrase_text}"
+        global _last_logged_trigger, _last_logged_timestamp
+        if dedup_key == _last_logged_trigger:
+            return
+        _last_logged_trigger = dedup_key
 
         # Get command rule
         command_rule = None
@@ -260,8 +281,40 @@ def log_command(phrase_info):
         with open(filepath, "w") as f:
             json.dump(payload, f, indent=2, default=str)
 
+        # Append compact line to JSONL for fast tail-based reading
+        with open(COMMANDS_JSONL, "a") as f:
+            f.write(json.dumps(payload, default=str) + "\n")
+
     except Exception:
         # Never let logging break command execution
+        pass
+
+
+def log_parrot_command(command_trigger: str, display: str = ""):
+    """Log a parrot-triggered action to JSONL as a regular command."""
+    try:
+        timestamp = datetime.now()
+        payload = {
+            "version": SCHEMA_VERSION,
+            "action_type": "command",
+            "timestamp": timestamp.isoformat(),
+            "command": {
+                "trigger": command_trigger,
+                "rule": None,
+                "display": display or command_trigger,
+            },
+            "phrase": {
+                "words": [],
+                "text": display or command_trigger,
+            },
+            "context": get_context_data(),
+            "metadata": {
+                "success": True,
+            },
+        }
+        with open(COMMANDS_JSONL, "a") as f:
+            f.write(json.dumps(payload, default=str) + "\n")
+    except Exception:
         pass
 
 
