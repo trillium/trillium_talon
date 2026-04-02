@@ -31,6 +31,7 @@ _state = {
     "mem_pressure": 0,
     "obs_streaming": False,
     "obs_recording": False,
+    "obs_scene": "",
     "stream_live": False,
     "stream_viewers": 0,
     "stream_game": "",
@@ -271,9 +272,15 @@ def on_draw(c: SkiaCanvas):
         title = _state.get("stream_title", "")
         uptime = _state.get("stream_uptime", "")
 
-        # Top row: viewers + uptime
+        # Top row: viewers + scene + uptime
         c.paint.color = "cc88ffff"  # Light purple
-        c.draw_text(f"{viewers} viewers", sp_text_x, sp_text_y_top)
+        viewers_text = f"{viewers} viewers"
+        c.draw_text(viewers_text, sp_text_x, sp_text_y_top)
+        scene = _state.get("obs_scene", "")
+        if scene:
+            viewers_w = c.paint.measure_text(viewers_text)[1].width
+            c.paint.color = "aaaaaaff"
+            c.draw_text(f"  {scene}", sp_text_x + viewers_w, sp_text_y_top)
         if uptime:
             c.paint.color = "aaaaaaff"
             c.draw_text(uptime, sp_right - 45, sp_text_y_top)

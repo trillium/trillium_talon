@@ -31,6 +31,7 @@ _state = {
     "pondering_seconds": None,
     "obs_streaming": False,
     "obs_recording": False,
+    "obs_scene": "",
 }
 
 
@@ -161,6 +162,13 @@ def _poll_week_percent():
 SYSMON_STATS = Path.home() / "code" / "system-monitor" / "data" / "stats.json"
 
 # ── OBS streaming/recording status ──────────────────────────────────
+# TODO: This polls OBS websocket every 2s even when not streaming.
+#   Ideally we'd only poll when OBS is actually running, or switch to
+#   an event-driven approach (OBS websocket supports event subscriptions).
+#   The scene name fetch was added here for convenience but adds to the
+#   polling overhead. Consider: start/stop polling based on OBS process
+#   presence, or use a persistent websocket connection with event callbacks
+#   instead of repeated subprocess spawns.
 
 import subprocess
 
@@ -175,9 +183,10 @@ try:
     cl = obs.ReqClient(host="localhost", port=4455, password=pw, timeout=2)
     s = cl.get_stream_status()
     r = cl.get_record_status()
-    print(json.dumps({"streaming": s.output_active, "recording": r.output_active}))
+    sc = cl.get_current_program_scene()
+    print(json.dumps({"streaming": s.output_active, "recording": r.output_active, "scene": sc.scene_name}))
 except Exception:
-    print(json.dumps({"streaming": False, "recording": False}))
+    print(json.dumps({"streaming": False, "recording": False, "scene": ""}))
 '''
 
 
@@ -193,11 +202,12 @@ def _poll_obs_status():
             update(
                 obs_streaming=data.get("streaming", False),
                 obs_recording=data.get("recording", False),
+                obs_scene=data.get("scene", ""),
             )
         else:
-            update(obs_streaming=False, obs_recording=False)
+            update(obs_streaming=False, obs_recording=False, obs_scene="")
     except Exception:
-        update(obs_streaming=False, obs_recording=False)
+        update(obs_streaming=False, obs_recording=False, obs_scene="")
 
 
 def _poll_sysmon():
