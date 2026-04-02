@@ -14,15 +14,13 @@ import re
 from talon import actions, scope, ui
 
 from ..analyze_phrase.types import AnalyzedPhrase
-from .schema import SCHEMA_VERSION_PREFIX
+from .schema import SCHEMA_VERSION
 
 # Only log in these modes
 _LOGGABLE_MODES = {"command", "dictation"}
 
 COMMANDS_RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "commands"
 COMMANDS_JSONL = Path.home() / ".talon" / "recordings" / "command_history.jsonl"
-
-SCHEMA_VERSION = SCHEMA_VERSION_PREFIX + "0"
 
 
 def get_safe_microphone():

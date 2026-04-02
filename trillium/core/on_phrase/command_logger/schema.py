@@ -85,4 +85,6 @@ class CommandHistoryEntry(TypedDict):
 
 
 # Version prefix for consumers to validate against
+# Version prefix for consumers to validate against (startswith check)
 SCHEMA_VERSION_PREFIX = "2."
+SCHEMA_VERSION = "2.1"
