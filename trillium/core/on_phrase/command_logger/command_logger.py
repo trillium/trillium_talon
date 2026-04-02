@@ -206,7 +206,13 @@ def log_parrot_command(
             "captures": [],
         }]
 
-        source = f"sound_{sound}" if sound else "sound"
+        # source directly answers: voice, repeat, or reverse
+        if action == "repeat":
+            source = "repeat"
+        elif action == "reverse":
+            source = "reverse"
+        else:
+            source = "sound"
 
         payload = {
             "version": SCHEMA_VERSION,
@@ -217,7 +223,7 @@ def log_parrot_command(
             "words": [],
             "commands": commands,
             "sound": {
-                "action": action,
+                "name": sound or None,
                 "confidence": confidence,
             },
             "context": get_context_data(),

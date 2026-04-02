@@ -55,9 +55,9 @@ class Metadata(TypedDict):
     success: bool
 
 
-class SoundSource(TypedDict, total=False):
-    """Present when source starts with "sound_"."""
-    action: str                  # "repeat" or "reverse"
+class SoundInfo(TypedDict, total=False):
+    """Present when source is "repeat" or "reverse"."""
+    name: Optional[str]          # e.g. "tongue_click", "cmere"
     confidence: Optional[float]  # detection confidence
 
 
@@ -67,19 +67,19 @@ class CommandHistoryEntry(TypedDict):
     Voice and sound entries share the same shape. Sound entries inherit
     phrase and commands from the last voice entry.
 
-    source values:
-    - "voice"              — spoken command
-    - "sound_tongue_click" — parrot tongue click (repeat)
-    - "sound_cmere"        — parrot cmere sound (reverse)
+    source — the only field a consumer needs to read:
+    - "voice"   — user spoke a command
+    - "repeat"  — sound triggered a repeat of the last command
+    - "reverse" — sound triggered the reverse/opposite of the last command
     """
     version: str            # "2.1"
     action_type: str        # "command"
-    source: str             # "voice" | "sound_{name}"
+    source: str             # "voice" | "repeat" | "reverse"
     timestamp: str          # ISO 8601
     phrase: str             # Raw spoken words (same for voice and sound)
     words: list[WordEntry]  # Per-word timing (empty for sound entries)
     commands: list[CommandEntry]  # Per-command breakdown (inherited for sound)
-    sound: Optional[SoundSource]  # Present when source starts with "sound_"
+    sound: Optional[SoundInfo]  # Present when source is "repeat" or "reverse"
     context: Context
     metadata: Metadata
 
