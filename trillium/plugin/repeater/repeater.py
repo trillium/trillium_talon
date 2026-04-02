@@ -5,7 +5,7 @@ import csv
 from pathlib import Path
 from .opposite_mappings import REVERSE_MODIFIERS, REVERSE_SPECIAL_KEYS, OPPOSITES
 from . import parrot_logger
-from . import command_logger
+from ...core.on_phrase.command_logger import log_parrot_command
 
 # Import parrot_integration to access confidence score
 try:
@@ -442,7 +442,7 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
                 "repeat", cmd_to_log, capture_to_log, success, confidence
             )
             if success:
-                command_logger.log_parrot_command(f"{namespace}.{action_name}")
+                log_parrot_command(f"{namespace}.{action_name}")
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log repeat action: {e}")
         return
@@ -501,7 +501,7 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
             )
             if success:
                 display = format_command_for_display(command_trigger) if command_trigger else ""
-                command_logger.log_parrot_command(command_trigger, display)
+                log_parrot_command(command_trigger, display)
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log repeat action: {e}")
 
@@ -560,7 +560,7 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None):
                 "reverse", cmd_to_log, capture_to_log, success, confidence
             )
             if success:
-                command_logger.log_parrot_command(f"{namespace}.{action_name}")
+                log_parrot_command(f"{namespace}.{action_name}")
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log reverse action: {e}")
         return
@@ -616,7 +616,7 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None):
             opposite_trigger = ""
             if command_name in OPPOSITES:
                 opposite_trigger = OPPOSITES[command_name].get("trigger", command_name)
-            command_logger.log_parrot_command(opposite_trigger or command_name)
+            log_parrot_command(opposite_trigger or command_name)
     except Exception as e:
         actions.user.boolean_print("repeater", f"Failed to log reverse action: {e}")
 

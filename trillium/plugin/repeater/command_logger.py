@@ -318,5 +318,8 @@ def log_parrot_command(command_trigger: str, display: str = ""):
         pass
 
 
-# Register the hook
-speech_system.register("post:phrase", log_command)
+# NOTE: Hook registration removed — logging is now handled by
+# trillium/core/on_phrase/on_phrase.py via analyze_phrase.
+# This file is kept for backward compat (log_parrot_command is still
+# imported by repeater.py). New code should import from
+# trillium.core.on_phrase.command_logger instead.

@@ -1,4 +1,9 @@
-from talon import speech_system, scope, actions, cron
+"""Then-mimic — splits phrases on "then" and executes segments sequentially.
+
+Called by the central on_phrase.py orchestrator, not self-registering.
+"""
+
+from talon import scope, actions, cron
 
 _pending_mimics: list[list[str]] = []
 
@@ -64,7 +69,3 @@ def _run_segment(idx, segments):
     actions.mimic(" ".join(words))
     if idx + 1 < len(segments):
         cron.after("10ms", lambda: _run_segment(idx + 1, segments))
-
-
-speech_system.register("pre:phrase", on_pre_phrase)
-speech_system.register("post:phrase", on_post_phrase)
