@@ -11,6 +11,11 @@ def on_pre_phrase(d):
     if "command" not in modes:
         return
 
+    # Don't split on "then" during pondering — it's normal dictation text
+    tags = scope.get("tag", set())
+    if "user.pondering" in tags:
+        return
+
     words = d.get("phrase", [])
     if not words:
         return
