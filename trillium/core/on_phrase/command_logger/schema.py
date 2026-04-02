@@ -1,4 +1,4 @@
-"""Command History JSONL Schema v2.0
+"""Command History JSONL Schema v2.1
 
 Canonical type definitions for the serialized command history format.
 Import these for type-checking consumers of command_history.jsonl.
@@ -55,36 +55,35 @@ class Metadata(TypedDict):
     success: bool
 
 
-class ParrotSource(TypedDict, total=False):
-    """Present when the entry was triggered by a parrot sound, not speech."""
-    sound: str              # e.g. "tongue_click", "cmere"
-    action: str             # "repeat" or "reverse"
-    confidence: Optional[float]  # parrot detection confidence
+class SoundSource(TypedDict, total=False):
+    """Present when source starts with "sound_"."""
+    action: str                  # "repeat" or "reverse"
+    confidence: Optional[float]  # detection confidence
 
 
 class CommandHistoryEntry(TypedDict):
-    """One line of command_history.jsonl (v2.0).
+    """One line of command_history.jsonl (v2.1).
 
-    Key differences from v1.x:
-    - `phrase` is a top-level string (the raw spoken words), not {words, text}
-    - `commands` is an array of CommandEntry (per-command breakdown), not a single `command` object
-    - `words` has per-word timing data (start/end from speech engine)
-    - v1 fields `command.trigger`, `command.display`, `opposite`, `capture` are removed
-    - `source` distinguishes voice commands from parrot-triggered actions
+    Voice and sound entries share the same shape. Sound entries inherit
+    phrase and commands from the last voice entry.
+
+    source values:
+    - "voice"              — spoken command
+    - "sound_tongue_click" — parrot tongue click (repeat)
+    - "sound_cmere"        — parrot cmere sound (reverse)
     """
-    version: str            # "2.0"
+    version: str            # "2.1"
     action_type: str        # "command"
-    source: str             # "voice" | "parrot"
+    source: str             # "voice" | "sound_{name}"
     timestamp: str          # ISO 8601
-    phrase: str             # Raw spoken words (voice), or repeated command display (parrot)
-    words: list[WordEntry]  # Per-word with optional timing (empty for parrot)
-    commands: list[CommandEntry]  # Per-command breakdown
-    parrot: Optional[ParrotSource]  # Present when source="parrot"
+    phrase: str             # Raw spoken words (same for voice and sound)
+    words: list[WordEntry]  # Per-word timing (empty for sound entries)
+    commands: list[CommandEntry]  # Per-command breakdown (inherited for sound)
+    sound: Optional[SoundSource]  # Present when source starts with "sound_"
     context: Context
     metadata: Metadata
 
 
-# Version prefix for consumers to validate against
 # Version prefix for consumers to validate against (startswith check)
 SCHEMA_VERSION_PREFIX = "2."
 SCHEMA_VERSION = "2.1"

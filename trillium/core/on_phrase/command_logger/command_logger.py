@@ -1,9 +1,11 @@
-"""Command Logger v2 — Logs structured command data from AnalyzedPhrase.
-
-Schema version 2.0 — captures raw spoken words per command.
+"""Command Logger v2.1 — Logs structured command data from AnalyzedPhrase.
 
 Writes append-only JSONL to ~/.talon/recordings/command_history.jsonl
 Also writes per-command JSON files to ~/.talon/recordings/commands/
+
+Voice and sound-triggered entries share the same shape. Sound entries
+inherit the phrase and commands from the last voice entry so consumers
+see equivalent records regardless of input source.
 """
 
 from datetime import datetime
@@ -21,6 +23,10 @@ _LOGGABLE_MODES = {"command", "dictation"}
 
 COMMANDS_RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "commands"
 COMMANDS_JSONL = Path.home() / ".talon" / "recordings" / "command_history.jsonl"
+
+# Last voice entry data — sound-triggered entries inherit from this
+_last_voice_phrase = ""
+_last_voice_commands = []
 
 
 def get_safe_microphone():
@@ -91,8 +97,33 @@ def _command_name_for_filename(phrase: str) -> str:
     return cleaned if cleaned else "unknown"
 
 
+def _build_commands(analyzed: AnalyzedPhrase) -> list[dict]:
+    """Build serializable command entries from an AnalyzedPhrase."""
+    commands = []
+    for cmd in analyzed.commands:
+        commands.append({
+            "phrase": cmd.phrase,
+            "rule": cmd.rule,
+            "code": cmd.code,
+            "path": cmd.path,
+            "line": cmd.line,
+            "captures": [
+                {"phrase": cap.phrase, "value": str(cap.value), "name": cap.name}
+                for cap in cmd.captures
+            ],
+        })
+    return commands
+
+
+def _write_jsonl(payload: dict):
+    """Append a payload to the JSONL file."""
+    with open(COMMANDS_JSONL, "a") as f:
+        f.write(json.dumps(payload, default=str) + "\n")
+
+
 def log_analyzed_phrase(analyzed: AnalyzedPhrase):
     """Log an analyzed phrase to JSONL and per-file JSON."""
+    global _last_voice_phrase, _last_voice_commands
     try:
         modes = scope.get("mode", set())
         if not (_LOGGABLE_MODES & set(modes)):
@@ -102,22 +133,11 @@ def log_analyzed_phrase(analyzed: AnalyzedPhrase):
             return
 
         timestamp = datetime.now()
-        context = get_context_data()
+        commands = _build_commands(analyzed)
 
-        # Build per-command entries
-        commands = []
-        for cmd in analyzed.commands:
-            commands.append({
-                "phrase": cmd.phrase,
-                "rule": cmd.rule,
-                "code": cmd.code,
-                "path": cmd.path,
-                "line": cmd.line,
-                "captures": [
-                    {"phrase": cap.phrase, "value": str(cap.value), "name": cap.name}
-                    for cap in cmd.captures
-                ],
-            })
+        # Store for sound-triggered entries to inherit
+        _last_voice_phrase = analyzed.phrase
+        _last_voice_commands = commands
 
         payload = {
             "version": SCHEMA_VERSION,
@@ -127,7 +147,7 @@ def log_analyzed_phrase(analyzed: AnalyzedPhrase):
             "phrase": analyzed.phrase,
             "words": [{"text": w.text, "start": w.start, "end": w.end} for w in analyzed.words],
             "commands": commands,
-            "context": context,
+            "context": get_context_data(),
             "metadata": {
                 "success": True,
             },
@@ -142,9 +162,7 @@ def log_analyzed_phrase(analyzed: AnalyzedPhrase):
         with open(filepath, "w") as f:
             json.dump(payload, f, indent=2, default=str)
 
-        # Append to JSONL
-        with open(COMMANDS_JSONL, "a") as f:
-            f.write(json.dumps(payload, default=str) + "\n")
+        _write_jsonl(payload)
 
     except Exception:
         pass
@@ -157,14 +175,18 @@ def log_parrot_command(
     action: str = "",
     confidence: float = None,
 ):
-    """Log a parrot-triggered action to JSONL.
+    """Log a sound-triggered action to JSONL.
+
+    Inherits phrase and commands from the last voice entry so the record
+    is equivalent to a voice command. Source encodes the sound name
+    (e.g. "sound_tongue_click", "sound_cmere").
 
     Args:
         command_trigger: The command rule being repeated/reversed
-        display: Human-readable form of the command
-        sound: Parrot sound name (e.g. "tongue_click", "cmere")
+        display: Human-readable form of the command (fallback)
+        sound: Sound name (e.g. "tongue_click", "cmere")
         action: What the sound did ("repeat" or "reverse")
-        confidence: Parrot detection confidence score
+        confidence: Detection confidence score
     """
     try:
         modes = scope.get("mode", set())
@@ -172,38 +194,37 @@ def log_parrot_command(
             return
 
         timestamp = datetime.now()
-        phrase_text = display or command_trigger
 
-        parrot_data = {}
-        if sound:
-            parrot_data["sound"] = sound
-        if action:
-            parrot_data["action"] = action
-        if confidence is not None:
-            parrot_data["confidence"] = confidence
+        # Use last voice entry's phrase/commands, fall back to trigger
+        phrase_text = _last_voice_phrase or display or command_trigger
+        commands = _last_voice_commands if _last_voice_commands else [{
+            "phrase": display or command_trigger,
+            "rule": command_trigger,
+            "code": None,
+            "path": None,
+            "line": None,
+            "captures": [],
+        }]
+
+        source = f"sound_{sound}" if sound else "sound"
 
         payload = {
             "version": SCHEMA_VERSION,
             "action_type": "command",
-            "source": "parrot",
+            "source": source,
             "timestamp": timestamp.isoformat(),
             "phrase": phrase_text,
             "words": [],
-            "commands": [{
-                "phrase": phrase_text,
-                "rule": command_trigger if command_trigger != phrase_text else None,
-                "code": None,
-                "path": None,
-                "line": None,
-                "captures": [],
-            }],
-            "parrot": parrot_data if parrot_data else None,
+            "commands": commands,
+            "sound": {
+                "action": action,
+                "confidence": confidence,
+            },
             "context": get_context_data(),
             "metadata": {
                 "success": True,
             },
         }
-        with open(COMMANDS_JSONL, "a") as f:
-            f.write(json.dumps(payload, default=str) + "\n")
+        _write_jsonl(payload)
     except Exception:
         pass
