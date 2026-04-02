@@ -414,13 +414,14 @@ def get_parrot_confidence():
     return None
 
 
-def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None):
+def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None, sound="tongue_click"):
     """Repeat the last repeatable command (excluding filtered commands)
 
     Args:
         cmd_to_log: The command to log (captured at action entry point)
         capture_to_log: The capture to log (captured at action entry point)
         confidence: The parrot confidence score (captured at action entry point)
+        sound: The parrot sound that triggered this repeat
     """
     # Check if there's a programmatic override set
     if override_repeat_action:
@@ -442,7 +443,7 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
                 "repeat", cmd_to_log, capture_to_log, success, confidence
             )
             if success:
-                log_parrot_command(f"{namespace}.{action_name}")
+                log_parrot_command(f"{namespace}.{action_name}", sound=sound, action="repeat", confidence=confidence)
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log repeat action: {e}")
         return
@@ -501,7 +502,7 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
             )
             if success:
                 display = format_command_for_display(command_trigger) if command_trigger else ""
-                log_parrot_command(command_trigger, display)
+                log_parrot_command(command_trigger, display, sound=sound, action="repeat", confidence=confidence)
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log repeat action: {e}")
 
@@ -532,13 +533,14 @@ def reverse_special_key():
         return False
 
 
-def opposite(cmd_to_log=None, capture_to_log=None, confidence=None):
+def opposite(cmd_to_log=None, capture_to_log=None, confidence=None, sound="cmere"):
     """Execute the opposite of the last repeatable command
 
     Args:
         cmd_to_log: The command to log (captured at action entry point)
         capture_to_log: The capture to log (captured at action entry point)
         confidence: The parrot confidence score (captured at action entry point)
+        sound: The parrot sound that triggered this reverse
     """
     # Check if there's a programmatic override set
     if override_opposite_action:
@@ -560,7 +562,7 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None):
                 "reverse", cmd_to_log, capture_to_log, success, confidence
             )
             if success:
-                log_parrot_command(f"{namespace}.{action_name}")
+                log_parrot_command(f"{namespace}.{action_name}", sound=sound, action="reverse", confidence=confidence)
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log reverse action: {e}")
         return
@@ -616,7 +618,7 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None):
             opposite_trigger = ""
             if command_name in OPPOSITES:
                 opposite_trigger = OPPOSITES[command_name].get("trigger", command_name)
-            log_parrot_command(opposite_trigger or command_name)
+            log_parrot_command(opposite_trigger or command_name, sound=sound, action="reverse", confidence=confidence)
     except Exception as e:
         actions.user.boolean_print("repeater", f"Failed to log reverse action: {e}")
 

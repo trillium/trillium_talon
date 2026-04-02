@@ -55,6 +55,13 @@ class Metadata(TypedDict):
     success: bool
 
 
+class ParrotSource(TypedDict, total=False):
+    """Present when the entry was triggered by a parrot sound, not speech."""
+    sound: str              # e.g. "tongue_click", "cmere"
+    action: str             # "repeat" or "reverse"
+    confidence: Optional[float]  # parrot detection confidence
+
+
 class CommandHistoryEntry(TypedDict):
     """One line of command_history.jsonl (v2.0).
 
@@ -63,13 +70,16 @@ class CommandHistoryEntry(TypedDict):
     - `commands` is an array of CommandEntry (per-command breakdown), not a single `command` object
     - `words` has per-word timing data (start/end from speech engine)
     - v1 fields `command.trigger`, `command.display`, `opposite`, `capture` are removed
+    - `source` distinguishes voice commands from parrot-triggered actions
     """
     version: str            # "2.0"
     action_type: str        # "command"
+    source: str             # "voice" | "parrot"
     timestamp: str          # ISO 8601
-    phrase: str             # Raw spoken words, e.g. "take line sit"
-    words: list[WordEntry]  # Per-word with optional timing
+    phrase: str             # Raw spoken words (voice), or repeated command display (parrot)
+    words: list[WordEntry]  # Per-word with optional timing (empty for parrot)
     commands: list[CommandEntry]  # Per-command breakdown
+    parrot: Optional[ParrotSource]  # Present when source="parrot"
     context: Context
     metadata: Metadata
 

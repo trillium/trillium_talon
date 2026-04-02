@@ -124,6 +124,7 @@ def log_analyzed_phrase(analyzed: AnalyzedPhrase):
         payload = {
             "version": SCHEMA_VERSION,
             "action_type": "command",
+            "source": "voice",
             "timestamp": timestamp.isoformat(),
             "phrase": analyzed.phrase,
             "words": [{"text": w.text, "start": w.start, "end": w.end} for w in analyzed.words],
@@ -151,28 +152,54 @@ def log_analyzed_phrase(analyzed: AnalyzedPhrase):
         pass
 
 
-def log_parrot_command(command_trigger: str, display: str = ""):
-    """Log a parrot-triggered action to JSONL as a regular command."""
+def log_parrot_command(
+    command_trigger: str,
+    display: str = "",
+    sound: str = "",
+    action: str = "",
+    confidence: float = None,
+):
+    """Log a parrot-triggered action to JSONL.
+
+    Args:
+        command_trigger: The command rule being repeated/reversed
+        display: Human-readable form of the command
+        sound: Parrot sound name (e.g. "tongue_click", "cmere")
+        action: What the sound did ("repeat" or "reverse")
+        confidence: Parrot detection confidence score
+    """
     try:
         modes = scope.get("mode", set())
         if not (_LOGGABLE_MODES & set(modes)):
             return
 
         timestamp = datetime.now()
+        phrase_text = display or command_trigger
+
+        parrot_data = {}
+        if sound:
+            parrot_data["sound"] = sound
+        if action:
+            parrot_data["action"] = action
+        if confidence is not None:
+            parrot_data["confidence"] = confidence
+
         payload = {
             "version": SCHEMA_VERSION,
             "action_type": "command",
+            "source": "parrot",
             "timestamp": timestamp.isoformat(),
-            "phrase": display or command_trigger,
+            "phrase": phrase_text,
             "words": [],
             "commands": [{
-                "phrase": display or command_trigger,
-                "rule": None,
+                "phrase": phrase_text,
+                "rule": command_trigger if command_trigger != phrase_text else None,
                 "code": None,
                 "path": None,
                 "line": None,
                 "captures": [],
             }],
+            "parrot": parrot_data if parrot_data else None,
             "context": get_context_data(),
             "metadata": {
                 "success": True,
