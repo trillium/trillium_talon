@@ -19,11 +19,11 @@ Features:
 import os
 import time
 from pathlib import Path
-from talon import actions, app, ui
+from talon import Module, actions, app, ui
 from . import recall_overlay
 from . import recall_state
 from .recall_state import (
-    mod, saved_windows, archived_windows,
+    saved_windows, archived_windows,
     pending_ctx, is_forbidden,
     save_to_disk, update_window_list, load_saved_windows,
     _cancel_pending, find_name_for_window_id,
@@ -34,6 +34,10 @@ from .recall_terminal import (
 from .recall_commands import (
     find_window_by_id, rematch_window, _resolve_command, _run_when_ready,
 )
+
+# Own Module for action registration — using recall_state.mod caused
+# actions to not be declared, so we register on our own Module instead.
+mod = Module()
 
 
 def _try_auto_assign(window: ui.Window):
