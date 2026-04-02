@@ -89,6 +89,12 @@ fs.watch(str(DATA_FILE.parent), _on_file_change)
 class Actions:
     def memory_show(page: str = ""):
         """Show the memory overlay, optionally filtered to a page"""
+        # Dismiss OBS scene overlay if open (shared canvas — only one panel at a time)
+        try:
+            from ...plugin.obs import obs_scene_overlay
+            obs_scene_overlay.hide()
+        except Exception:
+            pass
         global _current_page
         _current_page = page
         entries = _load()

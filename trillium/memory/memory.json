@@ -43,7 +43,8 @@
   {"command": "bd remember", "description": "save persistent knowledge across sessions", "page": "gastown"},
   {"command": "bd memories <keyword>", "description": "search persistent knowledge", "page": "gastown"},
   {"command": "timestamp <number> minutes future", "description": "insert local time N minutes from now (also: ahead, from now)"},
-  {"command": "scene list", "description": "show OBS scene overlay with all available scenes", "page": "broadcast"},
-  {"command": "scene <name>", "description": "switch OBS to a named scene (e.g. 'scene camera')", "page": "broadcast"},
-  {"command": "scene close", "description": "dismiss OBS scene overlay", "page": "broadcast"}
+  {"command": "broadcast list", "description": "show OBS scene overlay with all available scenes", "page": "broadcast"},
+  {"command": "broadcast <name>", "description": "switch OBS to a named scene (e.g. 'broadcast camera')", "page": "broadcast"},
+  {"command": "broadcast <letter>", "description": "switch OBS scene by letter (A=first, B=second, etc.)", "page": "broadcast"},
+  {"command": "broadcast close", "description": "dismiss OBS scene overlay", "page": "broadcast"}
 ]

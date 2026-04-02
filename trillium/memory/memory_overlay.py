@@ -6,11 +6,13 @@ Follows the recall help overlay visual patterns (navy/blue palette).
 Supports pages for grouped display. No auto-hide — stays until dismissed.
 """
 
-from talon import registry, skia, ui
+from talon import registry, ui
 from talon.canvas import Canvas, MouseEvent
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
+
+from ..utils.overlay_kit import draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
 
 _canvas: Canvas = None
 _entries: list[dict] = []
@@ -40,57 +42,12 @@ EMPTY_SIZE = 20
 ROW_PAD = 12
 
 
-def _draw_rounded_rect(c: SkiaCanvas, rect: Rect, radius: float):
-    """Draw a rounded rectangle using a Skia path."""
-    r = min(radius, rect.width / 2, rect.height / 2)
-    path = skia.Path()
-    path.add_rounded_rect(rect, r, r, skia.Path.Direction.CW)
-    c.draw_path(path)
-
-
-def _draw_panel_frame(c: SkiaCanvas, rect: Rect):
-    """Draw panel background + border."""
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = PANEL_COLOR
-    _draw_rounded_rect(c, rect, CORNER_RADIUS)
-    c.paint.style = c.paint.Style.STROKE
-    c.paint.stroke_width = 2
-    c.paint.color = PANEL_BORDER
-    _draw_rounded_rect(c, rect, CORNER_RADIUS)
-    c.paint.style = c.paint.Style.FILL
-
-
-def _draw_close_hint(c: SkiaCanvas, panel_x: float, panel_y: float, panel_w: float):
-    """Draw close hint text + X in the top-right of the panel."""
-    close_text = '"memory close" or Esc'
-    c.paint.textsize = HINT_SIZE
-    c.paint.color = DIM_COLOR
-    close_w = c.paint.measure_text(close_text)[1].width
-    x_size = 14
-    gap = 10
-    total_hint_w = close_w + gap + x_size
-    close_x = panel_x + panel_w - PANEL_PAD - total_hint_w
-    c.draw_text(close_text, close_x, panel_y + PANEL_PAD + HINT_SIZE)
-
-    # X mark
-    x_x = close_x + close_w + gap
-    x_cy = panel_y + PANEL_PAD + HINT_SIZE / 2
-    c.paint.style = c.paint.Style.STROKE
-    c.paint.stroke_width = 2
-    c.paint.color = DIM_COLOR
-    c.draw_line(x_x, x_cy - x_size / 2, x_x + x_size, x_cy + x_size / 2)
-    c.draw_line(x_x, x_cy + x_size / 2, x_x + x_size, x_cy - x_size / 2)
-    c.paint.style = c.paint.Style.FILL
-
-
 def _on_draw(c: SkiaCanvas):
     screen = ui.main_screen()
     sr = screen.rect
 
     # Full-screen dim backdrop
-    c.paint.style = c.paint.Style.FILL
-    c.paint.color = DIM_BG
-    c.draw_rect(Rect(sr.x, sr.y, sr.width, sr.height))
+    draw_dim_backdrop(c, sr, DIM_BG)
 
     # Pre-calculate panel height
     panel_h = PANEL_PAD                        # top padding
@@ -119,7 +76,7 @@ def _on_draw(c: SkiaCanvas):
     global _panel_rect
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
     _panel_rect = panel_rect
-    _draw_panel_frame(c, panel_rect)
+    draw_panel_frame(c, panel_rect, CORNER_RADIUS, PANEL_COLOR, PANEL_BORDER)
 
     # Clip to panel
     c.save()
@@ -149,7 +106,7 @@ def _on_draw(c: SkiaCanvas):
         c.paint.textsize = HINT_SIZE
         c.draw_text(badge_label, dot_x + dot_r + 6, cy + HEADER_SIZE)
 
-    _draw_close_hint(c, panel_x, panel_y, panel_w)
+    draw_close_hint(c, '"memory close" or Esc', HINT_SIZE, DIM_COLOR, panel_x, panel_y, panel_w, PANEL_PAD)
 
     cy += HEADER_SIZE + 20
 
@@ -178,11 +135,7 @@ def _on_draw(c: SkiaCanvas):
     # ── Pages footer (default view only) ──
     if not _page and _available_pages:
         cy += 8
-        c.paint.color = LINE_COLOR
-        c.paint.style = c.paint.Style.STROKE
-        c.paint.stroke_width = 1
-        c.draw_line(cx, cy, cx + content_w, cy)
-        c.paint.style = c.paint.Style.FILL
+        draw_separator(c, cx, cx + content_w, cy, LINE_COLOR)
         cy += 12
         c.paint.textsize = HINT_SIZE
         c.paint.color = DIM_COLOR
