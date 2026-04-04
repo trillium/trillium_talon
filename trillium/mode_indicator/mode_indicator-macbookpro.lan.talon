@@ -1,4 +1,4 @@
-hostname: trilliums-mbp.lan
+hostname: macbookpro.lan
 -
 settings():
     # Circle diameter in pixels
