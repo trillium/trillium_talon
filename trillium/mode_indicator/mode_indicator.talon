@@ -13,3 +13,6 @@ settings():
     user.mode_indicator_color_mixed = "1d5837"
     user.mode_indicator_color_command = "314974"
     user.mode_indicator_color_other = "7a7a7d"
+    # Weekly usage limit reset: Monday at 5pm Pacific
+    user.week_reset_day = 0
+    user.week_reset_hour = 17

@@ -10,11 +10,23 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from talon import Module, actions, app, cron, registry, scope
+from talon import Module, actions, app, cron, registry, scope, settings
 
 STATE_FILE = Path(__file__).parent / "mode_indicator_state.json"
 
 mod = Module()
+mod.setting(
+    "week_reset_day",
+    type=int,
+    default=3,
+    desc="Day of week the usage limit resets (0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun)",
+)
+mod.setting(
+    "week_reset_hour",
+    type=int,
+    default=12,
+    desc="Hour of day the usage limit resets (0-23, e.g. 12=noon, 20=8pm)",
+)
 
 _state = {
     "mode": "",
@@ -36,20 +48,22 @@ _state = {
 
 
 def _week_bounds():
-    """Return (last_thu_7pm, next_thu_7pm) bracketing now."""
+    """Return (last_reset, next_reset) bracketing now, based on settings."""
+    day = settings.get("user.week_reset_day")
+    hour = settings.get("user.week_reset_hour")
     now = datetime.now()
-    days_since_thu = (now.weekday() - 3) % 7
-    last_thu_7pm = now.replace(hour=19, minute=0, second=0, microsecond=0) - timedelta(
-        days=days_since_thu
+    days_since = (now.weekday() - day) % 7
+    last_reset = now.replace(hour=hour, minute=0, second=0, microsecond=0) - timedelta(
+        days=days_since
     )
-    if last_thu_7pm > now:
-        last_thu_7pm -= timedelta(weeks=1)
-    next_thu_7pm = last_thu_7pm + timedelta(weeks=1)
-    return last_thu_7pm, next_thu_7pm
+    if last_reset > now:
+        last_reset -= timedelta(weeks=1)
+    next_reset = last_reset + timedelta(weeks=1)
+    return last_reset, next_reset
 
 
 def get_week_percent() -> int:
-    """Get percentage of week elapsed since last Thursday 7pm to next Thursday 7pm."""
+    """Get percentage of week elapsed since last reset to next reset."""
     now = datetime.now()
     start, end = _week_bounds()
     elapsed = (now - start).total_seconds()
@@ -58,7 +72,7 @@ def get_week_percent() -> int:
 
 
 def get_week_remaining() -> str:
-    """Get remaining time until next Thursday 7pm as 'Xd Yh' or 'Xh Ym'."""
+    """Get remaining time until next reset as 'Xd Yh' or 'Xh Ym'."""
     now = datetime.now()
     _, end = _week_bounds()
     remaining = int((end - now).total_seconds())
