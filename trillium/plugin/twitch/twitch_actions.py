@@ -1,5 +1,5 @@
-"""Twitch Talon actions: stream status, chat connect/disconnect."""
-from talon import Module, settings
+"""Twitch Talon actions: stream status, chat connect/disconnect, title management."""
+from talon import Module, actions, settings
 
 
 mod = Module()
@@ -40,3 +40,29 @@ class TwitchActions:
         from user.trillium_talon.trillium.plugin.twitch.twitch_irc import client
         client.stop()
         print("Twitch: chat client stopped")
+
+    def twitch_show_title():
+        """Show the current Twitch channel title in the HUD log."""
+        channel = settings.get("user.twitch_channel")
+        if not channel:
+            actions.user.hud_add_log("warning", "Twitch: no channel configured")
+            return
+        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import get_channel_title
+        title = get_channel_title(channel)
+        if title:
+            actions.user.hud_add_log("event", f"Title: {title}")
+        else:
+            actions.user.hud_add_log("warning", "Twitch: could not fetch title")
+
+    def twitch_set_title(title: str):
+        """Set the Twitch channel title."""
+        channel = settings.get("user.twitch_channel")
+        if not channel:
+            actions.user.hud_add_log("warning", "Twitch: no channel configured")
+            return
+        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import set_channel_title
+        success = set_channel_title(channel, title)
+        if success:
+            actions.user.hud_add_log("success", f"Title set: {title}")
+        else:
+            actions.user.hud_add_log("warning", "Twitch: failed to update title")
