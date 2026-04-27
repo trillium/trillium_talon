@@ -2,7 +2,10 @@
 from talon import Module
 
 from . import obs_scene_overlay
-from .obs_scene_state import switch_scene, get_current_scene, get_scenes
+from .obs_scene_state import (
+    switch_scene, get_current_scene, get_scenes,
+    start_stream, stop_stream, start_recording, stop_recording, set_mics_muted,
+)
 
 mod = Module()
 
@@ -37,3 +40,27 @@ class Actions:
         idx = ord(letter.lower()) - ord('a')
         if 0 <= idx < len(scenes):
             _switch_and_refresh(scenes[idx])
+
+    def obs_start_stream():
+        """Start OBS stream"""
+        start_stream()
+
+    def obs_stop_stream():
+        """Stop OBS stream"""
+        stop_stream()
+
+    def obs_start_recording():
+        """Start OBS recording"""
+        start_recording()
+
+    def obs_stop_recording():
+        """Stop OBS recording"""
+        stop_recording()
+
+    def obs_mute_mics():
+        """Mute all OBS microphone inputs (coreaudio_input_capture sources)"""
+        set_mics_muted(True)
+
+    def obs_unmute_mics():
+        """Unmute all OBS microphone inputs"""
+        set_mics_muted(False)

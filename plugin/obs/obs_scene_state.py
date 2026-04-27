@@ -1,5 +1,6 @@
 """OBS scene state: reads scene list directly from OBS config on disk."""
 import json
+import subprocess
 from pathlib import Path
 from talon import Module, Context, app
 
@@ -9,9 +10,36 @@ ctx = Context()
 mod.list("obs_scene_names", desc="Available OBS scene names")
 
 OBS_SCENE_FILE = Path.home() / "Library" / "Application Support" / "obs-studio" / "basic" / "scenes" / "Untitled.json"
+_SYSTEM_PYTHON = "/Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python3"
+
+# Shared prelude injected into all OBS WebSocket scripts
+_OBS_PRELUDE = '''
+import subprocess, sys
+pw = subprocess.run(
+    ["security", "find-generic-password", "-s", "obs-websocket", "-w"],
+    capture_output=True, text=True, timeout=3,
+).stdout.strip()
+import obsws_python as obs
+cl = obs.ReqClient(host="localhost", port=4455, password=pw, timeout=2)
+'''
 
 _scenes: list[str] = []
 _current_scene: str = ""
+
+
+def _run_obs_script(script: str, *args: str) -> str:
+    """Run a Python snippet via system Python with OBS WebSocket credentials."""
+    try:
+        result = subprocess.run(
+            [_SYSTEM_PYTHON, "-c", script, *args],
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode != 0 and result.stderr:
+            print(f"OBS: {result.stderr.strip()}")
+        return result.stdout.strip()
+    except Exception as e:
+        print(f"OBS: error: {e}")
+        return ""
 
 
 def get_scenes() -> list[str]:
@@ -96,6 +124,37 @@ cl.set_current_program_scene(name=sys.argv[1])
         _current_scene = name
     except Exception as e:
         print(f"OBS scenes: switch error: {e}")
+
+
+def start_stream():
+    """Start OBS stream via WebSocket."""
+    _run_obs_script(_OBS_PRELUDE + "cl.start_stream()")
+
+
+def stop_stream():
+    """Stop OBS stream via WebSocket."""
+    _run_obs_script(_OBS_PRELUDE + "cl.stop_stream()")
+
+
+def start_recording():
+    """Start OBS recording via WebSocket."""
+    _run_obs_script(_OBS_PRELUDE + "cl.start_record()")
+
+
+def stop_recording():
+    """Stop OBS recording via WebSocket."""
+    _run_obs_script(_OBS_PRELUDE + "cl.stop_record()")
+
+
+def set_mics_muted(muted: bool):
+    """Mute or unmute all coreaudio_input_capture sources in OBS."""
+    script = _OBS_PRELUDE + """
+muted = sys.argv[1] == "true"
+for inp in cl.get_input_list().inputs:
+    if inp.get("inputKind") == "coreaudio_input_capture":
+        cl.set_input_mute(name=inp["inputName"], muted=muted)
+"""
+    _run_obs_script(script, "true" if muted else "false")
 
 
 def on_ready():
