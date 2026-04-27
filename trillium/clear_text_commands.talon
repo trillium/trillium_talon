@@ -18,11 +18,11 @@ mode: dictation
     key(enter)
 
 ^destroy <user.text> {user.dictation_ender}$:
-    user.clear_left_by_text(text)
+    user.clear_back_to_word(text)
     key(enter)
 
 ^destroy <user.text>$:
-    user.clear_left_by_text(text)
+    user.clear_back_to_word(text)
 
 ^destroy right <user.text>$:
     user.clear_right_by_text(text)
