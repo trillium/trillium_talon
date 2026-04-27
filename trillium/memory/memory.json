@@ -46,5 +46,13 @@
   {"command": "broadcast list", "description": "show OBS scene overlay with all available scenes", "page": "broadcast"},
   {"command": "broadcast <name>", "description": "switch OBS to a named scene (e.g. 'broadcast camera')", "page": "broadcast"},
   {"command": "broadcast <letter>", "description": "switch OBS scene by letter (A=first, B=second, etc.)", "page": "broadcast"},
-  {"command": "broadcast close", "description": "dismiss OBS scene overlay", "page": "broadcast"}
+  {"command": "broadcast close", "description": "dismiss OBS scene overlay", "page": "broadcast"},
+  {"command": "broadcast go live", "description": "start OBS stream (also: broadcast start stream)", "page": "broadcast"},
+  {"command": "broadcast end stream", "description": "stop OBS stream (also: broadcast stop stream)", "page": "broadcast"},
+  {"command": "broadcast start recording", "description": "start OBS recording", "page": "broadcast"},
+  {"command": "broadcast stop recording", "description": "stop OBS recording", "page": "broadcast"},
+  {"command": "broadcast mute", "description": "mute all mic inputs in OBS (coreaudio sources)", "page": "broadcast"},
+  {"command": "broadcast unmute", "description": "restore all mic inputs in OBS", "page": "broadcast"},
+  {"command": "broadcast title", "description": "show current Twitch stream title (works offline)", "page": "broadcast"},
+  {"command": "broadcast set title <phrase>", "description": "update Twitch stream title by voice", "page": "broadcast"}
 ]
