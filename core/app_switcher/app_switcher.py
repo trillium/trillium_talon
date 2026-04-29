@@ -407,10 +407,24 @@ class Actions:
 
     def switcher_focus_window(window: ui.Window):
         """Focus window and wait until switch is made"""
-        window.focus()
+        _focus_result = window.focus()
         t1 = time.perf_counter()
+        _retried = False
         while ui.active_window() != window:
             if time.perf_counter() - t1 > 1:
+                if not _retried:
+                    # First timeout: log diagnostics then retry with app.focus()
+                    _aw = ui.active_window()
+                    print(f"[focus_debug] TIMEOUT focus_returned={_focus_result} target={window.app.name}:{window.id} active={_aw.app.name}:{_aw.id} eq={_aw == window} id_eq={_aw.id == window.id}")
+                    _retried = True
+                    try:
+                        window.app.focus()
+                        actions.sleep(0.1)
+                    except Exception:
+                        pass
+                    window.focus()
+                    t1 = time.perf_counter()
+                    continue
                 raise RuntimeError(f"Can't focus window: {window.title}")
             actions.sleep(0.1)
 
