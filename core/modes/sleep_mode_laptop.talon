@@ -1,6 +1,6 @@
 mode: sleep
 not speech.engine: dragon
-hostname: /MacBook.Pro/
+hostname: /trilliums-(MacBook.Pro|mbp)/
 -
 
 ^wake up laptop$: speech.enable()

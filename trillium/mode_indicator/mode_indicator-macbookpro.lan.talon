@@ -1,4 +1,4 @@
-hostname: /MacBook.Pro/
+hostname: /trilliums-(MacBook.Pro|mbp)/
 -
 settings():
     # Circle diameter in pixels

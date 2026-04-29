@@ -1,7 +1,7 @@
 mode: command
 mode: dictation
 not speech.engine: dragon
-hostname: /MacBook.Pro/
+hostname: /trilliums-(MacBook.Pro|mbp)/
 -
 
 ^sleep laptop [<phrase>]$: speech.disable()
