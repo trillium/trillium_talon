@@ -1,7 +1,7 @@
 mode: command
 mode: dictation
 not speech.engine: dragon
-hostname: MacBookPro.localdomain
+hostname: /MacBook.Pro/
 -
 
 ^sleep laptop [<phrase>]$: speech.disable()

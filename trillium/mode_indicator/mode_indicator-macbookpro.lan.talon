@@ -1,4 +1,4 @@
-hostname: /MacBookPro/
+hostname: /MacBook.Pro/
 -
 settings():
     # Circle diameter in pixels

@@ -1,6 +1,6 @@
 mode: sleep
 not speech.engine: dragon
-hostname: MacBookPro.localdomain
+hostname: /MacBook.Pro/
 -
 
 ^wake up laptop$: speech.enable()
