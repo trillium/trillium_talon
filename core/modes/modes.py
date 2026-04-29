@@ -62,6 +62,18 @@ class Actions:
                 # note: this may not do anything for all versions of Dragon. Requires Pro.
                 actions.user.dragon_engine_command_mode()
 
+    def speech_mode_rotate():
+        """Rotate speech modes: sleep -> command -> command+dictation -> sleep"""
+        from talon import scope
+        modes = scope.get("mode", set())
+        if "sleep" in modes:
+            actions.speech.enable()
+            actions.user.command_mode()
+        elif "command" in modes and "dictation" not in modes:
+            actions.mode.enable("dictation")
+        else:
+            actions.speech.disable()
+
     def dragon_mode():
         """For windows and Mac with Dragon, disables Talon commands and exits Dragon's command mode"""
         engine = speech_system.engine.name

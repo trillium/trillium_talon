@@ -56,15 +56,15 @@ class Actions:
             app.notify("Error")
         actions.user.sound_microphone_enable_event()
 
-    def mic_onboard():
-        """Switch to MacBook Pro Microphone"""
+    def mic_onboard(speech_control: str = "toggle"):
+        """Switch to MacBook Pro Microphone. speech_control: 'toggle' (default) or 'mic_only'."""
         active_mic = actions.sound.active_microphone()
-        if actions.speech.enabled() and active_mic == "MacBook Pro Microphone":
+        if speech_control == "toggle" and actions.speech.enabled() and active_mic == "MacBook Pro Microphone":
             actions.speech.disable()
         else:
             announce_microphone("MacBook Pro Microphone")
             actions.user.sound_microphone_enable_event()
-            if actions.speech.enabled() is False:
+            if speech_control == "toggle" and actions.speech.enabled() is False:
                 actions.speech.enable()
     
     def mic_rotate_core_microphones():
@@ -78,6 +78,17 @@ class Actions:
         else:
             actions.user.mic_onboard()
         actions.user.sound_microphone_enable_event()
+
+    def hotkey_onboard_mic_speech_rotate():
+        """Hotkey action: switch to onboard mic, or rotate speech mode if already onboard."""
+        active_mic = actions.sound.active_microphone()
+        if active_mic != "MacBook Pro Microphone":
+            announce_microphone("MacBook Pro Microphone")
+            actions.user.sound_microphone_enable_event()
+            if actions.speech.enabled() is False:
+                actions.speech.enable()
+        else:
+            actions.user.speech_mode_rotate()
 
     def mic_none():
         """Switch to no microphone"""
