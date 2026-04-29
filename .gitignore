@@ -29,3 +29,8 @@ usage_log.csv
 *.db
 .beads-credential-key
 .beads/
+
+# Gas Town (added by gt)
+.runtime/
+.claude/commands/
+.logs/

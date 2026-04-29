@@ -1,0 +1,37 @@
+{
+  "editor": {
+    "id": 12345,
+    "app": "Terminal",
+    "title": "my-project — user@hostname — ~/code/my-project — -zsh — 80×24",
+    "path": "/Users/username/code/my-project",
+    "aliases": ["code"]
+  },
+  "browser": {
+    "id": null,
+    "app": "Google Chrome",
+    "title": "Example Page - Google Chrome",
+    "path": "/",
+    "aliases": []
+  },
+  "notes": {
+    "id": 6789,
+    "app": "Terminal",
+    "title": "notes — user@hostname — ~/Documents/notes — -zsh — 80×24",
+    "path": "/Users/username/Documents/notes",
+    "aliases": ["docs"],
+    "command": "yolo"
+  },
+  "_archive": {
+    "old-window": {
+      "id": 111,
+      "app": "Terminal",
+      "title": "old-project — user@hostname — -zsh — 80×24",
+      "path": null,
+      "aliases": [],
+      "forgotten_at": 1700000000.0
+    }
+  },
+  "_settings": {
+    "persistent_highlight": true
+  }
+}
