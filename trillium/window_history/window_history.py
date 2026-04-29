@@ -14,6 +14,8 @@ front), so we use index arithmetic rather than freezing the array:
 
 from talon import Module, Context, actions, app, cron, ui
 
+from . import window_overlay
+
 mod = Module()
 mod.tag("window_browsing", desc="Active after lasty — 'next'/'previous' navigate window history")
 
@@ -72,6 +74,16 @@ def _reset_timeout():
     _timeout_job = cron.after(f"{BROWSE_TIMEOUT_MS}ms", _stop_browsing)
 
 
+def _overlay_show():
+    """Show the window overlay with current state."""
+    window_overlay.show(window_history, _depth, _total_navs, find_window_by_id)
+
+
+def _overlay_refresh():
+    """Refresh the window overlay with current state."""
+    window_overlay.refresh(window_history, _depth, _total_navs, find_window_by_id)
+
+
 def _start_browsing():
     """Enter browsing mode."""
     global _depth, _total_navs
@@ -87,6 +99,7 @@ def _stop_browsing():
     _total_navs = 0
     _timeout_job = None
     toggle_ctx.tags = []
+    window_overlay.hide()
 
 
 def on_window_focus(window: ui.Window):
@@ -137,6 +150,7 @@ class Actions:
         _total_navs = 1
         _reset_timeout()
         _set_repeater_overrides()
+        _overlay_show()
 
     def window_browse_next():
         """Step one further back in window history"""
@@ -148,6 +162,7 @@ class Actions:
         _total_navs += 1
         _reset_timeout()
         _set_repeater_overrides()
+        _overlay_refresh()
 
     def window_browse_previous():
         """Step one forward (more recent) in window history"""
@@ -165,6 +180,7 @@ class Actions:
         _total_navs += 1
         _reset_timeout()
         _set_repeater_overrides()
+        _overlay_refresh()
 
     def window_browse_stop():
         """Exit window browsing mode"""
