@@ -41,7 +41,19 @@ class Actions:
         """Refresh the activity monitor data"""
         activity_overlay.refresh()
 
+    def activity_sort_cpu():
+        """Sort activity monitor by CPU usage"""
+        activity_overlay.set_sort_mode("cpu")
+
+    def activity_sort_memory():
+        """Sort activity monitor by memory usage"""
+        activity_overlay.set_sort_mode("mem")
+
+    def activity_sort_combined():
+        """Sort activity monitor by combined CPU + memory score"""
+        activity_overlay.set_sort_mode("combined")
+
     def activity_kill(n: int):
-        """Kill process at row n (1-based) with SIGTERM"""
+        """Kill process at row n (0-based index from overlay_select) with SIGTERM"""
         success, message = activity_overlay.kill_by_index(n)
         print(f"[activity] {message}")

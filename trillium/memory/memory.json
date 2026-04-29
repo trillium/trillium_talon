@@ -68,5 +68,22 @@
   {"command": "widen / narrow <number>", "description": "resize window multiple steps at once", "page": "windows"},
   {"command": "<prose> question", "description": "dictation ender — types prose followed by ? (end of utterance only)", "page": "dictation"},
   {"command": "tab reopen", "description": "restore last closed tab (Cmd+Shift+T) — works in browsers, VS Code, most tabbed apps", "page": "windows"},
-  {"command": "tab restore", "description": "alias for tab reopen — restore last closed tab", "page": "windows"}
+  {"command": "tab restore", "description": "alias for tab reopen — restore last closed tab", "page": "windows"},
+  {"command": "sort cpu", "description": "sort activity monitor by CPU usage (activity overlay must be open)", "page": "system"},
+  {"command": "sort memory", "description": "sort activity monitor by memory usage (activity overlay must be open)", "page": "system"},
+  {"command": "microphone show / list", "description": "show mic selection overlay with all available microphones", "page": "microphone"},
+  {"command": "microphone close", "description": "dismiss mic selection overlay", "page": "microphone"},
+  {"command": "microphone pick <number|letter>", "description": "switch to microphone by number or letter from the overlay", "page": "microphone"},
+  {"command": "microphone exclude <number|letter>", "description": "exclude a mic by number or letter from the overlay (persisted)", "page": "microphone"},
+  {"command": "microphone include <number|letter>", "description": "re-include an excluded mic by number or letter", "page": "microphone"},
+  {"command": "microphone exclude reset", "description": "remove all dynamic mic exclusions", "page": "microphone"},
+  {"command": "point <number>", "description": "jump to Nth most recent interaction point (1 = last click)", "page": "mouse-clock"},
+  {"command": "name point <number>", "description": "pin a recent interaction point with auto-assigned symbol (e.g. 'name point one')", "page": "mouse-clock"},
+  {"command": "point <shape>", "description": "jump to a pinned point by symbol (e.g. 'point bolt', 'point fox')", "page": "mouse-clock"},
+  {"command": "point <color> <shape>", "description": "jump to a colored pin variant (e.g. 'point blue bolt', 'point red fox')", "page": "mouse-clock"},
+  {"command": "unpin <shape>", "description": "remove a default-color pin by shape (e.g. 'unpin bolt')", "page": "mouse-clock"},
+  {"command": "unpin <color> <shape>", "description": "remove a colored pin variant (e.g. 'unpin blue bolt')", "page": "mouse-clock"},
+  {"command": "clock points", "description": "show interaction point labels (recent + pins) on the overlay", "page": "mouse-clock"},
+  {"command": "clock points close", "description": "hide interaction point labels from the overlay", "page": "mouse-clock"},
+  {"command": "sort combined", "description": "sort activity monitor by combined CPU + memory score (also: 'sort hogs')", "page": "activity"}
 ]

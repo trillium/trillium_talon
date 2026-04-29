@@ -12,6 +12,7 @@ from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
 from ...utils.overlay_kit import DismissibleOverlay, draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
+from ...utils.overlay_selector import overlay_labels
 
 # ── Color palette (same teal / amber as speak_review) ──
 
@@ -240,13 +241,13 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
         c.paint.color = DIM_COLOR
         c.draw_text("No entries found.", cx, cy + ENTRY_TEXT_SIZE)
     else:
+        labels = overlay_labels(len(_entries))
         for i, entry in enumerate(_entries):
-            row_num = i + 1
             lines = wrapped_entries[i]
 
             c.paint.textsize = ROW_NUM_SIZE
             c.paint.color = SECTION_COLOR
-            num_text = f"{row_num}."
+            num_text = f"{labels[i]}."
             c.draw_text(num_text, cx, cy + ROW_NUM_SIZE)
             num_w = c.paint.measure_text(num_text)[1].width + 8
 

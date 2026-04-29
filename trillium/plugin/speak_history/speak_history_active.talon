@@ -3,7 +3,7 @@ tag: user.speak_history_active
 
 ^next$: user.speak_history_next()
 ^previous$: user.speak_history_previous()
-^replay <number_small>$: user.speak_history_replay(number_small)
+^replay <user.overlay_select>$: user.speak_history_replay(overlay_select)
 ^replay last <number_small>$: user.speak_history_replay_last(number_small)
 ^show all$: user.speak_history_clear_filter()
 ^show {user.speak_history_caller}$: user.speak_history_filter(speak_history_caller)

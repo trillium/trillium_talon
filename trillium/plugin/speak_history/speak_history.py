@@ -178,8 +178,8 @@ class Actions:
             _refresh()
 
     def speak_history_replay(row_number: int):
-        """Re-speak a history entry by its row number on the current page"""
-        idx = row_number - 1
+        """Re-speak a history entry by 0-based index on the current page"""
+        idx = row_number
         if idx < 0 or idx >= len(_entries):
             return
         row_id = str(_entries[idx]["id"])
