@@ -118,15 +118,20 @@ class DismissibleOverlay:
         close_hint_text: str = "esc to close",
         close_hint_size: float = 14,
         close_hint_color: str = "aaaaaaff",
+        on_hide: Optional[Callable] = None,
+        blocks_mouse: bool = True,
     ):
         self._user_on_draw = on_draw
         self._auto_hide = auto_hide
         self._close_hint_text = close_hint_text
         self._close_hint_size = close_hint_size
         self._close_hint_color = close_hint_color
+        self._on_hide = on_hide
+        self._blocks_mouse = blocks_mouse
         self._canvas: Canvas = None
         self._hide_job = None
         self._panel_rect: Rect = None
+        self._panel_rects: list[Rect] = []
 
     @property
     def is_showing(self) -> bool:
@@ -135,6 +140,15 @@ class DismissibleOverlay:
     def set_panel_rect(self, rect: Rect):
         """Call from on_draw to set the panel rect for click-outside detection."""
         self._panel_rect = rect
+
+    def set_panel_rects(self, rects: list[Rect]):
+        """Call from on_draw to set multiple panel rects for click-outside detection."""
+        self._panel_rects = rects
+
+    def freeze(self):
+        """Re-freeze the canvas to trigger a redraw."""
+        if self._canvas:
+            self._canvas.freeze()
 
     def draw_close_hint(self, c: SkiaCanvas, panel_x: float, panel_y: float, panel_w: float, panel_pad: float):
         """Draw the X close hint in the top-right of the panel."""
@@ -147,19 +161,24 @@ class DismissibleOverlay:
         self._user_on_draw(c, self)
 
     def _on_mouse(self, e: MouseEvent):
-        """Dismiss when clicking outside the panel."""
+        """Dismiss when clicking outside the panel(s)."""
         if e.event == "mousedown" and e.button == 0:
-            if self._panel_rect and not self._panel_rect.contains(e.gpos):
+            # Multi-rect mode: check all panel rects
+            if self._panel_rects:
+                if not any(r.contains(e.gpos) for r in self._panel_rects):
+                    self.hide()
+            # Single-rect mode
+            elif self._panel_rect and not self._panel_rect.contains(e.gpos):
                 self.hide()
 
     def show(self):
         """Create canvas with mouse dismiss, escape tag, and optional auto-hide."""
         if self._canvas:
-            self.hide()
+            self._teardown()
 
         screen: Screen = ui.main_screen()
         self._canvas = Canvas.from_screen(screen)
-        self._canvas.blocks_mouse = True
+        self._canvas.blocks_mouse = self._blocks_mouse
         self._canvas.register("draw", self._on_draw)
         self._canvas.register("mouse", self._on_mouse)
         self._canvas.freeze()
@@ -170,8 +189,8 @@ class DismissibleOverlay:
         if self._auto_hide:
             self._hide_job = cron.after(self._auto_hide, self.hide)
 
-    def hide(self):
-        """Tear down canvas, unregister handlers, clear tag."""
+    def _teardown(self):
+        """Internal: tear down canvas without calling on_hide (used by show re-entry)."""
         if self._hide_job:
             cron.cancel(self._hide_job)
             self._hide_job = None
@@ -181,9 +200,29 @@ class DismissibleOverlay:
             self._canvas.close()
             self._canvas = None
         self._panel_rect = None
+        self._panel_rects = []
         if self in _active_overlays:
             _active_overlays.remove(self)
         _update_overlay_tag()
+
+    def hide(self):
+        """Tear down canvas, unregister handlers, clear tag."""
+        was_showing = self._canvas is not None
+        if self._hide_job:
+            cron.cancel(self._hide_job)
+            self._hide_job = None
+        if self._canvas:
+            self._canvas.unregister("draw", self._on_draw)
+            self._canvas.unregister("mouse", self._on_mouse)
+            self._canvas.close()
+            self._canvas = None
+        self._panel_rect = None
+        self._panel_rects = []
+        if self in _active_overlays:
+            _active_overlays.remove(self)
+        _update_overlay_tag()
+        if was_showing and self._on_hide:
+            self._on_hide()
 
 
 @mod.action_class

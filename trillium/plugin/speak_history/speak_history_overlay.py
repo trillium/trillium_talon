@@ -4,19 +4,14 @@ Speak History Overlay - Persistent canvas showing paginated history entries
 Full-screen dimmed backdrop with two panels: a main content panel showing
 history entries, and a smaller command reference panel to the right.
 Reuses the speak_review teal/amber palette.
+Uses DismissibleOverlay for lifecycle management.
 """
 
 from talon import ui
-from talon.canvas import Canvas, MouseEvent
-from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
-from ...utils.overlay_kit import draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
-
-_canvas: Canvas = None
-_main_rect: Rect = None
-_cmd_rect: Rect = None
+from ...utils.overlay_kit import DismissibleOverlay, draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
 
 # ── Color palette (same teal / amber as speak_review) ──
 
@@ -157,7 +152,7 @@ def _draw_cmd_panel(c: SkiaCanvas, rect: Rect):
     c.restore()
 
 
-def _on_draw(c: SkiaCanvas):
+def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     screen = ui.main_screen()
     sr = screen.rect
 
@@ -210,9 +205,7 @@ def _on_draw(c: SkiaCanvas):
     cmd_y = sr.y + (sr.height - cmd_h) / 2
 
     # ── Draw main panel ──
-    global _main_rect, _cmd_rect
     main_rect = Rect(main_x, main_y, main_w, main_h)
-    _main_rect = main_rect
     draw_panel_frame(c, main_rect, CORNER_RADIUS, PANEL_COLOR, PANEL_BORDER)
 
     c.save()
@@ -284,8 +277,13 @@ def _on_draw(c: SkiaCanvas):
 
     # ── Draw command panel ──
     cmd_rect = Rect(cmd_x, cmd_y, cmd_w, cmd_h)
-    _cmd_rect = cmd_rect
     _draw_cmd_panel(c, cmd_rect)
+
+    # Register both panel rects for click-outside detection
+    overlay.set_panel_rects([main_rect, cmd_rect])
+
+
+_overlay = DismissibleOverlay(on_draw=_on_draw, auto_hide=None)
 
 
 def update(
@@ -302,37 +300,14 @@ def update(
     _total_pages = total_pages
     _total_count = total_count
     _caller_filter = caller_filter
-    if _canvas:
-        _canvas.freeze()
-
-
-def _on_mouse(e: MouseEvent):
-    """Dismiss overlay when clicking outside both panels."""
-    if e.event == "mousedown" and e.button == 0:
-        in_main = _main_rect and _main_rect.contains(e.gpos)
-        in_cmd = _cmd_rect and _cmd_rect.contains(e.gpos)
-        if not in_main and not in_cmd:
-            hide()
+    _overlay.freeze()
 
 
 def show():
     """Create and show the overlay canvas."""
-    global _canvas
-    if _canvas:
-        hide()
-    screen: Screen = ui.main_screen()
-    _canvas = Canvas.from_screen(screen)
-    _canvas.blocks_mouse = True
-    _canvas.register("draw", _on_draw)
-    _canvas.register("mouse", _on_mouse)
-    _canvas.freeze()
+    _overlay.show()
 
 
 def hide():
     """Destroy the overlay canvas."""
-    global _canvas
-    if _canvas:
-        _canvas.unregister("draw", _on_draw)
-        _canvas.unregister("mouse", _on_mouse)
-        _canvas.close()
-        _canvas = None
+    _overlay.hide()

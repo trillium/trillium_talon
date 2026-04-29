@@ -7,6 +7,9 @@ Windows that can't be found are shown in red at the top of the screen.
 
 "recall help" shows a full-screen panel with all saved windows,
 their metadata, and a command reference. Auto-hides after 30s.
+
+Status, help, and prompt sub-overlays use DismissibleOverlay.
+Label, flash, highlight, and persistent overlays remain manual.
 """
 
 from talon import cron, registry, skia, ui
@@ -15,7 +18,7 @@ from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
-from ...trillium.utils.overlay_kit import draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_rounded_rect, draw_separator
+from ...trillium.utils.overlay_kit import DismissibleOverlay, draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_rounded_rect, draw_separator
 
 canvas: Canvas = None
 _hide_job = None
@@ -26,16 +29,6 @@ PAD_Y = 12
 FONT_SIZE = 48
 SHOW_DURATION = "7s"
 MISSING_GAP = 10  # vertical gap between stacked missing-window labels
-
-# Status overlay globals
-_status_canvas: Canvas = None
-_status_hide_job = None
-_status_panel_rect: Rect = None
-
-# Help overlay globals
-_help_canvas: Canvas = None
-_help_hide_job = None
-_help_panel_rect: Rect = None
 
 # Help overlay styling
 HELP_BG_COLOR = "000000cc"
@@ -94,7 +87,7 @@ def _resolve_command_shell(stored: str) -> str | None:
 def _update_overlay_tag():
     """Set or clear the overlay_visible tag based on active canvases."""
     from .recall_state import overlay_ctx
-    if canvas or _status_canvas or _help_canvas or _prompt_canvas:
+    if canvas or _status_overlay.is_showing or _help_overlay.is_showing or _prompt_overlay.is_showing:
         overlay_ctx.tags = ["user.recall_overlay_visible"]
     else:
         overlay_ctx.tags = []
@@ -260,7 +253,7 @@ HELP_COMMANDS = [
 
 # ── Status overlay (saved windows panel) ─────────────────────────────
 
-def on_draw_status(c: SkiaCanvas):
+def _on_draw_status(c: SkiaCanvas, overlay: DismissibleOverlay):
     saved_windows, find_window_by_id = _get_saved_windows()
     screen = ui.main_screen()
     sr = screen.rect
@@ -296,9 +289,8 @@ def on_draw_status(c: SkiaCanvas):
     panel_y = sr.y + (sr.height - panel_h) / 2
 
     # Draw panel
-    global _status_panel_rect
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
-    _status_panel_rect = panel_rect
+    overlay.set_panel_rect(panel_rect)
     draw_panel_frame(c, panel_rect, HELP_CORNER_RADIUS, HELP_PANEL_COLOR, HELP_PANEL_BORDER)
 
     c.save()
@@ -382,7 +374,7 @@ def on_draw_status(c: SkiaCanvas):
 
 # ── Help overlay (commands reference panel) ──────────────────────────
 
-def on_draw_help(c: SkiaCanvas):
+def _on_draw_help(c: SkiaCanvas, overlay: DismissibleOverlay):
     screen = ui.main_screen()
     sr = screen.rect
 
@@ -406,9 +398,8 @@ def on_draw_help(c: SkiaCanvas):
     panel_y = sr.y + (sr.height - panel_h) / 2
 
     # Draw panel
-    global _help_panel_rect
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
-    _help_panel_rect = panel_rect
+    overlay.set_panel_rect(panel_rect)
     draw_panel_frame(c, panel_rect, HELP_CORNER_RADIUS, HELP_PANEL_COLOR, HELP_PANEL_BORDER)
 
     c.save()
@@ -453,116 +444,15 @@ def on_draw_help(c: SkiaCanvas):
     c.restore()
 
 
-def _on_mouse_status(e: MouseEvent):
-    """Dismiss status overlay when clicking outside the panel."""
-    if e.event == "mousedown" and e.button == 0:
-        if _status_panel_rect and not _status_panel_rect.contains(e.gpos):
-            hide_status()
-
-
-def show_status():
-    """Show the status overlay with all saved windows."""
-    global _status_canvas, _status_hide_job
-
-    hide_help()
-
-    if _status_hide_job:
-        cron.cancel(_status_hide_job)
-        _status_hide_job = None
-
-    if _status_canvas:
-        _status_canvas.unregister("draw", on_draw_status)
-        _status_canvas.unregister("mouse", _on_mouse_status)
-        _status_canvas.close()
-        _status_canvas = None
-
-    screen: Screen = ui.main_screen()
-    _status_canvas = Canvas.from_screen(screen)
-    _status_canvas.blocks_mouse = True
-    _status_canvas.register("draw", on_draw_status)
-    _status_canvas.register("mouse", _on_mouse_status)
-    _update_overlay_tag()
-
-
-def hide_status():
-    """Hide and destroy the status overlay canvas."""
-    global _status_canvas, _status_hide_job
-    if _status_hide_job:
-        cron.cancel(_status_hide_job)
-        _status_hide_job = None
-    if _status_canvas:
-        _status_canvas.unregister("draw", on_draw_status)
-        _status_canvas.unregister("mouse", _on_mouse_status)
-        _status_canvas.close()
-        _status_canvas = None
-    _update_overlay_tag()
-
-
-def _on_mouse_help(e: MouseEvent):
-    """Dismiss help overlay when clicking outside the panel."""
-    if e.event == "mousedown" and e.button == 0:
-        if _help_panel_rect and not _help_panel_rect.contains(e.gpos):
-            hide_help()
-
-
-def show_help():
-    """Show the help overlay with command reference."""
-    global _help_canvas, _help_hide_job
-
-    hide_status()
-
-    if _help_hide_job:
-        cron.cancel(_help_hide_job)
-        _help_hide_job = None
-
-    if _help_canvas:
-        _help_canvas.unregister("draw", on_draw_help)
-        _help_canvas.unregister("mouse", _on_mouse_help)
-        _help_canvas.close()
-        _help_canvas = None
-
-    screen: Screen = ui.main_screen()
-    _help_canvas = Canvas.from_screen(screen)
-    _help_canvas.blocks_mouse = True
-    _help_canvas.register("draw", on_draw_help)
-    _help_canvas.register("mouse", _on_mouse_help)
-    _update_overlay_tag()
-
-
-def hide_help():
-    """Hide and destroy the help overlay canvas."""
-    global _help_canvas, _help_hide_job
-    if _help_hide_job:
-        cron.cancel(_help_hide_job)
-        _help_hide_job = None
-    if _help_canvas:
-        _help_canvas.unregister("draw", on_draw_help)
-        _help_canvas.unregister("mouse", _on_mouse_help)
-        _help_canvas.close()
-        _help_canvas = None
-    _update_overlay_tag()
-
-
-def hide_any():
-    """Hide whichever overlay is currently active."""
-    hide_overlay()
-    hide_status()
-    hide_help()
-    hide_prompt()
-
-
 # ── Prompt overlay (used by combine, rename, alias) ──────────────────
 
-_prompt_canvas: Canvas = None
-_prompt_hide_job = None
 _prompt_title: str = ""
 _prompt_subtitle: str = ""
-_prompt_panel_rect: Rect = None
 PROMPT_DURATION = "15s"
 PROMPT_CORNER_RADIUS = 16
 
 
-def on_draw_prompt(c: SkiaCanvas):
+def _on_draw_prompt(c: SkiaCanvas, overlay: DismissibleOverlay):
     screen = ui.main_screen()
     sr = screen.rect
 
@@ -575,9 +465,8 @@ def on_draw_prompt(c: SkiaCanvas):
     panel_x = sr.x + (sr.width - panel_w) / 2
     panel_y = sr.y + (sr.height - panel_h) / 2
 
-    global _prompt_panel_rect
     prompt_rect = Rect(panel_x, panel_y, panel_w, panel_h)
-    _prompt_panel_rect = prompt_rect
+    overlay.set_panel_rect(prompt_rect)
     c.paint.color = HELP_PANEL_COLOR
     draw_rounded_rect(c, prompt_rect, PROMPT_CORNER_RADIUS)
 
@@ -607,54 +496,70 @@ def on_draw_prompt(c: SkiaCanvas):
     c.draw_text('"recall close" to cancel', cx, cy + HELP_DETAIL_SIZE)
 
 
-def _on_mouse_prompt(e: MouseEvent):
-    """Dismiss prompt overlay when clicking outside the panel."""
-    if e.event == "mousedown" and e.button == 0:
-        if _prompt_panel_rect and not _prompt_panel_rect.contains(e.gpos):
-            hide_prompt()
+def _on_prompt_hide():
+    """Called when prompt overlay is dismissed — cancel pending state."""
+    from .recall_state import _cancel_pending
+    _cancel_pending()
+    _update_overlay_tag()
+
+
+# ── DismissibleOverlay instances ──────────────────────────────────────
+
+_status_overlay = DismissibleOverlay(
+    on_draw=_on_draw_status, auto_hide=None, on_hide=_update_overlay_tag,
+)
+_help_overlay = DismissibleOverlay(
+    on_draw=_on_draw_help, auto_hide=None, on_hide=_update_overlay_tag,
+)
+_prompt_overlay = DismissibleOverlay(
+    on_draw=_on_draw_prompt, auto_hide=PROMPT_DURATION, on_hide=_on_prompt_hide,
+)
+
+
+def show_status():
+    """Show the status overlay with all saved windows."""
+    hide_help()
+    _status_overlay.show()
+    _update_overlay_tag()
+
+
+def hide_status():
+    """Hide and destroy the status overlay canvas."""
+    _status_overlay.hide()
+
+
+def show_help():
+    """Show the help overlay with command reference."""
+    hide_status()
+    _help_overlay.show()
+    _update_overlay_tag()
+
+
+def hide_help():
+    """Hide and destroy the help overlay canvas."""
+    _help_overlay.hide()
 
 
 def show_prompt(title: str, subtitle: str):
     """Show a prompt overlay with custom title and subtitle."""
-    global _prompt_canvas, _prompt_hide_job, _prompt_title, _prompt_subtitle
+    global _prompt_title, _prompt_subtitle
     _prompt_title = title
     _prompt_subtitle = subtitle
-
-    if _prompt_hide_job:
-        cron.cancel(_prompt_hide_job)
-        _prompt_hide_job = None
-
-    if _prompt_canvas:
-        _prompt_canvas.unregister("draw", on_draw_prompt)
-        _prompt_canvas.unregister("mouse", _on_mouse_prompt)
-        _prompt_canvas.close()
-        _prompt_canvas = None
-
-    screen: Screen = ui.main_screen()
-    _prompt_canvas = Canvas.from_screen(screen)
-    _prompt_canvas.blocks_mouse = True
-    _prompt_canvas.register("draw", on_draw_prompt)
-    _prompt_canvas.register("mouse", _on_mouse_prompt)
-    _prompt_canvas.freeze()
-
-    _prompt_hide_job = cron.after(PROMPT_DURATION, hide_prompt)
+    _prompt_overlay.show()
     _update_overlay_tag()
 
 
 def hide_prompt():
     """Hide the prompt overlay and cancel pending state."""
-    global _prompt_canvas, _prompt_hide_job
-    if _prompt_hide_job:
-        cron.cancel(_prompt_hide_job)
-        _prompt_hide_job = None
-    if _prompt_canvas:
-        _prompt_canvas.unregister("draw", on_draw_prompt)
-        _prompt_canvas.unregister("mouse", _on_mouse_prompt)
-        _prompt_canvas.close()
-        _prompt_canvas = None
-    from .recall_state import _cancel_pending
-    _cancel_pending()
-    _update_overlay_tag()
+    _prompt_overlay.hide()
+
+
+def hide_any():
+    """Hide whichever overlay is currently active."""
+    hide_overlay()
+    hide_status()
+    hide_help()
+    hide_prompt()
 
 
 # ── Flash notification ────────────────────────────────────────────────

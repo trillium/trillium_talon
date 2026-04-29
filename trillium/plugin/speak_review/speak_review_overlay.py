@@ -4,18 +4,14 @@ Speak Review Overlay - Persistent canvas showing current rewrite entry
 Full-screen dimmed backdrop with a centered panel showing the current
 entry details, progress counter, and voice command hints.
 Follows the recall overlay visual patterns with a warm teal/amber palette.
+Uses DismissibleOverlay for lifecycle management.
 """
 
 from talon import ui
-from talon.canvas import Canvas, MouseEvent
-from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
+
+from ...utils.overlay_kit import DismissibleOverlay, draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
 from talon.ui import Rect
-
-from ...utils.overlay_kit import draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
-
-_canvas: Canvas = None
-_panel_rect: Rect = None
 
 # ── Color palette (warm teal / amber — relaxing but distinct from recall) ──
 
@@ -65,7 +61,7 @@ HINTS = [
 ]
 
 
-def _on_draw(c: SkiaCanvas):
+def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     screen = ui.main_screen()
     sr = screen.rect
 
@@ -93,9 +89,8 @@ def _on_draw(c: SkiaCanvas):
     panel_y = sr.y + (sr.height - panel_h) / 2
 
     # Draw panel frame
-    global _panel_rect
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
-    _panel_rect = panel_rect
+    overlay.set_panel_rect(panel_rect)
     draw_panel_frame(c, panel_rect, CORNER_RADIUS, PANEL_COLOR, PANEL_BORDER)
 
     # Clip to panel
@@ -161,6 +156,9 @@ def _on_draw(c: SkiaCanvas):
     c.restore()
 
 
+_overlay = DismissibleOverlay(on_draw=_on_draw, auto_hide=None)
+
+
 def update(section: str, key: str, value: str, current: int, total: int):
     """Update overlay state and re-freeze the canvas."""
     global _section, _key, _value, _current, _total
@@ -169,35 +167,14 @@ def update(section: str, key: str, value: str, current: int, total: int):
     _value = value
     _current = current
     _total = total
-    if _canvas:
-        _canvas.freeze()
-
-
-def _on_mouse(e: MouseEvent):
-    """Dismiss overlay when clicking outside the panel."""
-    if e.event == "mousedown" and e.button == 0:
-        if _panel_rect and not _panel_rect.contains(e.gpos):
-            hide()
+    _overlay.freeze()
 
 
 def show():
     """Create and show the overlay canvas."""
-    global _canvas
-    if _canvas:
-        hide()
-    screen: Screen = ui.main_screen()
-    _canvas = Canvas.from_screen(screen)
-    _canvas.blocks_mouse = True
-    _canvas.register("draw", _on_draw)
-    _canvas.register("mouse", _on_mouse)
-    _canvas.freeze()
+    _overlay.show()
 
 
 def hide():
     """Destroy the overlay canvas."""
-    global _canvas
-    if _canvas:
-        _canvas.unregister("draw", _on_draw)
-        _canvas.unregister("mouse", _on_mouse)
-        _canvas.close()
-        _canvas = None
+    _overlay.hide()
