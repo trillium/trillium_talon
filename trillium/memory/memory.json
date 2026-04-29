@@ -65,5 +65,8 @@
   {"command": "bump left / right", "description": "nudge window 5% of screen width (active 60s after snap)", "page": "windows"},
   {"command": "bump left / right <number>", "description": "nudge window multiple steps at once", "page": "windows"},
   {"command": "widen / narrow", "description": "resize window symmetrically by 3% of screen width", "page": "windows"},
-  {"command": "widen / narrow <number>", "description": "resize window multiple steps at once", "page": "windows"}
+  {"command": "widen / narrow <number>", "description": "resize window multiple steps at once", "page": "windows"},
+  {"command": "<prose> question", "description": "dictation ender — types prose followed by ? (end of utterance only)", "page": "dictation"},
+  {"command": "tab reopen", "description": "restore last closed tab (Cmd+Shift+T) — works in browsers, VS Code, most tabbed apps", "page": "windows"},
+  {"command": "tab restore", "description": "alias for tab reopen — restore last closed tab", "page": "windows"}
 ]
