@@ -222,6 +222,23 @@ OPPOSITES = {
         "trigger": "next",
         "action": ("user", "speak_history_next", ())
     },
+    # window bumping
+    "bump left": {
+        "trigger": "bump right",
+        "action": ("user", "window_bump", ("right",))
+    },
+    "bump right": {
+        "trigger": "bump left",
+        "action": ("user", "window_bump", ("left",))
+    },
+    "widen": {
+        "trigger": "narrow",
+        "action": ("user", "window_resize", ("narrow",))
+    },
+    "narrow": {
+        "trigger": "widen",
+        "action": ("user", "window_resize", ("widen",))
+    },
     # reverse command - opposite is to move in original direction
     "reverse": {
         "trigger": "original",
