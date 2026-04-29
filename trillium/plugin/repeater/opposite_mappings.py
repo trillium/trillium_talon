@@ -168,32 +168,32 @@ OPPOSITES = {
     # mouse clock navigation
     "<user.letters_colors>+": {
         "trigger": "reverse",
-        "action": ("user", "mouse_clock_move_opposite", ())
+        "action": ("user", "mouse_clock_move_reverse_last_direction", ())
     },
     "^<user.letters_colors>+$": {
         "trigger": "reverse",
-        "action": ("user", "mouse_clock_move_opposite", ())
+        "action": ("user", "mouse_clock_move_reverse_last_direction", ())
     },
     "^clock <user.letters_colors>+$": {
         "trigger": "reverse",
-        "action": ("user", "mouse_clock_move_opposite", ())
+        "action": ("user", "mouse_clock_move_reverse_last_direction", ())
     },
     "^<user.letters_colors>+ clock$": {
         "trigger": "reverse",
-        "action": ("user", "mouse_clock_move_opposite", ())
+        "action": ("user", "mouse_clock_move_reverse_last_direction", ())
     },
     "clock <user.letters_colors>+": {
         "trigger": "reverse",
-        "action": ("user", "mouse_clock_move_opposite", ())
+        "action": ("user", "mouse_clock_move_reverse_last_direction", ())
     },
     "<user.letters_colors>+ clock": {
         "trigger": "reverse",
-        "action": ("user", "mouse_clock_move_opposite", ())
+        "action": ("user", "mouse_clock_move_reverse_last_direction", ())
     },
     # circle answer (clock ring mode)
     "<user.circle_answer>": {
         "trigger": "reverse",
-        "action": ("user", "mouse_clock_move_opposite", ())
+        "action": ("user", "mouse_clock_move_reverse_last_direction", ())
     },
     # tab / shift-tab
     "tab": {
@@ -242,6 +242,6 @@ OPPOSITES = {
     # reverse command - opposite is to move in original direction
     "reverse": {
         "trigger": "original",
-        "action": ("user", "mouse_clock_move_original", ())
+        "action": ("user", "mouse_clock_move_repeat_last_direction", ())
     },
 }
