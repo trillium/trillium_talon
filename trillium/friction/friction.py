@@ -58,17 +58,25 @@ class Actions:
 
         scope, needs_review = _parse_scope(scope_utterance)
         state.pending_scope = (scope, needs_review, scope_utterance)
-        state.pending_context = build_context_notes(scope_utterance)
+        state.pending_context = None  # built async
         state.current_issue_id = None
 
+        # Enter friction mode immediately (visual feedback first)
         _enter_friction_mode()
+
+        # Build context in background so we never block the main thread
+        def _build_context():
+            state.pending_context = build_context_notes(scope_utterance)
+
+        cron.after("0ms", _build_context)
 
     def friction_append(text: str):
         """Append text to the current friction entry. Creates ticket on first dictation."""
         # First dictation after friction_capture - create the ticket
         if state.pending_scope and not state.current_issue_id:
             scope, needs_review, _ = state.pending_scope
-            state.current_issue_id = ops.create_issue(text, state.pending_context, scope, needs_review)
+            context = state.pending_context or ""  # may not be ready yet
+            state.current_issue_id = ops.create_issue(text, context, scope, needs_review)
             print(f"[friction] Created issue: {state.current_issue_id}")
             state.last_issue_id = state.current_issue_id
             if state.current_issue_id:

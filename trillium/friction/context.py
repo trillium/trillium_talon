@@ -6,26 +6,40 @@ from pathlib import Path
 
 from talon import registry, scope
 
-RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "commands"
+COMMANDS_JSONL = Path.home() / ".talon" / "recordings" / "command_history.jsonl"
 
 
 def get_recent_commands(limit: int = 10) -> list[dict]:
-    """Get recent commands from recordings directory."""
-    if not RECORDINGS_DIR.exists():
+    """Get recent commands from JSONL command history (tail read, instant)."""
+    if not COMMANDS_JSONL.exists():
         return []
 
-    files = sorted(RECORDINGS_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
-    commands = []
-    for f in files[:limit]:
-        try:
-            data = json.loads(f.read_text())
-            commands.append({
-                "timestamp": data.get("timestamp", ""),
-                "trigger": data.get("command", {}).get("trigger", ""),
-            })
-        except Exception:
-            pass
-    return commands
+    try:
+        # Read last 8KB — more than enough for 10 commands
+        size = COMMANDS_JSONL.stat().st_size
+        read_bytes = min(size, 8192)
+        with open(COMMANDS_JSONL, "rb") as f:
+            f.seek(max(0, size - read_bytes))
+            tail = f.read().decode("utf-8", errors="replace")
+
+        lines = tail.strip().split("\n")
+        # Skip first line (may be partial from seek)
+        if size > read_bytes:
+            lines = lines[1:]
+
+        commands = []
+        for line in reversed(lines[-limit:]):
+            try:
+                data = json.loads(line)
+                commands.append({
+                    "timestamp": data.get("timestamp", ""),
+                    "trigger": data.get("trigger", ""),
+                })
+            except Exception:
+                pass
+        return commands[:limit]
+    except Exception:
+        return []
 
 
 def get_talon_context() -> dict:
