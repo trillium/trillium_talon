@@ -1,45 +1,53 @@
-"""Ops integration for friction tickets."""
+"""Friction capture — JSONL-based local storage.
 
-import subprocess
+Captures friction events instantly to a local JSONL file with zero dependencies.
+A separate triage step promotes entries into real beads (bd/ops/life/ideas) later.
+"""
+
+import json
+import uuid
+from datetime import datetime
 from pathlib import Path
 
-OPS_DB = Path.home() / ".openclaw" / ".ops" / "beads.db"
+FRICTION_LOG = Path.home() / ".talon" / "friction.jsonl"
 
 
 def create_issue(title: str, notes: str, scope: str = "general", needs_review: bool = False) -> str | None:
-    """Create an ops issue and return the issue ID."""
-    print(f"[friction] Creating ops issue: {title[:50]}... (scope: {scope}, needs_review: {needs_review})")
-    labels = f"friction,triage,{scope}"
+    """Create a friction entry and return the entry ID."""
+    issue_id = f"friction-{uuid.uuid4().hex[:6]}"
+    labels = ["friction", "triage", scope]
     if needs_review:
-        labels += ",review"
+        labels.append("review")
+    entry = {
+        "type": "create",
+        "id": issue_id,
+        "title": title,
+        "notes": notes,
+        "scope": scope,
+        "needs_review": needs_review,
+        "labels": labels,
+        "created": datetime.now().isoformat(),
+    }
     try:
-        result = subprocess.run(
-            ["ops", "--db", str(OPS_DB), "create", "--title", title, "--type", "task", "--priority", "3",
-             "--labels", labels, "--notes", notes, "--silent"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        print(f"[friction] ops create returncode: {result.returncode}")
-        print(f"[friction] ops create stdout: {result.stdout}")
-        print(f"[friction] ops create stderr: {result.stderr}")
-        if result.returncode == 0:
-            return result.stdout.strip()
-        else:
-            print(f"[friction] ops create failed: {result.stderr}")
+        with open(FRICTION_LOG, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+        print(f"[friction] Saved to JSONL: {issue_id} — {title[:50]}")
+        return issue_id
     except Exception as e:
-        print(f"[friction] ops create exception: {e}")
-    return None
+        print(f"[friction] JSONL write failed: {e}")
+        return None
 
 
 def append_to_issue(issue_id: str, text: str):
-    """Append text to an ops issue's notes."""
+    """Append text to a friction entry."""
+    entry = {
+        "type": "append",
+        "id": issue_id,
+        "text": text,
+        "timestamp": datetime.now().isoformat(),
+    }
     try:
-        subprocess.run(
-            ["ops", "--db", str(OPS_DB), "update", issue_id, "--append-notes", text],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
+        with open(FRICTION_LOG, "a") as f:
+            f.write(json.dumps(entry) + "\n")
     except Exception:
         pass
