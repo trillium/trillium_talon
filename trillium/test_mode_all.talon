@@ -13,5 +13,5 @@ alexa please (mute | unmute) trillium$:
 ^zoom (toggle video)$:
     user.zoom_toggle_video()
 
-key(super-ctrl-alt-shift-z):
+key(cmd-ctrl-alt-shift-z):
     user.zoom_mute()
