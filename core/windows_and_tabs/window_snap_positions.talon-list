@@ -39,6 +39,8 @@ bottom right small: BOTTOM_RIGHT_SMALL
 bottom left large: BOTTOM_LEFT_LARGE
 bottom right large: BOTTOM_RIGHT_LARGE
 bottom center small: BOTTOM_CENTER_SMALL
+center half: CENTER_HALF
+center two thirds: CENTER_TWO_THIRDS
 center: CENTER
 full: FULL
 fullscreen: FULLSCREEN
