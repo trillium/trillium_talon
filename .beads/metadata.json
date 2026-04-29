@@ -1,9 +1,0 @@
-{
-  "database": "dolt",
-  "backend": "dolt",
-  "dolt_mode": "server",
-  "dolt_server_host": "mini2",
-  "dolt_server_port": 3307,
-  "dolt_database": "talon",
-  "project_id": "e39ef60a-f993-4d04-8558-6599ae78a2c1"
-}
