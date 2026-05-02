@@ -1,5 +1,5 @@
 list: user.system_paths
-hostname: /trilliums-(MacBook.Pro|mbp)/
+hostname: /MacBookPro|trilliums-(MacBook.Pro|mbp)/
 -
 user: /Users/trilliumsmith
 desktop: /Users/trilliumsmith/Desktop
