@@ -33,10 +33,7 @@ def rematch_window(info: dict) -> ui.Window:
         if a.name != app_name:
             continue
         for window in a.windows():
-            try:
-                if window.rect.width <= 0 or window.rect.height <= 0:
-                    continue
-            except AttributeError:
+            if window.rect.width <= 0 or window.rect.height <= 0:
                 continue
             # Match by path in title
             if saved_path and saved_path in window.title:

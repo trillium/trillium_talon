@@ -123,11 +123,8 @@ def update_window_list():
         name_map = {}
         for name, info in saved_windows.items():
             name_map[name] = name
-        # Add aliases second, but never let an alias shadow a canonical name
-        for name, info in saved_windows.items():
             for alias in info.get("aliases", []):
-                if alias not in name_map:
-                    name_map[alias] = name
+                name_map[alias] = name
         spoken_forms = actions.user.create_spoken_forms_from_map(
             name_map,
             generate_subsequences=False,

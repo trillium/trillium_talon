@@ -32,7 +32,6 @@
 ^<user.saved_window_names>:
     user.recall_window(saved_window_names)
     sleep(25ms)
-    user.window_bump_activate()
 
 ^recall detach <user.saved_window_names>$:
     user.recall_unsave(saved_window_names)
