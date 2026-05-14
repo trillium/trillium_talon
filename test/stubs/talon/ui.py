@@ -39,6 +39,10 @@ class Rect:
     def center(self):
         return Point2d(self.x + self.width / 2, self.y + self.height / 2)
 
+    def contains(self, point) -> bool:
+        return (self.x <= point.x <= self.x + self.width and
+                self.y <= point.y <= self.y + self.height)
+
     def __repr__(self):
         return f"Rect(x={self.x}, y={self.y}, width={self.width}, height={self.height})"
 
