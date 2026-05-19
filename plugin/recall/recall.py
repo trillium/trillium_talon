@@ -73,6 +73,11 @@ def _on_focus_change(window: ui.Window):
     if app_name == "Talon":
         print(f"[recall-debug]   -> ignoring Talon canvas focus event")
         return
+    # Suppress focus bouncing after an explicit pill click.
+    from .recall_overlay_persistent import is_focus_locked
+    if is_focus_locked():
+        print(f"[recall-debug]   -> suppressed (focus lock active from pill click)")
+        return
     _try_auto_assign(window)
     if not recall_state._persistent_highlight_enabled:
         return
