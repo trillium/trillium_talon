@@ -62,6 +62,17 @@ def _try_auto_assign(window: ui.Window):
 
 def _on_focus_change(window: ui.Window):
     """When focus changes, try auto-assign and update persistent highlight."""
+    try:
+        app_name = window.app.name
+        print(f"[recall-debug] focus_change: id={window.id}, app='{app_name}', title='{window.title[:60]}'")
+    except Exception:
+        print(f"[recall-debug] focus_change: (could not read window properties)")
+        app_name = ""
+    # Ignore Talon's own canvas windows — they fire focus events when
+    # overlay canvases are created/clicked, causing wrong-window cascades.
+    if app_name == "Talon":
+        print(f"[recall-debug]   -> ignoring Talon canvas focus event")
+        return
     _try_auto_assign(window)
     if not recall_state._persistent_highlight_enabled:
         return

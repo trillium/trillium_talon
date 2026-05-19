@@ -7,6 +7,7 @@ import time
 from talon import actions, ui
 from . import recall_overlay
 from . import recall_state
+from .recall_overlay_persistent import refresh_click_canvases
 from .recall_state import (
     mod, saved_windows, archived_windows,
     is_forbidden,
@@ -51,9 +52,13 @@ class Actions:
         window = ui.active_window()
         app_name = window.app.name
 
+        # DEBUG: log what window we're actually seeing
+        print(f"[recall-debug] save_window('{name}'): active window id={window.id}, app='{app_name}', title='{window.title[:80]}'")
+
         # Check if this window is already saved under a different name
         existing_name = find_name_for_window_id(window.id)
         if existing_name and existing_name != name:
+            print(f"[recall-debug]   -> found existing entry '{existing_name}' with same id, would alias")
             # Add as alias instead of creating a duplicate
             aliases = saved_windows[existing_name].get("aliases", [])
             if name not in aliases:
@@ -88,6 +93,7 @@ class Actions:
 
         save_to_disk()
         update_window_list()
+        refresh_click_canvases()
 
         # Update persistent highlight if enabled, otherwise show brief highlight
         if recall_state._persistent_highlight_enabled:
@@ -104,6 +110,7 @@ class Actions:
         del saved_windows[name]
         save_to_disk()
         update_window_list()
+        refresh_click_canvases()
         recall_overlay.flash(f'forgot "{name}" (archived)')
 
         # Clear persistent highlight if the forgotten window was highlighted

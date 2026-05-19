@@ -1,6 +1,14 @@
-"""Recall Overlay Persistent - Persistent window border + name tab for ALL saved windows."""
+"""Recall Overlay Persistent - Persistent window border + name tab for ALL saved windows.
 
-from talon import cron, skia, ui
+Uses a single full-screen canvas (blocks_mouse=False) for rendering pills.
+Click detection uses a fast cron poll on ctrl.mouse_buttons_down() + hit-testing
+against cached pill rects — no canvas mouse handler needed, no blocks_mouse=True,
+so all normal clicks pass through unimpeded.
+
+No separate Canvas.from_rect() click canvases — those caused macOS focus-stealing.
+"""
+
+from talon import cron, ctrl, skia, ui
 from talon.canvas import Canvas
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
@@ -16,13 +24,19 @@ PERSISTENT_LABEL_SIZE = 13
 PERSISTENT_LABEL_PAD_X = 8
 PERSISTENT_LABEL_PAD_Y = 4
 PERSISTENT_TAB_GAP = 4
-PERSISTENT_POLL_INTERVAL = "200ms"
 
 _persistent_canvas: Canvas = None
 _persistent_window = None
 _persistent_name: str = ""
-_click_canvases: list = []
-_click_sync_job = None
+_redraw_job = None
+_click_poll_job = None
+
+# Cached pill rects from the last draw, used for mouse hit-testing.
+# List of (name, pill_rect) tuples — name is the saved_windows key.
+_pill_hit_rects: list = []
+
+# Track previous mouse button state so we detect the down-edge only.
+_prev_mouse_down: bool = False
 
 
 def _compute_pill_positions(measure_text_fn=None):
@@ -71,60 +85,35 @@ def _compute_pill_positions(measure_text_fn=None):
     return results
 
 
-def _rebuild_click_canvases():
-    """Close all click canvases and recreate from current pill positions."""
-    global _click_canvases
-    for canvas, _, _ in _click_canvases:
-        try:
-            canvas.close()
-        except Exception:
-            pass
-    _click_canvases = []
-    for window, name, pill_rect in _compute_pill_positions():
-        c = Canvas.from_rect(pill_rect)
-        c.blocks_mouse = True
-        def _h(e, w=window):
-            if e.event == "mousedown" and e.button == 0:
-                try:
-                    w.focus()
-                except Exception:
-                    pass
-        c.register("mouse", _h)
-        c.freeze()
-        _click_canvases.append((c, window, name))
-
-
-def _sync_click_canvases():
-    positions = _compute_pill_positions()
-    if len(positions) != len(_click_canvases):
-        _rebuild_click_canvases()
-        return
-    for i, (window, name, pill_rect) in enumerate(positions):
-        canvas, old_window, old_name = _click_canvases[i]
-        if old_window != window or old_name != name:
-            _rebuild_click_canvases()
-            return
-        canvas.move(pill_rect.x, pill_rect.y)
-        canvas.resize(pill_rect.width, pill_rect.height)
-        canvas.freeze()
-
-
-def _close_click_canvases():
-    global _click_canvases, _click_sync_job
-    if _click_sync_job:
-        cron.cancel(_click_sync_job)
-        _click_sync_job = None
-    for canvas, _, _ in _click_canvases:
-        try:
-            canvas.close()
-        except Exception:
-            pass
-    _click_canvases = []
+def _poll_click():
+    """Fast poll: detect mouse-down edge, hit-test against pill rects."""
+    global _prev_mouse_down
+    buttons = ctrl.mouse_buttons_down()
+    is_down = 0 in buttons
+    if is_down and not _prev_mouse_down:
+        # Mouse button just went down — hit-test
+        mx, my = ctrl.mouse_pos()
+        for name, pill_rect in _pill_hit_rects:
+            if (pill_rect.x <= mx <= pill_rect.x + pill_rect.width and
+                    pill_rect.y <= my <= pill_rect.y + pill_rect.height):
+                saved_windows, find_window_by_id = _get_saved_windows()
+                info = saved_windows.get(name)
+                if info:
+                    w = find_window_by_id(info.get("id"))
+                    if w:
+                        try:
+                            w.focus()
+                        except Exception:
+                            pass
+                break
+    _prev_mouse_down = is_down
 
 
 def on_draw_persistent(c: SkiaCanvas):
+    global _pill_hit_rects
     saved_windows, find_window_by_id = _get_saved_windows()
     if not saved_windows:
+        _pill_hit_rects = []
         return
     active_id = _persistent_window.id if _persistent_window else None
     entries, placed = [], []
@@ -164,6 +153,10 @@ def on_draw_persistent(c: SkiaCanvas):
                 break
         placed.append(pill_rect)
         entries.append((window, name, info["id"], pill_rect, text_w, text_h))
+
+    # Cache pill rects for mouse hit-testing
+    _pill_hit_rects = [(name, pill_rect) for _, name, _, pill_rect, _, _ in entries]
+
     for window, name, wid, pill_rect, text_w, text_h in entries:
         is_active = (active_id is not None and wid == active_id)
         tab_color = (PERSISTENT_COLOR_ACTIVE + PERSISTENT_ALPHA_ACTIVE if is_active
@@ -202,30 +195,56 @@ def on_draw_persistent(c: SkiaCanvas):
         c.paint.stroke_width = 0
 
 
+def _do_redraw():
+    """Freeze the persistent canvas to trigger a redraw."""
+    global _redraw_job
+    _redraw_job = None
+    if _persistent_canvas:
+        _persistent_canvas.freeze()
+
+
+def _schedule_redraw():
+    """Schedule a redraw after a short delay to let the window manager settle."""
+    global _redraw_job
+    if _redraw_job:
+        cron.cancel(_redraw_job)
+    _redraw_job = cron.after("50ms", _do_redraw)
+
+
+def refresh_click_canvases():
+    """Legacy API — now just triggers a canvas redraw.
+    Called from recall_save.py on save/forget to update pill positions."""
+    _schedule_redraw()
+
+
 def show_persistent_highlight(window, name: str):
     """Update the persistent highlight to track the given window."""
-    global _persistent_canvas, _persistent_window, _persistent_name, _click_sync_job
+    global _persistent_canvas, _persistent_window, _persistent_name, _click_poll_job
     _persistent_window = window
     _persistent_name = name
     if not _persistent_canvas:
         screen = ui.main_screen()
         _persistent_canvas = Canvas.from_screen(screen)
         _persistent_canvas.register("draw", on_draw_persistent)
-    if not _click_sync_job:
-        _rebuild_click_canvases()
-        _click_sync_job = cron.interval(PERSISTENT_POLL_INTERVAL, _sync_click_canvases)
+    if not _click_poll_job:
+        _click_poll_job = cron.interval("16ms", _poll_click)
+    _schedule_redraw()
 
 
 def hide_persistent_highlight():
-    """Destroy the persistent canvas and stop polling entirely."""
+    """Destroy the persistent canvas entirely."""
     global _persistent_canvas, _persistent_window, _persistent_name
-    _close_click_canvases()
+    global _pill_hit_rects, _click_poll_job
+    if _click_poll_job:
+        cron.cancel(_click_poll_job)
+        _click_poll_job = None
     if _persistent_canvas:
         _persistent_canvas.unregister("draw", on_draw_persistent)
         _persistent_canvas.close()
         _persistent_canvas = None
     _persistent_window = None
     _persistent_name = ""
+    _pill_hit_rects = []
 
 
 def clear_persistent_highlight():
@@ -233,12 +252,12 @@ def clear_persistent_highlight():
     global _persistent_window, _persistent_name
     _persistent_window = None
     _persistent_name = ""
+    _schedule_redraw()
 
 
 def rebuild_persistent_canvas():
     """Rebuild the persistent canvas on a new screen."""
-    global _persistent_canvas, _click_sync_job
-    _close_click_canvases()
+    global _persistent_canvas
     if not _persistent_canvas:
         return
     _persistent_canvas.unregister("draw", on_draw_persistent)
@@ -246,5 +265,30 @@ def rebuild_persistent_canvas():
     screen = ui.main_screen()
     _persistent_canvas = Canvas.from_screen(screen)
     _persistent_canvas.register("draw", on_draw_persistent)
-    _rebuild_click_canvases()
-    _click_sync_job = cron.interval(PERSISTENT_POLL_INTERVAL, _sync_click_canvases)
+    _schedule_redraw()
+
+
+def _hot_reload_recovery():
+    """Re-create the canvas after a hot-reload resets module state.
+    Talon's app.register('ready') only fires once at startup, so when this
+    module is reloaded, _persistent_canvas is None even though the feature
+    is enabled in saved_windows.json.  This deferred call gives the rest of
+    the recall package time to reload first."""
+    from .recall_state import _persistent_highlight_enabled
+    if _persistent_highlight_enabled and not _persistent_canvas:
+        # Find the current focused window to seed the highlight
+        try:
+            from .recall_state import find_name_for_window_id
+            window = ui.active_window()
+            name = find_name_for_window_id(window.id)
+            if name:
+                show_persistent_highlight(window, name)
+            else:
+                # No saved window focused, but still activate the canvas
+                show_persistent_highlight(window, "")
+        except Exception:
+            pass
+
+
+# Schedule recovery after a short delay so sibling modules finish reloading.
+cron.after("200ms", _hot_reload_recovery)
