@@ -1,4 +1,4 @@
-from talon import Context, Module, settings, actions, speech_system
+from talon import Context, Module, settings, actions, scope, speech_system
 from talon import resource
 import time
 import csv
@@ -22,7 +22,12 @@ class Actions:
     def special_key_opposite():
         """Execute the opposite of the last special key press"""
 
-    def set_next_repeat_action(namespace: str, action_name: str, args: list = None):
+    def set_next_repeat_action(
+        namespace: str,
+        action_name: str,
+        args: list = None,
+        debounce_s: float = 0.0,
+    ):
         """Set what action should run on the next repeat sound.
 
         Call this from any command to override what the pop sound does next.
@@ -32,14 +37,33 @@ class Actions:
             namespace: Action namespace (e.g., "edit", "key", "user")
             action_name: Action name (e.g., "left", "delete")
             args: List of arguments to pass to the action
+            debounce_s: Optional per-override cooldown in seconds. When > 0,
+                consuming this override won't fire it again within this window
+                — useful for actions that are easy to double-trigger by accident
+                (e.g. disambiguation choices). Defaults to 0 (no debounce). The
+                last-used timestamp is preserved when the same (namespace,
+                action, args) is re-armed, so the cooldown survives re-arms
+                across the same logical session.
         """
-        global override_repeat_action
-        override_repeat_action = (namespace, action_name, tuple(args) if args else ())
+        global override_repeat_action, override_repeat_debounce_s
+        global override_repeat_last_used_at
+        new = (namespace, action_name, tuple(args) if args else ())
+        if override_repeat_action != new:
+            override_repeat_last_used_at = 0.0
+        override_repeat_action = new
+        override_repeat_debounce_s = float(debounce_s) if debounce_s else 0.0
         actions.user.boolean_print(
-            "repeater", f"Set next repeat action: {namespace}.{action_name}({args})"
+            "repeater",
+            f"Set next repeat action: {namespace}.{action_name}({args}) "
+            f"debounce_s={override_repeat_debounce_s}",
         )
 
-    def set_next_opposite_action(namespace: str, action_name: str, args: list = None):
+    def set_next_opposite_action(
+        namespace: str,
+        action_name: str,
+        args: list = None,
+        debounce_s: float = 0.0,
+    ):
         """Set what action should run on the next opposite sound.
 
         Call this from any command to override what the cmere sound does next.
@@ -49,18 +73,33 @@ class Actions:
             namespace: Action namespace (e.g., "edit", "key", "user")
             action_name: Action name (e.g., "right", "undo")
             args: List of arguments to pass to the action
+            debounce_s: Optional per-override cooldown in seconds. See
+                set_next_repeat_action for semantics. Defaults to 0.
         """
-        global override_opposite_action
-        override_opposite_action = (namespace, action_name, tuple(args) if args else ())
+        global override_opposite_action, override_opposite_debounce_s
+        global override_opposite_last_used_at
+        new = (namespace, action_name, tuple(args) if args else ())
+        if override_opposite_action != new:
+            override_opposite_last_used_at = 0.0
+        override_opposite_action = new
+        override_opposite_debounce_s = float(debounce_s) if debounce_s else 0.0
         actions.user.boolean_print(
-            "repeater", f"Set next opposite action: {namespace}.{action_name}({args})"
+            "repeater",
+            f"Set next opposite action: {namespace}.{action_name}({args}) "
+            f"debounce_s={override_opposite_debounce_s}",
         )
 
     def clear_repeat_overrides():
         """Clear any programmatically set repeat/opposite overrides"""
         global override_repeat_action, override_opposite_action
+        global override_repeat_debounce_s, override_opposite_debounce_s
+        global override_repeat_last_used_at, override_opposite_last_used_at
         override_repeat_action = None
         override_opposite_action = None
+        override_repeat_debounce_s = 0.0
+        override_opposite_debounce_s = 0.0
+        override_repeat_last_used_at = 0.0
+        override_opposite_last_used_at = 0.0
         actions.user.boolean_print("repeater", "Cleared repeat/opposite overrides")
 
     def repeater_get_state() -> dict:
@@ -204,6 +243,14 @@ last_repeatable_capture = None
 # Format: (namespace, action_name, args) e.g. ("edit", "left", ())
 override_repeat_action = None
 override_opposite_action = None
+# Optional per-override debounce window (seconds). 0 disables debounce.
+override_repeat_debounce_s: float = 0.0
+override_opposite_debounce_s: float = 0.0
+# perf_counter() timestamp of the most recent consumption of each override,
+# used together with the debounce_s windows above. Reset to 0.0 on arm of a
+# DIFFERENT (namespace, action, args) tuple and on clear.
+override_repeat_last_used_at: float = 0.0
+override_opposite_last_used_at: float = 0.0
 
 
 def should_track_command(command_name):
@@ -211,10 +258,19 @@ def should_track_command(command_name):
     return command_name not in excluded_commands_set
 
 
+_TRACKABLE_MODES = {"command", "dictation"}
+
+
 def on_post_phrase(j):
     """Called after every phrase/command is executed"""
     global last_repeatable_cmd, last_repeatable_capture
     global override_repeat_action, override_opposite_action
+
+    # Only track commands in actionable modes — skip sleep, etc.
+    modes = scope.get("mode", set())
+    if not (_TRACKABLE_MODES & set(modes)):
+        return
+
     # Get the last command that was executed
     try:
         last_cmd, capture = actions.core.last_command()
@@ -233,6 +289,13 @@ def on_post_phrase(j):
             )
             override_repeat_action = None
             override_opposite_action = None
+            # Reset associated debounce state alongside the override
+            global override_repeat_debounce_s, override_opposite_debounce_s
+            global override_repeat_last_used_at, override_opposite_last_used_at
+            override_repeat_debounce_s = 0.0
+            override_opposite_debounce_s = 0.0
+            override_repeat_last_used_at = 0.0
+            override_opposite_last_used_at = 0.0
         # Store this as the last repeatable command
         last_repeatable_cmd = last_cmd
         last_repeatable_capture = capture
@@ -425,6 +488,21 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
     """
     # Check if there's a programmatic override set
     if override_repeat_action:
+        # Per-override debounce: skip if same override was consumed within
+        # the configured cooldown window. Default debounce_s=0 disables.
+        global override_repeat_last_used_at
+        now = time.perf_counter()
+        if (
+            override_repeat_debounce_s > 0
+            and override_repeat_last_used_at > 0
+            and (now - override_repeat_last_used_at) < override_repeat_debounce_s
+        ):
+            actions.user.boolean_print(
+                "repeater",
+                f"Debounced repeat override (within {override_repeat_debounce_s}s)",
+            )
+            return
+        override_repeat_last_used_at = now
         namespace, action_name, args = override_repeat_action
         actions.user.boolean_print(
             "repeater", f"Using override repeat action: {namespace}.{action_name}({args})"
@@ -544,6 +622,20 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None, sound="cmere
     """
     # Check if there's a programmatic override set
     if override_opposite_action:
+        # Per-override debounce (see set_next_opposite_action). 0 disables.
+        global override_opposite_last_used_at
+        now = time.perf_counter()
+        if (
+            override_opposite_debounce_s > 0
+            and override_opposite_last_used_at > 0
+            and (now - override_opposite_last_used_at) < override_opposite_debounce_s
+        ):
+            actions.user.boolean_print(
+                "repeater",
+                f"Debounced opposite override (within {override_opposite_debounce_s}s)",
+            )
+            return
+        override_opposite_last_used_at = now
         namespace, action_name, args = override_opposite_action
         actions.user.boolean_print(
             "repeater", f"Using override opposite action: {namespace}.{action_name}({args})"
