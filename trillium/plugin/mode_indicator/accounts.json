@@ -1,0 +1,11 @@
+{
+  "accounts": [
+    {
+      "name": "primary",
+      "email": "sharedanthropic@gmail.com",
+      "tier": "pro",
+      "keychain_service": "Claude Code-credentials",
+      "token_format": "claude-credentials-json"
+    }
+  ]
+}

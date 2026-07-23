@@ -1,5 +1,31 @@
 # trillium_talon — Changelog
 
+## 2026-07-22 — Edgar (task-z7bn)
+
+Files: trillium/plugin/mode_indicator/poll_usage.py, trillium/plugin/mode_indicator/accounts.json
+
+Fix the Claude Code usage tracker for a SINGLE subscription and get live data
+flowing into the mode indicator again. It was dead — mode_indicator_state.json
+had week_percent/five_hour_percent = null and accounts = [].
+
+Root causes + fixes:
+- `update_state` only wrote the legacy top-level keys the indicator reads when
+  `account_name == "primary"`, but accounts.json named them "acc1"/"acc2" → those
+  keys were NEVER written. Fixed: primary is now the FIRST account by position
+  (`is_primary` flag threaded through main → poll_account → update_state), not a
+  magic name. Works for one subscription (sole account = primary).
+- Both accounts used `token_format: "raw"` (ccjuggler setup tokens, inference-
+  scoped) → poll_account returns early (usage API needs a user:profile OAuth
+  scope) → no usage ever fetched. Fixed: accounts.json is now a single account
+  using the built-in `Claude Code-credentials` OAuth token (claude-credentials-json)
+  — the real logged-in subscription that CAN fetch usage.
+- Stale subscription_end (June, past) pinned week_percent to 100%. Fixed:
+  effective_end_iso ignores a subscription-end already in the past (auto-renewing
+  sub) and uses the live 7-day window; the primary account uses the file-based
+  override path.
+- VERIFIED live: restarted com.trillium.poll-usage; state now writes
+  week_percent≈30 (4d21h), five_hour≈9%, static "62%  23c", subscription active.
+
 ## 2026-07-22 — Edgar (task-stke)
 
 Files: plugin/recall/herdr_focus.py, plugin/recall/herdr_focus.talon, plugin/recall/herdr_tab_alias.talon-list
