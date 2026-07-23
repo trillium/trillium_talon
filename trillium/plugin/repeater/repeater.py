@@ -3,7 +3,13 @@ from talon import resource
 import time
 import csv
 from pathlib import Path
-from .opposite_mappings import REVERSE_MODIFIERS, REVERSE_SPECIAL_KEYS, OPPOSITES
+from .opposite_mappings import (
+    REVERSE_MODIFIERS,
+    REVERSE_SPECIAL_KEYS,
+    OPPOSITES,
+    LINE_ENDER_TRIGGERS,
+    LINE_ENDER_REVERSE_ACTION,
+)
 from . import parrot_logger
 from ...core.on_phrase.command_logger.command_logger import log_parrot_command
 
@@ -692,6 +698,16 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None, sound="cmere
                     namespace, action_name, args = opposite_mapping["action"]
                     action_func = getattr(getattr(actions, namespace), action_name)
                     action_func(*args)
+            elif command_name in LINE_ENDER_TRIGGERS or "dictation_ender" in command_name:
+                # Line-ender (lap/bravely/…): no natural opposite. Re-arm the
+                # SuperWhisper reverse-sound / pondering listening queue so the
+                # reverse double-click chain stays viable after a submit.
+                ns, action_name, args = LINE_ENDER_REVERSE_ACTION
+                actions.user.boolean_print(
+                    "repeater",
+                    f"Line-ender '{command_name}' reverse -> re-arm pondering ({ns}.{action_name})",
+                )
+                getattr(getattr(actions, ns), action_name)(*args)
             else:
                 actions.user.boolean_print(
                     "repeater", f"No opposite defined for: {command_name}"
