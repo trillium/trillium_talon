@@ -1,5 +1,25 @@
 # trillium_talon — Changelog
 
+## 2026-07-23 — Edgar (task-ya0t, P1 regression)
+
+Files: trillium/plugin/herder/herder_nav.talon
+
+Cursorless/editor commands ("split right", "split down", "pane left/right/up/down")
+were being EATEN in VSCode. Root cause via the matcher (talon-inspect + registry
+_active_scores): herder_nav.talon loaded GLOBALLY (specificity [1,0,0,0,0,0], no
+app/mode/tag) so its herdr pane-nav commands won everywhere, shadowing VSCode.
+(The broader "cursorless eaten" report was mostly this + action-name collisions;
+bind-trace showed standard cursorless commands — take/chuck/bring/etc. — still win
+cursorless.talon, so it was NOT a cursorless-grammar shadow.)
+
+Fix: scoped herder_nav.talon to `tag: user.herder_panel` (set by herder_panel.py
+when app.name=WezTerm — herdr isn't a standalone app so `app:` can't match it,
+exactly as the file's own NOTE and herder_panel.py prescribe). Now the pane/split/
+tab/space commands are active ONLY when the herdr terminal is focused; in VSCode
+they go inactive and stop shadowing. Verified via registry: herder_nav
+_active_scores tag_count=1, active only under WezTerm.
+
+
 ## 2026-07-22 — Edgar (task-z7bn)
 
 Files: trillium/plugin/mode_indicator/poll_usage.py, trillium/plugin/mode_indicator/accounts.json
