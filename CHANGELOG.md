@@ -1,5 +1,23 @@
 # trillium_talon — Changelog
 
+## 2026-07-22 — Edgar (task-stke)
+
+Files: plugin/recall/herdr_focus.py, plugin/recall/herdr_focus.talon, plugin/recall/herdr_tab_alias.talon-list
+
+Voice-alias jump to a specific herdr tab: say "mayor"/"firstmate"/"edgar"/etc.
+to focus that agent's herdr tab and bring the herdr host (WezTerm) to the front.
+
+- `herdr_focus_tab(target)` shells to `herdr agent focus <arg>`. Named agents
+  focus by name; the nameless firstmate/mayor tabs resolve DYNAMICALLY by cwd
+  (`cwd:code/firstmate` → current pane_id via `herdr agent list`) since tab/pane
+  ids change across restarts. Then `open -a WezTerm` foregrounds the host.
+- Alias→target map lives in herdr_tab_alias.talon-list (easy to extend):
+  mayor/firstmate→firstmate cwd, plus edgar/hooks/shepherd/mechanic/parlay-dev/
+  danny/noreddit by name.
+- Self-contained — does NOT touch recall's persistent overlay (avoids its known
+  focus bug). Resolver verified read-only (cwd→w5:p1, all names present); the
+  live focus + foreground needs a voice test.
+
 ## 2026-07-22 — Edgar (task-bg4y)
 
 Files: trillium/plugin/repeater/opposite_mappings.py, trillium/plugin/repeater/repeater.py

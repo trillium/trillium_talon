@@ -1,0 +1,12 @@
+list: user.herdr_tab_alias
+-
+# Spoken alias : herdr focus target (agent name, or cwd:<substr> for nameless tabs)
+mayor: cwd:code/firstmate
+firstmate: cwd:code/firstmate
+edgar: edgar
+hooks: hooks
+shepherd: shepherd
+mechanic: mechanic
+parlay dev: parlay-dev
+danny: danny
+noreddit: noreddit
