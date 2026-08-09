@@ -27,6 +27,7 @@ ctx = Context()
 class Actions:
     def special_key_opposite():
         """Execute the opposite of the last special key press"""
+        pass
 
     def set_next_repeat_action(
         namespace: str,
@@ -202,6 +203,36 @@ class Actions:
                         actions.edit.down()
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to perform navigation: {e}")
+
+    def repeater_sleep_repeat():
+        """Sleep-mode repeat: consume only an ARMED override, never the last command.
+
+        Bound from repeater_sleep.talon while sleeping (tongue-click). If no
+        override is armed, does nothing — the fallback to the last repeatable
+        command is intentionally skipped so sounds can't misfire actions while
+        Talon is asleep.
+        """
+        cmd_to_log = last_repeatable_cmd
+        capture_to_log = last_repeatable_capture
+        confidence = get_parrot_confidence()
+        if not _consume_override("repeat", cmd_to_log, capture_to_log, confidence, sound="tongue_click"):
+            actions.user.boolean_print(
+                "repeater", "Sleep repeat: no armed override — ignoring tongue-click"
+            )
+
+    def repeater_sleep_opposite():
+        """Sleep-mode opposite: consume only an ARMED override, never the last command.
+
+        Bound from repeater_sleep.talon while sleeping (kitty-cmere). Same
+        no-fallback rule as repeater_sleep_repeat.
+        """
+        cmd_to_log = last_repeatable_cmd
+        capture_to_log = last_repeatable_capture
+        confidence = get_parrot_confidence()
+        if not _consume_override("opposite", cmd_to_log, capture_to_log, confidence, sound="cmere"):
+            actions.user.boolean_print(
+                "repeater", "Sleep opposite: no armed override — ignoring cmere"
+            )
 
 
 # Commands to exclude from repeater (raw dictation, etc)
@@ -483,6 +514,76 @@ def get_parrot_confidence():
     return None
 
 
+def _consume_override(kind, cmd_to_log=None, capture_to_log=None, confidence=None, sound=None):
+    """Execute an armed repeat/opposite override, if one is set.
+
+    Shared by the command-mode handlers (`repeat_last_repeatable` / `opposite`)
+    and the sleep-mode handlers (`repeater_sleep_repeat` / `repeater_sleep_opposite`).
+
+    Args:
+        kind: "repeat" or "opposite" — which override slot to consume.
+        cmd_to_log / capture_to_log / confidence: logging metadata captured at
+            the action entry point.
+        sound: The parrot sound that triggered the action, for logging.
+
+    Returns:
+        True if an override was executed, False if none was armed or the call
+        was debounced. Callers decide what "no override" means — the sleep
+        handlers ignore it (never fall back to the last command).
+    """
+    global override_repeat_last_used_at, override_opposite_last_used_at
+    if kind == "repeat":
+        action = override_repeat_action
+        debounce_s = override_repeat_debounce_s
+        last_used = override_repeat_last_used_at
+    else:
+        action = override_opposite_action
+        debounce_s = override_opposite_debounce_s
+        last_used = override_opposite_last_used_at
+
+    if not action:
+        return False
+
+    # Per-override debounce: skip if same override was consumed within the
+    # configured cooldown window. Default debounce_s=0 disables.
+    now = time.perf_counter()
+    if debounce_s > 0 and last_used > 0 and (now - last_used) < debounce_s:
+        actions.user.boolean_print(
+            "repeater", f"Debounced {kind} override (within {debounce_s}s)"
+        )
+        return False
+    if kind == "repeat":
+        override_repeat_last_used_at = now
+    else:
+        override_opposite_last_used_at = now
+
+    namespace, action_name, args = action
+    actions.user.boolean_print(
+        "repeater", f"Using override {kind} action: {namespace}.{action_name}({args})"
+    )
+    success = True
+    try:
+        action_func = getattr(getattr(actions, namespace), action_name)
+        action_func(*args)
+    except Exception as e:
+        actions.user.boolean_print("repeater", f"Failed to execute override: {e}")
+        success = False
+
+    # Log the action (logger's schema uses "repeat" / "reverse" as the type)
+    log_type = "reverse" if kind == "opposite" else "repeat"
+    try:
+        parrot_logger.log_parrot_action(
+            log_type, cmd_to_log, capture_to_log, success, confidence
+        )
+        if success:
+            log_parrot_command(
+                f"{namespace}.{action_name}", sound=sound, action=log_type, confidence=confidence
+            )
+    except Exception as e:
+        actions.user.boolean_print("repeater", f"Failed to log {kind} action: {e}")
+    return True
+
+
 def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None, sound="tongue_click"):
     """Repeat the last repeatable command (excluding filtered commands)
 
@@ -494,42 +595,7 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
     """
     # Check if there's a programmatic override set
     if override_repeat_action:
-        # Per-override debounce: skip if same override was consumed within
-        # the configured cooldown window. Default debounce_s=0 disables.
-        global override_repeat_last_used_at
-        now = time.perf_counter()
-        if (
-            override_repeat_debounce_s > 0
-            and override_repeat_last_used_at > 0
-            and (now - override_repeat_last_used_at) < override_repeat_debounce_s
-        ):
-            actions.user.boolean_print(
-                "repeater",
-                f"Debounced repeat override (within {override_repeat_debounce_s}s)",
-            )
-            return
-        override_repeat_last_used_at = now
-        namespace, action_name, args = override_repeat_action
-        actions.user.boolean_print(
-            "repeater", f"Using override repeat action: {namespace}.{action_name}({args})"
-        )
-        success = True
-        try:
-            action_func = getattr(getattr(actions, namespace), action_name)
-            action_func(*args)
-        except Exception as e:
-            actions.user.boolean_print("repeater", f"Failed to execute override: {e}")
-            success = False
-
-        # Log the repeat action
-        try:
-            parrot_logger.log_parrot_action(
-                "repeat", cmd_to_log, capture_to_log, success, confidence
-            )
-            if success:
-                log_parrot_command(f"{namespace}.{action_name}", sound=sound, action="repeat", confidence=confidence)
-        except Exception as e:
-            actions.user.boolean_print("repeater", f"Failed to log repeat action: {e}")
+        _consume_override("repeat", cmd_to_log, capture_to_log, confidence, sound)
         return
 
     # Check what the actual last command was
@@ -628,41 +694,7 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None, sound="cmere
     """
     # Check if there's a programmatic override set
     if override_opposite_action:
-        # Per-override debounce (see set_next_opposite_action). 0 disables.
-        global override_opposite_last_used_at
-        now = time.perf_counter()
-        if (
-            override_opposite_debounce_s > 0
-            and override_opposite_last_used_at > 0
-            and (now - override_opposite_last_used_at) < override_opposite_debounce_s
-        ):
-            actions.user.boolean_print(
-                "repeater",
-                f"Debounced opposite override (within {override_opposite_debounce_s}s)",
-            )
-            return
-        override_opposite_last_used_at = now
-        namespace, action_name, args = override_opposite_action
-        actions.user.boolean_print(
-            "repeater", f"Using override opposite action: {namespace}.{action_name}({args})"
-        )
-        success = True
-        try:
-            action_func = getattr(getattr(actions, namespace), action_name)
-            action_func(*args)
-        except Exception as e:
-            actions.user.boolean_print("repeater", f"Failed to execute override: {e}")
-            success = False
-
-        # Log the reverse action
-        try:
-            parrot_logger.log_parrot_action(
-                "reverse", cmd_to_log, capture_to_log, success, confidence
-            )
-            if success:
-                log_parrot_command(f"{namespace}.{action_name}", sound=sound, action="reverse", confidence=confidence)
-        except Exception as e:
-            actions.user.boolean_print("repeater", f"Failed to log reverse action: {e}")
+        _consume_override("opposite", cmd_to_log, capture_to_log, confidence, sound)
         return
 
     # Use passed-in command or fall back to global

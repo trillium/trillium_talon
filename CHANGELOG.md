@@ -1,5 +1,59 @@
 # trillium_talon — Changelog
 
+## 2026-08-08
+
+Files: trillium/plugin/repeater/repeater_sleep.talon (new), trillium/plugin/repeater/sleep_clear_commands.talon (new), trillium/plugin/repeater/repeater.py, trillium/core/click_to_finish.py, .tests/test_repeater_sleep.py (new), .tests/test_click_to_finish.py (new), .tests/stubs/talon/grammar.py, .tests/stubs/talon/__init__.py, .tests/stubs/talon/scripting/types.py, .tests/stubs/talon/engines/w2l.py (new), .tests/stubs/talon_init.py (new)
+
+New `sleep_clear_commands.talon` authorizes exactly two voice commands —
+`destroy` (→ `user.clear_last_dictation()`) and `nuke left` (→
+`user.nuke_left()`, with the same aliases as rapid_delete.talon) — using the
+SAME matchers as repeater_sleep.talon (`mode: sleep` + `tag: user.parrot_on` +
+NOT pondering + NOT deep_sleep, every clause explicitly `and`'d). This lets the
+hands-free sleep loop discard text it just entered without waking Talon.
+
+Sleep-mode parrot sounds now consume repeater's armed overrides. New
+`repeater_sleep.talon` binds tongue-click → `user.repeater_sleep_repeat()` and
+kitty-cmere → `user.repeater_sleep_opposite()` while sleeping (`mode: sleep` +
+`tag: user.parrot_on` + NOT pondering + NOT deep_sleep, every clause explicitly
+`and`'d — same-type matchers OR by default, so un-AND'd tags would have matched
+during pondering and re-created the task-rg2q context-tie). Unlike the
+command-mode handlers, the sleep actions NEVER fall back to the last command:
+with no override armed the sound is ignored. This lets SuperWhisper dictation
+close and reopen from sleep via the follow-ups click_to_finish.py lines up
+(submit on repeat, re-enter pondering on opposite).
+
+click_to_finish.py: pondering exit now restores the pre-entry state instead of
+always returning to command mode. `enable()` captures whether Talon was asleep
+before `speech.disable()` drops it into mode:sleep; `disable()` returns to
+sleep (`speech.disable()`) if it started asleep, else to command mode. This
+makes the sleep-loop hands-free and symmetric: sleep → cmere → dictate →
+tongue-click (submit) → back to sleep.
+
+repeater.py: extracted the override-consumption path into `_consume_override()`,
+shared by `repeat_last_repeatable()`/`opposite()` and the two new sleep actions
+(no behavior change for command mode). Parrot logging is a no-op in sleep anyway
+(`log_parrot_command` gates on command/dictation modes).
+
+Tests: 12 new tests — 9 in `.tests/test_repeater_sleep.py` (armed/no-armed/
+no-fallback/persistence/debounce/dispatch-slot isolation) and 3 in
+`.tests/test_click_to_finish.py` (exit-to-command / exit-to-sleep / stale-state
+reset). Test harness: added `speech_system` stub, `talon.grammar.vm`
+(VMCapture/VMListCapture), `talon.engines.w2l` (DecodeWord/WordMeta),
+`CommandImpl`, and `talon_init.TALON_HOME` so the repeater import chain
+(→ command_logger → analyze_phrase) loads under pytest. Full suite: 105 passed;
+3 pre-existing failures in test_recall_overlay_persistent.py (test expects
+`on_mouse_persistent`, which doesn't exist in the module — unrelated to this
+change, recall files are mid-work).
+
+## 2026-08-03 — session 573726b5
+
+Files: trillium/plugin/mode_indicator/poll_usage.py
+## 2026-07-30 — session d29b1466
+
+Files: trillium/plugin/herder/herder_nav.talon
+## 2026-07-30 — session d0ad18fe
+
+Files: plugin/recall/herdr_tab_alias.talon-list, trillium/plugin/media/media.talon, trillium/microphone/change_mic.py
 ## 2026-07-23 — Edgar (task-ya0t, P1 regression)
 
 Files: trillium/plugin/herder/herder_nav.talon
