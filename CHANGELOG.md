@@ -1,5 +1,25 @@
 # trillium_talon — Changelog
 
+## 2026-08-08 — reverse sound reserved for re-launching pondering
+
+Files: trillium/plugin/repeater/repeater.py, trillium/plugin/repeater/repeater_sleep.talon, .tests/test_repeater_sleep.py
+
+Generalized the "no natural opposite → re-enter pondering" rule beyond the
+line-enders. Any action with no entry in `OPPOSITES` now uses the reverse
+sound (kitty-cmere) to re-launch pondering (`LINE_ENDER_REVERSE_ACTION`) instead
+of logging "No opposite defined" and no-op'ing — in command mode (`opposite()`)
+and from sleep (`repeater_sleep_opposite()`). In sleep mode cmere still
+consumes an ARMED opposite override first (and never executes the last
+command's opposite); only when nothing is armed does the sound re-launch
+pondering, so the hands-free loop stays live from a cold sleep:
+sleep → cmere → dictate → tongue-click submit → back to sleep.
+
+Tests: 3 updated, 2 added. `test_sleep_opposite_without_override_relaunches_pondering`
+replaces the old no-op assertion; new `test_sleep_opposite_without_override_ignores_stored_command`
+and `test_command_mode_opposite_no_mapping_relaunches_pondering`; the
+dispatch-by-sound test now asserts cmere doesn't consume the repeat slot.
+Full suite: 107 passed; 3 pre-existing recall failures unchanged.
+
 ## 2026-08-08
 
 Files: trillium/plugin/repeater/repeater_sleep.talon (new), trillium/plugin/repeater/sleep_clear_commands.talon (new), trillium/plugin/repeater/repeater.py, trillium/core/click_to_finish.py, .tests/test_repeater_sleep.py (new), .tests/test_click_to_finish.py (new), .tests/stubs/talon/grammar.py, .tests/stubs/talon/__init__.py, .tests/stubs/talon/scripting/types.py, .tests/stubs/talon/engines/w2l.py (new), .tests/stubs/talon_init.py (new)

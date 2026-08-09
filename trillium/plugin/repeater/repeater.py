@@ -221,18 +221,26 @@ class Actions:
             )
 
     def repeater_sleep_opposite():
-        """Sleep-mode opposite: consume only an ARMED override, never the last command.
+        """Sleep-mode opposite: consume an ARMED override; otherwise the reverse
+        sound is reserved for re-launching pondering.
 
-        Bound from repeater_sleep.talon while sleeping (kitty-cmere). Same
-        no-fallback rule as repeater_sleep_repeat.
+        Bound from repeater_sleep.talon while sleeping (kitty-cmere). Unlike
+        `repeater_sleep_repeat` it never falls back to the *last command* — but
+        when no override is armed, the reverse sound's job is to re-enter
+        pondering (LINE_ENDER_REVERSE_ACTION), so the hands-free loop stays live.
         """
         cmd_to_log = last_repeatable_cmd
         capture_to_log = last_repeatable_capture
         confidence = get_parrot_confidence()
-        if not _consume_override("opposite", cmd_to_log, capture_to_log, confidence, sound="cmere"):
-            actions.user.boolean_print(
-                "repeater", "Sleep opposite: no armed override — ignoring cmere"
-            )
+        if override_opposite_action:
+            _consume_override("opposite", cmd_to_log, capture_to_log, confidence, sound="cmere")
+            return
+        ns, action_name, args = LINE_ENDER_REVERSE_ACTION
+        actions.user.boolean_print(
+            "repeater",
+            f"Sleep opposite: no armed override — re-launching pondering ({ns}.{action_name})",
+        )
+        getattr(getattr(actions, ns), action_name)(*args)
 
 
 # Commands to exclude from repeater (raw dictation, etc)
@@ -741,10 +749,15 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None, sound="cmere
                 )
                 getattr(getattr(actions, ns), action_name)(*args)
             else:
+                # No reverse action defined for this command — the reverse sound
+                # is reserved for re-launching pondering (same as the line-enders,
+                # which also have no natural opposite).
+                ns, action_name, args = LINE_ENDER_REVERSE_ACTION
                 actions.user.boolean_print(
-                    "repeater", f"No opposite defined for: {command_name}"
+                    "repeater",
+                    f"No opposite defined for '{command_name}' — reverse -> re-launch pondering ({ns}.{action_name})",
                 )
-                success = False
+                getattr(getattr(actions, ns), action_name)(*args)
     except Exception as e:
         actions.user.boolean_print("repeater", f"Failed to execute opposite: {e}")
         success = False
