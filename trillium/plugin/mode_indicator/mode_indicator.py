@@ -89,6 +89,19 @@ mod.setting("mode_indicator_color_command", type=str)
 mod.setting("mode_indicator_color_other", type=str)
 mod.setting("mode_indicator_color_friction", type=str, default="7d0000", desc="Color when friction capture mode is active")
 mod.setting(
+    "mode_indicator_sheen",
+    type=bool,
+    default=True,
+    desc="If true, tint the WHOLE screen in the bar's override color (e.g. pondering purple) so a "
+         "highlighted mode reads screen-wide, not just in the top bar",
+)
+mod.setting(
+    "mode_indicator_sheen_alpha",
+    type=float,
+    default=0.22,
+    desc="Full-screen mode-sheen opacity in percentages(0-1). 0=invisible, 1=fully opaque",
+)
+mod.setting(
     "mode_indicator_bar_height",
     type=float,
     default=25,
@@ -193,6 +206,21 @@ def on_draw(c: SkiaCanvas):
     screen: Screen = ui.main_screen()
     rect = screen.rect
     scale = screen.scale if app.platform != "mac" else 1
+
+    # --- Full-screen mode sheen (drawn FIRST so bar/circle stay readable on top) ---
+    # When a mode sets a bar color override (pondering purple 7b2fff, friction red, ...) the
+    # top bar changes color; this tints the WHOLE screen that same color so the state reads
+    # screen-wide, not just in the bar. Keys off the exact same override source get_bar_color()
+    # uses, so trigger + color always match the bar with zero extra plumbing.
+    sheen_override = _state.get("bar_color_override")
+    if sheen_override and settings.get("user.mode_indicator_sheen"):
+        sheen_hex = str(sheen_override).lstrip("#")
+        sheen_alpha = max(0.0, min(1.0, settings.get("user.mode_indicator_sheen_alpha")))
+        c.paint.shader = None
+        c.paint.imagefilter = None
+        c.paint.style = c.paint.Style.FILL
+        c.paint.color = f"{sheen_hex}{int(sheen_alpha * 255):02x}"
+        c.draw_rect(rect)
 
     # --- Compute shared geometry ---
     bar_height = settings.get("user.mode_indicator_bar_height") * scale
