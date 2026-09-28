@@ -66,6 +66,9 @@ def build_state_doc(names, focused):
             apps.append(name)
         if len(apps) >= MAX_APPS:
             break
+    # Sorted: the OS order is arbitrary, and stable rows keep panel
+    # tap targets from jumping around between ticks.
+    apps.sort(key=str.casefold)
     return {"ts": time.time(), "apps": apps,
             "focused": clean_name(focused)}
 
