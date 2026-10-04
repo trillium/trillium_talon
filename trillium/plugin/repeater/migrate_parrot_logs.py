@@ -19,7 +19,6 @@ Changes from v1.0 to v1.1:
 import json
 from pathlib import Path
 
-
 PARROT_RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "parrot"
 BACKUP_DIR = PARROT_RECORDINGS_DIR / "_backup_v1.0"
 

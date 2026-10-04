@@ -53,9 +53,9 @@ key(f2:repeat):
     key(brightness_up)
 
 # key(f3): # mission control?
-# key(f4): # spotlight?                                                   
+# key(f4): # spotlight?
 # key(f5): # dictation?
-# key(f6): # do not disturb?  
+# key(f6): # do not disturb?
 
 key(f7): key(rewind)
 key(f8): key(play)

@@ -3,6 +3,7 @@ say_text_background - Run '/Users/trilliumsmith/bashrc_dir/public/SAY ' command 
 """
 
 import subprocess
+
 from talon import Module, cron
 
 mod = Module()
@@ -14,7 +15,9 @@ def say_background_process(text):
     """Run /Users/trilliumsmith/bashrc_dir/public/SAY  command in the background (non-blocking) and track process"""
 
     try:
-        proc = subprocess.Popen(["/Users/trilliumsmith/bashrc_dir/public/SAY", text], start_new_session=True)
+        proc = subprocess.Popen(
+            ["/Users/trilliumsmith/bashrc_dir/public/SAY", text], start_new_session=True
+        )
         _say_processes.append(proc)
     except FileNotFoundError as e:
         try:
@@ -69,8 +72,8 @@ class Actions:
         """Cancel all running /Users/trilliumsmith/bashrc_dir/public/SAY  processes"""
         cancel_say_processes()
 
+
 # Example usage in Talon REPL:
 # from trillium.speak_aloud import Actions
 # Actions.speak_aloud("Hello world")
 # Actions.speak_aloud_cancel()
-

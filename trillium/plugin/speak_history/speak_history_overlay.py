@@ -11,7 +11,13 @@ from talon import ui
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
-from ...utils.overlay_kit import DismissibleOverlay, draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
+from ...utils.overlay_kit import (
+    DismissibleOverlay,
+    draw_close_hint,
+    draw_dim_backdrop,
+    draw_panel_frame,
+    draw_separator,
+)
 from ...utils.overlay_selector import overlay_labels
 
 # ── Color palette (same teal / amber as speak_review) ──
@@ -68,8 +74,6 @@ HINTS = [
 
 TEXT_INDENT = 16
 LINE_HEIGHT = ENTRY_TEXT_SIZE + 4
-
-
 
 
 def _wrap_text(c: SkiaCanvas, text: str, max_width: float) -> list[str]:
@@ -220,7 +224,16 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     c.paint.color = TEXT_COLOR
     c.draw_text("Speak History", cx, cy + HEADER_SIZE)
 
-    draw_close_hint(c, '"spoken close"', HINT_DETAIL_SIZE, DIM_COLOR, main_x, main_y, main_w, PANEL_PAD)
+    draw_close_hint(
+        c,
+        '"spoken close"',
+        HINT_DETAIL_SIZE,
+        DIM_COLOR,
+        main_x,
+        main_y,
+        main_w,
+        PANEL_PAD,
+    )
     cy += HEADER_SIZE + 8
 
     # Subtitle

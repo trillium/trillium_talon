@@ -33,13 +33,14 @@ bd sync               # Sync with git
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 
-
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
+
 ## Beads Issue Tracker
 
 This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
@@ -73,16 +74,16 @@ python -m pytest test/ -v    # Run all tests
 
 Talon is a voice-coding framework with a custom Python runtime. Key concepts:
 
-| Concept | Description | How to test |
-|---------|-------------|-------------|
-| **Module** | Declares actions, lists, settings, tags, captures | Stubs auto-register actions |
-| **Context** | Activates based on OS, app, tags, modes | Set `Context.matches` in tests |
-| **Actions** | Named functions called by voice commands | `actions.register_test_action()` |
-| **Settings** | User-configurable values (`user.my_setting`) | `Settings.set("user.my_setting", val)` |
-| **Canvas** | Screen overlay for visual UI (uses Skia) | `Canvas.from_screen()` + mock Skia canvas |
-| **Cron** | Timer scheduling (`interval`, `after`) | `Cron.trigger(job_id)` fires manually |
-| **Noise/Parrot** | Mouth noise detection (pop, hiss) | `ParrotSystem.simulate_noise("pop")` |
-| **Clip** | Clipboard access | `Clip.set_text()` / `Clip.text()` |
+| Concept          | Description                                       | How to test                               |
+| ---------------- | ------------------------------------------------- | ----------------------------------------- |
+| **Module**       | Declares actions, lists, settings, tags, captures | Stubs auto-register actions               |
+| **Context**      | Activates based on OS, app, tags, modes           | Set `Context.matches` in tests            |
+| **Actions**      | Named functions called by voice commands          | `actions.register_test_action()`          |
+| **Settings**     | User-configurable values (`user.my_setting`)      | `Settings.set("user.my_setting", val)`    |
+| **Canvas**       | Screen overlay for visual UI (uses Skia)          | `Canvas.from_screen()` + mock Skia canvas |
+| **Cron**         | Timer scheduling (`interval`, `after`)            | `Cron.trigger(job_id)` fires manually     |
+| **Noise/Parrot** | Mouth noise detection (pop, hiss)                 | `ParrotSystem.simulate_noise("pop")`      |
+| **Clip**         | Clipboard access                                  | `Clip.set_text()` / `Clip.text()`         |
 
 ### Available Stubs
 
@@ -108,4 +109,5 @@ test/stubs/talon/
 └── scripting/
     └── types.py             # ListTypeFull
 ```
+
 <!-- END BEADS INTEGRATION -->

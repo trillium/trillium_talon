@@ -1,13 +1,13 @@
+import time
 from typing import Any
 
-from talon import Module, Context, app, cron, registry, scope, skia, ui, actions, ctrl
+from talon import Context, Module, actions, app, cron, ctrl, registry, scope, skia, ui
 from talon.canvas import Canvas, MouseEvent
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.skia.imagefilter import ImageFilter
-from talon.ui import Rect
 from talon.types.point import Point2d
-import time
+from talon.ui import Rect
 
 canvas: Canvas = None
 current_mode = ""
@@ -19,9 +19,7 @@ mod.list(
 
 ctx = Context()
 
-hex_points = {
-    "beep": "boop"
-}
+hex_points = {"beep": "boop"}
 
 cron_jobs = {}
 
@@ -36,7 +34,7 @@ GREEN = "ff1493"  # Green
 PINK = "ff1493"  # Pink
 BLUE = "0072b1"  # Blue
 RED = "ff1493"  # Red
-BORDER_COLOR =   "000000"  # Black
+BORDER_COLOR = "000000"  # Black
 WIDTH = 500
 HEIGHT = 500
 
@@ -51,6 +49,7 @@ BUTTON_FLAT_HEIGHT = BUTTON_RADIUS
 TRIGGER_HEIGHT = CIRCLE_RADIUS
 BUTTON_OFFSETS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
 
+
 def cron_bump():
     global cron_num
     cron_num += 1
@@ -58,13 +57,16 @@ def cron_bump():
         # actions.user.hud_add_log("warning", f"cron_num: {cron_num}")
         cron.after("1500ms", cron_bump)
 
+
 def cron_on():
     global CRON_ACTIVE
     CRON_ACTIVE = True
 
+
 def cron_off():
     global CRON_ACTIVE
     CRON_ACTIVE = False
+
 
 @ctx.action_class("user")
 class UserActions:
@@ -72,10 +74,12 @@ class UserActions:
         """hex hexhexhex"""
         actions.user.hud_add_log("warning", "hex-grid-active")
 
+
 def generate_coordinate_key(letter: str, color: str = "") -> str:
     """Generate a coordinate key"""
     # return f"{letter}{color}"
     return f"{letter}"
+
 
 def on_draw(c: SkiaCanvas):
     global cron_num
@@ -87,7 +91,6 @@ def on_draw(c: SkiaCanvas):
 
     c.paint.color = BLACK
     y_center = c.rect.center.y
-
 
     # Draw a a small circle at the mouse position
     c.paint.style = c.paint.Style.FILL
@@ -111,9 +114,9 @@ def on_draw(c: SkiaCanvas):
     #         vals.append(f"{row}{col}")
 
     # vals needs to be changed to a dictionary
-        # dictionary to have keys as the point names
-        # values as the point values
-    # 
+    # dictionary to have keys as the point names
+    # values as the point values
+    #
 
     ROW_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".lower()
     COL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".lower()
@@ -124,7 +127,7 @@ def on_draw(c: SkiaCanvas):
 
     # for row in range(0):
 
-    for runs_row, row in enumerate(range(-10,11)):
+    for runs_row, row in enumerate(range(-10, 11)):
         # Pick the first letter in the list first
         # Picks "A"
         row_letter = ROW_LETTERS[runs_row]
@@ -139,19 +142,18 @@ def on_draw(c: SkiaCanvas):
                 color = PINK
             if row_letter == "I":
                 color = PINK
-                
+
             # col_letter = COL_LETTERS[row_chooser + runs_col]
             col_letter = COL_LETTERS[runs_col]
 
-                
             key = f"{row_letter}{col_letter}"
             if row_letter == "I":
-                key= col_letter
+                key = col_letter
             if row_letter == "i":
-                key= col_letter
+                key = col_letter
             hex_points[key] = {
-                "coords": (mouse_x - ((col+1) * OFFSET), mouse_y + (row * OFFSET)),
-                "group": 0 if color == GREEN else 1
+                "coords": (mouse_x - ((col + 1) * OFFSET), mouse_y + (row * OFFSET)),
+                "group": 0 if color == GREEN else 1,
             }
 
             text = None if (cron_num + hex_points[key]["group"]) % 2 == 0 else key
@@ -161,9 +163,8 @@ def on_draw(c: SkiaCanvas):
 
             # render(c, _new_vals[key]["coords"], None, GREEN)
             render(c, hex_points[key]["coords"], text, color)
-            
 
-            col_letter = COL_LETTERS[runs_col ]
+            col_letter = COL_LETTERS[runs_col]
             if row_letter == "I":
                 color = BLUE
             if row_letter == "i":
@@ -171,39 +172,32 @@ def on_draw(c: SkiaCanvas):
 
             key = f"{col_letter}{row_letter}"
             if row_letter == "I":
-                key= col_letter
+                key = col_letter
             if row_letter == "i":
-                key= col_letter
+                key = col_letter
 
             hex_points[key] = {
-                "coords": (mouse_x + ((col+1) * OFFSET), mouse_y + (row * OFFSET)),
-                "group": 0 if color == GREEN else 1
+                "coords": (mouse_x + ((col + 1) * OFFSET), mouse_y + (row * OFFSET)),
+                "group": 0 if color == GREEN else 1,
             }
 
             # text = None
             # text = key
-            text = None if (cron_num +hex_points[key]["group"]) % 2 == 0 else key
+            text = None if (cron_num + hex_points[key]["group"]) % 2 == 0 else key
 
             # render(c, _new_vals[key]["coords"], None, GREEN)
             render(c, hex_points[key]["coords"], text, color)
-        
-
-            
-
 
             # "AB"   &   "BA"
             # "AC"   &   "CA"
             # "AD"   &   "DA"
 
-
-
             # Render dots from left to right
             # x, y = mouse_x + (i * OFFSET), mouse_y + (j * OFFSET)
             # render(c, (x,y), vals.pop(0), GREEN)
-            
+
             # x, y = mouse_x - (i * OFFSET), mouse_y + (j * OFFSET)
             # render(c, (x,y), vals.pop(0), GREEN)
-            
 
             # Render dots to the right of cursor
             # draw_dot(c, mouse_x + (i * OFFSET), mouse_y + (j * OFFSET), GREEN)
@@ -221,16 +215,15 @@ def on_draw(c: SkiaCanvas):
         key = f"{row_letter}"
         hex_points[key] = {
             "coords": (mouse_x + (0 * OFFSET), mouse_y + (row * OFFSET)),
-            "group": 1
+            "group": 1,
         }
 
         # text = None
-        text = None if (cron_num +hex_points[key]["group"]) % 2 == 0 else key
+        text = None if (cron_num + hex_points[key]["group"]) % 2 == 0 else key
 
         # render(c, _new_vals[key]["coords"], None, GREEN)
         render(c, hex_points[key]["coords"], text, PINK)
-        
-        
+
 
 # def get_mouse_position():
 #     mouse_x, mouse_y = ctrl.mouse_pos()
@@ -238,9 +231,10 @@ def on_draw(c: SkiaCanvas):
 
 
 def get_mouse_position():
-    '''returns (x, y) mouse position'''
+    """returns (x, y) mouse position"""
     mouse_x, mouse_y = ctrl.mouse_pos()
     return mouse_x, mouse_y
+
 
 def draw_dot(
     c: SkiaCanvas,
@@ -248,7 +242,7 @@ def draw_dot(
     y: float,
     color: str = GREEN,
     stroke: bool = True,
-):  
+):
     c.paint.style = c.paint.Style.FILL
     c.paint.color = color
     c.draw_circle(x, y, CIRCLE_RADIUS / 2)
@@ -256,6 +250,7 @@ def draw_dot(
         c.paint.style = c.paint.Style.STROKE
         c.paint.color = BLACK
         c.draw_circle(x, y, CIRCLE_RADIUS / 2)
+
 
 def draw_text(
     c: SkiaCanvas,
@@ -274,12 +269,13 @@ def draw_text(
         y + CIRCLE_RADIUS,
     )
 
+
 def render(
-        c: SkiaCanvas,
-        coords: (float, float),
-        text: str=None,
-        color: str=GREEN,
-        stroke: bool=True,
+    c: SkiaCanvas,
+    coords: (float, float),
+    text: str = None,
+    color: str = GREEN,
+    stroke: bool = True,
 ):
     x, y = coords
     c.paint.style = c.paint.Style.FILL
@@ -311,12 +307,14 @@ def render(
 # def rango_hint_double(m) -> str:
 #     return m.letter + m.letter
 
+
 @mod.capture(rule="<user.letter> | <user.letter> <user.letter>")
 def hex_target(m) -> str:
     "Multiple letter keys"
     # val = "".join(m.letter_list)
     # actions.user.hud_add_log("event", "capture: " + str(val))
     return "".join(m.letter_list)
+
 
 def on_mouse(e: MouseEvent):
     global last_mouse_pos
@@ -329,6 +327,7 @@ def on_mouse(e: MouseEvent):
         canvas.move(canvas.rect.x + dx, canvas.rect.y + dy)
     elif e.event == "mouseup" and e.button == 0:
         last_mouse_pos = None
+
 
 def hex_grid_show():
     """Toggle visibility of hex grid"""
@@ -350,6 +349,7 @@ def hex_grid_show():
     cron_bump()
     # cron_num_job = cron.after("1s", lambda: cron_num = True)
 
+
 def hex_grid_hide():
     """Toggle visibility of gamepad tester gui"""
     global canvas
@@ -359,7 +359,7 @@ def hex_grid_hide():
     canvas.unregister("mouse", on_mouse)
     canvas.close()
     canvas = None
-    ctx.tags = []      
+    ctx.tags = []
     cron_off()
 
 
@@ -377,7 +377,7 @@ class Actions:
             hex_grid_show()
         else:
             hex_grid_hide()
-        
+
     def hex_grid():
         """hex_grid"""
 
@@ -387,19 +387,19 @@ class Actions:
     # def test_test(m) -> list[str]:
     def test_test(m: str) -> str:
         """Returns a list of letters"""
-        global hex_points    
+        global hex_points
         out = "".join(m)
         try:
             point = hex_points[out]
             # x,y = hex_points['coords'](m)
             # stringy = str(point.keys())
-            x,y = point['coords']
+            x, y = point["coords"]
             actions.mouse_move(x, y)
             # actions.user.hud_add_log("success", stringy)
 
-            x,y = str(x), str(y)
+            x, y = str(x), str(y)
         except:
-            x,y = None, None
+            x, y = None, None
             # actions.user.hud_add_log("warning", "except")
         if x and y:
             # actions.user.hud_add_log("success", "test_test: " + out + " " + x + " " + y)
@@ -412,12 +412,9 @@ class Actions:
 
     def hex_grid_show():
         """Hex grid on"""
-        
+
     def hex_grid_hide():
         """Hex grid off"""
-        
-        
 
     def cron_experiment():
-        '''Cron experiment'''
-        
+        """Cron experiment"""

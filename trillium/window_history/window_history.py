@@ -12,12 +12,15 @@ front), so we use index arithmetic rather than freezing the array:
   Backward: index = total_navs - (depth - 1)
 """
 
-from talon import Module, Context, actions, app, cron, ui
+from talon import Context, Module, actions, app, cron, ui
 
 from . import window_overlay
 
 mod = Module()
-mod.tag("window_browsing", desc="Active after lasty — 'next'/'previous' navigate window history")
+mod.tag(
+    "window_browsing",
+    desc="Active after lasty — 'next'/'previous' navigate window history",
+)
 
 toggle_ctx = Context()
 
@@ -27,8 +30,8 @@ HISTORY_SIZE = 30
 window_history = []
 
 # Browsing state
-_depth = 0          # position in the original history (0 = starting window)
-_total_navs = 0     # number of focus changes since lasty
+_depth = 0  # position in the original history (0 = starting window)
+_total_navs = 0  # number of focus changes since lasty
 _timeout_job = None
 BROWSE_TIMEOUT_MS = 3500
 

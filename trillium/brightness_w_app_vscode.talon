@@ -3,9 +3,3 @@ penguin penguin three second sleep:
 
 penguin penguin short sleep:
     sleep(1)
-
-
-
-    
-
-

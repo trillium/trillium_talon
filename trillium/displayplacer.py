@@ -1,8 +1,10 @@
-_V = "0.0.1"; print(f"[v{_V}] {__name__}")
+_V = "0.0.1"
+print(f"[v{_V}] {__name__}")
 
 import json
 import subprocess
 from pathlib import Path
+
 from talon import Module, actions, imgui
 
 mod = Module()
@@ -20,6 +22,7 @@ def gui_profiles(gui: imgui.GUI):
     if gui.button("Close"):
         gui_profiles.hide()
 
+
 TAG = "displayplacer"
 PROFILES_DIR = Path.home() / ".config" / "displayplacer"
 
@@ -30,9 +33,7 @@ def _ensure_profiles_dir():
 
 def _get_current_command() -> str:
     """Run displayplacer list and extract the command at the bottom."""
-    result = subprocess.run(
-        ["displayplacer", "list"], capture_output=True, text=True
-    )
+    result = subprocess.run(["displayplacer", "list"], capture_output=True, text=True)
     lines = result.stdout.strip().splitlines()
     for line in reversed(lines):
         line = line.strip()
@@ -53,7 +54,9 @@ class Actions:
         _ensure_profiles_dir()
         cmd = _get_current_command()
         if not cmd:
-            actions.user.notify("Could not read current display config", level=2, duration=3)
+            actions.user.notify(
+                "Could not read current display config", level=2, duration=3
+            )
             return
         profile_path = PROFILES_DIR / f"{name}.json"
         profile_path.write_text(json.dumps({"name": name, "command": cmd}, indent=2))
@@ -64,7 +67,9 @@ class Actions:
         """Load and apply a named display profile"""
         profile_path = PROFILES_DIR / f"{name}.json"
         if not profile_path.exists():
-            actions.user.notify(f"Display profile '{name}' not found", level=2, duration=3)
+            actions.user.notify(
+                f"Display profile '{name}' not found", level=2, duration=3
+            )
             print(f"[{TAG}] Profile not found: {name}")
             return
         data = json.loads(profile_path.read_text())
@@ -89,7 +94,9 @@ class Actions:
         """Delete a saved display profile"""
         profile_path = PROFILES_DIR / f"{name}.json"
         if not profile_path.exists():
-            actions.user.notify(f"Display profile '{name}' not found", level=2, duration=3)
+            actions.user.notify(
+                f"Display profile '{name}' not found", level=2, duration=3
+            )
             return
         profile_path.unlink()
         print(f"[{TAG}] Deleted profile '{name}'")

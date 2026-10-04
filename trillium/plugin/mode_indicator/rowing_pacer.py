@@ -41,7 +41,14 @@ class BorderPath:
     Then teleports back to start.
     """
 
-    def __init__(self, bar_left: float, bar_top: float, bar_right: float, bar_height: float, radius: float = 8):
+    def __init__(
+        self,
+        bar_left: float,
+        bar_top: float,
+        bar_right: float,
+        bar_height: float,
+        radius: float = 8,
+    ):
         self.bx = bar_left
         self.by = bar_top
         self.bw = bar_right - bar_left

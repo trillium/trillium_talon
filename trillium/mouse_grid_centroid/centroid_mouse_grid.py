@@ -9,8 +9,8 @@
 import math
 from typing import Union
 
-from talon import Context, Module, actions, canvas, cron, ctrl, screen, settings, ui
 from skia import Paint, Rect
+from talon import Context, Module, actions, canvas, cron, ctrl, screen, settings, ui
 from talon.types.point import Point2d
 
 mod = Module()
@@ -60,6 +60,7 @@ COLOR_CROSS = LIGHT_GREEN
 COLOR_ACTIVE_GRID = RED
 COLOR_INACTIVE_GRID = BLACK
 
+
 class MouseSnapNine:
     def __init__(self):
         self.screen = None
@@ -81,7 +82,7 @@ class MouseSnapNine:
         self.max_zoom = 3
         self.chars_map = {key: val for val, key in enumerate(self.chars, start=1)}
 
-        self.outArray = [] # diagnostics
+        self.outArray = []  # diagnostics
 
     def setup(self, *, rect: Rect = None, screen_num: int = None):
         screens = ui.screens()
@@ -150,7 +151,7 @@ class MouseSnapNine:
     def draw(self, canvas):
         paint = canvas.paint
 
-        self.outArray  = [f"mouse position: {ctrl.mouse_pos()}"] + self.outArray
+        self.outArray = [f"mouse position: {ctrl.mouse_pos()}"] + self.outArray
         self.outArray = [""] + self.outArray
 
         def draw_grid(offset_x, offset_y, width, height):
@@ -176,7 +177,7 @@ class MouseSnapNine:
                     offset_y + line_horz * height // self.cols,
                 )
                 lines.append(text)
-            self.outArray = lines + self.outArray            
+            self.outArray = lines + self.outArray
 
         def draw_crosses(offset_x, offset_y, width, height):
             for row in range(0, 2):
@@ -225,8 +226,8 @@ class MouseSnapNine:
             # Draw the circle
             # canvas.draw_circle(Point2d(center_x, center_y), 5, paint)  # 5 is the radius of the circle
             canvas.draw_circle(center_x, center_y, 3)
-            self.outArray  = [""] + self.outArray
-            self.outArray  = [f"draw dot      : {center_x}, {center_y}"] + self.outArray
+            self.outArray = [""] + self.outArray
+            self.outArray = [f"draw dot      : {center_x}, {center_y}"] + self.outArray
 
         if self.count < 2:
             paint.color = COLOR_CROSS
@@ -277,7 +278,7 @@ class MouseSnapNine:
     def calc_narrow(self, boxes, rect):
         rect = rect.copy()
         # bdr = narrow_expansion.get()
-        bdr = settings.get('user.grid_narrow_expansion')
+        bdr = settings.get("user.grid_narrow_expansion")
         bdr = 25
 
         x_list = []
@@ -326,7 +327,7 @@ class MouseSnapNine:
         else:
             self.mcanvas.freeze()
 
-        # Append the contents of rect.center to the output object        
+        # Append the contents of rect.center to the output object
         boxes_str = ", ".join(self.chars[i - 1].upper() for i in boxes)
         # Convert the properties of rect to a string
         rect_str = f"\n  x: {rect.x}, \n  y: {rect.y}, \n  width: {rect.width}, \n  height: {rect.height}, \n  center: {rect.center}"
@@ -434,7 +435,7 @@ class GridActions:
     def centroid_grid_is_active():
         """check if grid is already active"""
         return mg.active
-    
+
     def centroid_update_screenshot():
         """Updates the screenshot"""
         mg.update_screenshot()

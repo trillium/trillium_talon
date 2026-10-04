@@ -1,5 +1,6 @@
-from talon import Context, Module, actions, speech_system
 from typing import Any
+
+from talon import Context, Module, actions, speech_system
 
 mod = Module()
 ctx = Context()
@@ -16,7 +17,9 @@ last_cursorless_modifiers = None
 
 @mod.action_class
 class Actions:
-    def cursorless_same_target(new_target: Any):  # pyright: ignore [reportGeneralTypeIssues]
+    def cursorless_same_target(
+        new_target: Any,
+    ):  # pyright: ignore [reportGeneralTypeIssues]
         """Repeat the last Cursorless action with a new target"""
         # Default implementation (will be overridden by context)
         pass
@@ -89,7 +92,9 @@ speech_system.register("post:phrase", on_post_phrase)
 
 @ctx.action_class("user")
 class UserActions:
-    def cursorless_same_target(new_target: Any):  # pyright: ignore [reportGeneralTypeIssues]
+    def cursorless_same_target(
+        new_target: Any,
+    ):  # pyright: ignore [reportGeneralTypeIssues]
         """Repeat the last Cursorless action with a new target"""
         global last_cursorless_instruction, last_cursorless_modifiers
 

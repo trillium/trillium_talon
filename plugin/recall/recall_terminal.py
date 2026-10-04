@@ -9,13 +9,21 @@ Self-contained module for terminal-related utilities:
 
 import os
 import re
+
 from talon import ui
 
 # Known terminal app names for path detection
 TERMINAL_APPS = {
-    "Gnome-terminal", "Mate-terminal", "kitty", "Alacritty",
-    "foot", "xfce4-terminal", "Terminator", "Tilix",
-    "Terminal", "iTerm2",
+    "Gnome-terminal",
+    "Mate-terminal",
+    "kitty",
+    "Alacritty",
+    "foot",
+    "xfce4-terminal",
+    "Terminator",
+    "Tilix",
+    "Terminal",
+    "iTerm2",
 }
 
 

@@ -51,12 +51,16 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     cmd_header_h = ROW_HEIGHT
     panel_h = (
         PANEL_PAD * 2
-        + HEADER_SIZE + 16                          # header + gap
-        + ROW_HEIGHT * settings_rows + 8             # settings rows
-        + separator_gap                              # separator
-        + cmd_header_h                               # "Commands" sub-header
-        + ROW_HEIGHT * len(COMMANDS) + 4             # command rows
-        + 16 + HINT_SIZE                             # timeout hint
+        + HEADER_SIZE
+        + 16  # header + gap
+        + ROW_HEIGHT * settings_rows
+        + 8  # settings rows
+        + separator_gap  # separator
+        + cmd_header_h  # "Commands" sub-header
+        + ROW_HEIGHT * len(COMMANDS)
+        + 4  # command rows
+        + 16
+        + HINT_SIZE  # timeout hint
     )
 
     # Measure widths for two-column command table
@@ -115,7 +119,9 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
 
     # Separator
     y += separator_gap // 2
-    draw_separator(c, panel_x + PANEL_PAD, panel_x + panel_w - PANEL_PAD, y, PANEL_BORDER)
+    draw_separator(
+        c, panel_x + PANEL_PAD, panel_x + panel_w - PANEL_PAD, y, PANEL_BORDER
+    )
 
     # Commands sub-header
     y += cmd_header_h

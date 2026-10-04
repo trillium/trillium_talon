@@ -7,16 +7,18 @@ Extracts raw spoken words, per-command breakdown, and capture mappings
 from the Talon Phrase object passed to speech_system hooks.
 """
 
-from talon import actions, speech_system, registry
-from talon.grammar import Phrase, Capture
-from talon.grammar.vm import VMListCapture, VMCapture
-from talon.engines.w2l import DecodeWord, WordMeta
-from talon.scripting.types import CommandImpl
-from talon_init import TALON_HOME
-from typing import Optional
 import os
 import re
-from .types import AnalyzedPhrase, AnalyzedCommand, AnalyzedCapture, AnalyzedWord
+from typing import Optional
+
+from talon import actions, registry, speech_system
+from talon.engines.w2l import DecodeWord, WordMeta
+from talon.grammar import Capture, Phrase
+from talon.grammar.vm import VMCapture, VMListCapture
+from talon.scripting.types import CommandImpl
+from talon_init import TALON_HOME
+
+from .types import AnalyzedCapture, AnalyzedCommand, AnalyzedPhrase, AnalyzedWord
 
 SIM_RE = re.compile(r"""(?:\[\d+] "[^"]+"\s+path: ([^\n]+)\s+rule: "([^"]+))+""")
 

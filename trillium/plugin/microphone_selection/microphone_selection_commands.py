@@ -1,4 +1,5 @@
 """Microphone selection voice command actions."""
+
 from talon import Module
 
 from . import microphone_selection_overlay

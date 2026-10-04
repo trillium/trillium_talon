@@ -31,10 +31,12 @@ def get_recent_commands(limit: int = 10) -> list[dict]:
         for line in reversed(lines[-limit:]):
             try:
                 data = json.loads(line)
-                commands.append({
-                    "timestamp": data.get("timestamp", ""),
-                    "trigger": data.get("trigger", ""),
-                })
+                commands.append(
+                    {
+                        "timestamp": data.get("timestamp", ""),
+                        "trigger": data.get("trigger", ""),
+                    }
+                )
             except Exception:
                 pass
         return commands[:limit]

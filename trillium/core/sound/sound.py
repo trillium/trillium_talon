@@ -2,6 +2,7 @@ from talon import Context, Module, actions
 
 mod = Module()
 
+
 @mod.action_class
 class Actions:
     def volume_up():

@@ -6,6 +6,7 @@ escape key, X close hint, auto-hide timer.
 """
 
 from typing import Callable, Optional
+
 from talon import Context, Module, cron, skia, ui
 from talon.canvas import Canvas, MouseEvent
 from talon.screen import Screen
@@ -78,7 +79,9 @@ def draw_dim_backdrop(c: SkiaCanvas, screen_rect: Rect, color: str = "000000cc")
     """Draw a full-screen semi-transparent backdrop."""
     c.paint.style = c.paint.Style.FILL
     c.paint.color = color
-    c.draw_rect(Rect(screen_rect.x, screen_rect.y, screen_rect.width, screen_rect.height))
+    c.draw_rect(
+        Rect(screen_rect.x, screen_rect.y, screen_rect.width, screen_rect.height)
+    )
 
 
 def draw_separator(c: SkiaCanvas, x1: float, x2: float, y: float, color: str):
@@ -150,11 +153,24 @@ class DismissibleOverlay:
         if self._canvas:
             self._canvas.freeze()
 
-    def draw_close_hint(self, c: SkiaCanvas, panel_x: float, panel_y: float, panel_w: float, panel_pad: float):
+    def draw_close_hint(
+        self,
+        c: SkiaCanvas,
+        panel_x: float,
+        panel_y: float,
+        panel_w: float,
+        panel_pad: float,
+    ):
         """Draw the X close hint in the top-right of the panel."""
         draw_close_hint(
-            c, self._close_hint_text, self._close_hint_size,
-            self._close_hint_color, panel_x, panel_y, panel_w, panel_pad,
+            c,
+            self._close_hint_text,
+            self._close_hint_size,
+            self._close_hint_color,
+            panel_x,
+            panel_y,
+            panel_w,
+            panel_pad,
         )
 
     def _on_draw(self, c: SkiaCanvas):

@@ -24,12 +24,14 @@ def parse_startup_warnings(log_content: str) -> list[dict]:
         # Python warnings: WARNING /path/file.py:123: SyntaxWarning: message
         match = re.match(r".*WARNING\s+([^:]+):(\d+):\s+(\w+Warning):\s+(.+)", line)
         if match:
-            warnings.append({
-                "type": match.group(3),
-                "file": match.group(1),
-                "line": int(match.group(2)),
-                "message": match.group(4).strip(),
-            })
+            warnings.append(
+                {
+                    "type": match.group(3),
+                    "file": match.group(1),
+                    "line": int(match.group(2)),
+                    "message": match.group(4).strip(),
+                }
+            )
 
     return warnings
 
@@ -41,13 +43,17 @@ def parse_startup_errors(log_content: str) -> list[dict]:
 
     for i, line in enumerate(lines):
         # TalonScript parse errors
-        parse_match = re.search(r'ERROR Failed to parse TalonScript in "([^"]+)" for "([^"]+)"', line)
+        parse_match = re.search(
+            r'ERROR Failed to parse TalonScript in "([^"]+)" for "([^"]+)"', line
+        )
         if parse_match:
-            errors.append({
-                "type": "parse",
-                "file": parse_match.group(1),
-                "message": f'Failed to parse command "{parse_match.group(2)}"',
-            })
+            errors.append(
+                {
+                    "type": "parse",
+                    "file": parse_match.group(1),
+                    "message": f'Failed to parse command "{parse_match.group(2)}"',
+                }
+            )
             continue
 
         # Callback errors
@@ -59,10 +65,12 @@ def parse_startup_errors(log_content: str) -> list[dict]:
                 if re.match(r"^[A-Z][a-zA-Z]*Error:", lines[j]):
                     error_msg = lines[j].strip()
                     break
-            errors.append({
-                "type": "callback",
-                "message": error_msg,
-            })
+            errors.append(
+                {
+                    "type": "callback",
+                    "message": error_msg,
+                }
+            )
             continue
 
     return errors
@@ -89,7 +97,9 @@ def get_startup_log_content() -> str:
         if idx > last_start:
             last_start = idx
 
-    return content[last_start:] if last_start > 0 else content[-50000:]  # Last 50KB if no marker
+    return (
+        content[last_start:] if last_start > 0 else content[-50000:]
+    )  # Last 50KB if no marker
 
 
 def parse_summary_counts(log_content: str) -> tuple[int, int]:
@@ -132,7 +142,9 @@ def write_startup_status():
 
         # Also save to history
         STATUS_HISTORY_DIR.mkdir(exist_ok=True)
-        history_file = STATUS_HISTORY_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        history_file = (
+            STATUS_HISTORY_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         history_file.write_text(json.dumps(status, indent=2))
 
         # Clean up old history files (keep last 20)
@@ -143,7 +155,7 @@ def write_startup_status():
         if errors or warnings:
             app.notify(
                 f"Startup: {error_count} error(s), {warning_count} warning(s)",
-                "See ~/.talon/startup_status.json for details"
+                "See ~/.talon/startup_status.json for details",
             )
     except Exception as e:
         print(f"Failed to write startup status: {e}")

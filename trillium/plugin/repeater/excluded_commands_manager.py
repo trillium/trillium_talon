@@ -2,6 +2,7 @@
 
 import csv
 from pathlib import Path
+
 from talon import Module, actions, app
 
 mod = Module()

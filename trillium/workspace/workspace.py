@@ -1,4 +1,5 @@
-_V = "0.0.3"; print(f"[v{_V}] {__name__}")
+_V = "0.0.3"
+print(f"[v{_V}] {__name__}")
 
 """
 Workspace Registry - Register, alias, and open VSCode workspaces by voice.
@@ -14,7 +15,8 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import unquote, urlparse
-from talon import Module, Context, actions, app, fs, ui
+
+from talon import Context, Module, actions, app, fs, ui
 
 mod = Module()
 ctx = Context()
@@ -109,7 +111,9 @@ def _find_vscode_window(workspace_name: str):
 
     Title format: '... — <workspace_name> — Visual Studio Code — ...'
     """
-    name_lower = workspace_name.lower().replace(" ", "").replace("-", "").replace("_", "")
+    name_lower = (
+        workspace_name.lower().replace(" ", "").replace("-", "").replace("_", "")
+    )
     for w in ui.windows():
         if w.app.name != "Code":
             continue
@@ -117,7 +121,9 @@ def _find_vscode_window(workspace_name: str):
         for i, part in enumerate(parts):
             if "Visual Studio Code" in part and i > 0:
                 candidate = parts[i - 1].strip()
-                candidate_norm = candidate.lower().replace(" ", "").replace("-", "").replace("_", "")
+                candidate_norm = (
+                    candidate.lower().replace(" ", "").replace("-", "").replace("_", "")
+                )
                 if candidate_norm == name_lower:
                     return w
     return None
@@ -145,7 +151,9 @@ def _workspace_name_from_title() -> str:
 
 
 # VSCode state DB location on macOS
-_VSCODE_STATE_DB = Path.home() / "Library/Application Support/Code/User/globalStorage/state.vscdb"
+_VSCODE_STATE_DB = (
+    Path.home() / "Library/Application Support/Code/User/globalStorage/state.vscdb"
+)
 
 
 def _get_recent_paths_from_vscode() -> list:
@@ -187,7 +195,9 @@ def _get_current_workspace_path() -> str:
     recent = _get_recent_paths_from_vscode()
     name_lower = name.lower().replace(" ", "").replace("-", "").replace("_", "")
     for path in recent:
-        folder_name = Path(path).name.lower().replace(" ", "").replace("-", "").replace("_", "")
+        folder_name = (
+            Path(path).name.lower().replace(" ", "").replace("-", "").replace("_", "")
+        )
         if folder_name == name_lower:
             print(f"[workspace] Matched: {path}")
             return path
@@ -294,7 +304,9 @@ class Actions:
                 break
 
         if not found_key:
-            actions.user.notify("Current workspace not in registry", level=2, duration=3)
+            actions.user.notify(
+                "Current workspace not in registry", level=2, duration=3
+            )
             return
 
         actions.user.workspace_remove_by_alias(found_key)

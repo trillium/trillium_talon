@@ -1,9 +1,15 @@
 """Twitch Helix API client for stream status queries and channel management."""
+
 import json as _json
 from dataclasses import dataclass
 from typing import Optional
 
-from user.trillium_talon.trillium.plugin.twitch.twitch_auth import get_bearer_token, get_client_id, http_request, refresh_oauth_token
+from user.trillium_talon.trillium.plugin.twitch.twitch_auth import (
+    get_bearer_token,
+    get_client_id,
+    http_request,
+    refresh_oauth_token,
+)
 
 
 @dataclass

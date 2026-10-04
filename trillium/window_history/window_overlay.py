@@ -90,7 +90,9 @@ def _on_draw(c: SkiaCanvas):
         pill_w = text_w + PILL_H_PAD * 2
         measurements.append((label, pill_w, text_w))
 
-    total_w = sum(pw for _, pw, _ in measurements) + ITEM_GAP * max(len(measurements) - 1, 0)
+    total_w = sum(pw for _, pw, _ in measurements) + ITEM_GAP * max(
+        len(measurements) - 1, 0
+    )
     max_bar_w = rect.width * 0.6
 
     # Truncate if too wide, show overflow count
@@ -102,11 +104,7 @@ def _on_draw(c: SkiaCanvas):
         overflow_label = f"+{overflow}"
         overflow_tw = c.paint.measure_text(overflow_label)[1].width
         overflow_pw = overflow_tw + PILL_H_PAD * 2
-        total_w = (
-            sum(m[1] for _, m in display)
-            + ITEM_GAP * len(display)
-            + overflow_pw
-        )
+        total_w = sum(m[1] for _, m in display) + ITEM_GAP * len(display) + overflow_pw
 
     bar_w = total_w + BAR_H_PAD * 2
     bar_x = rect.left + (rect.width - bar_w) / 2

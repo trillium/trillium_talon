@@ -1,4 +1,5 @@
 """Drawing functions for the mic selection overlay."""
+
 from talon import ui
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
@@ -73,8 +74,13 @@ def _draw_excluded_section(c, excluded, start_y, panel_x):
     return y
 
 
-def draw_overlay(c: SkiaCanvas, overlay: DismissibleOverlay,
-                 mics: list[str], excluded: list[str], active: str):
+def draw_overlay(
+    c: SkiaCanvas,
+    overlay: DismissibleOverlay,
+    mics: list[str],
+    excluded: list[str],
+    active: str,
+):
     """Main draw function for the mic selection overlay."""
     screen = ui.main_screen()
     rect = screen.rect
@@ -95,9 +101,13 @@ def draw_overlay(c: SkiaCanvas, overlay: DismissibleOverlay,
     if excluded:
         excluded_h = 12 + HINT_SIZE + 8 + (ROW_HEIGHT - 8) * len(excluded)
     panel_h = (
-        PANEL_PAD * 2 + HEADER_SIZE + 8
-        + ROW_HEIGHT * len(mics) + excluded_h
-        + 20 + HINT_SIZE
+        PANEL_PAD * 2
+        + HEADER_SIZE
+        + 8
+        + ROW_HEIGHT * len(mics)
+        + excluded_h
+        + 20
+        + HINT_SIZE
     )
 
     panel_x = rect.x + (rect.width - panel_w) / 2

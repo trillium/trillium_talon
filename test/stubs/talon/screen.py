@@ -12,16 +12,29 @@ class Screen:
         self.width = width
         self.height = height
         self.dpi = dpi
-        self.visible_rect = type("rect", (), {
-            "x": x, "y": y, "width": width, "height": height,
-        })()
+        self.visible_rect = type(
+            "rect",
+            (),
+            {
+                "x": x,
+                "y": y,
+                "width": width,
+                "height": height,
+            },
+        )()
 
     @property
     def rect(self):
-        return type("rect", (), {
-            "x": self.x, "y": self.y,
-            "width": self.width, "height": self.height,
-        })()
+        return type(
+            "rect",
+            (),
+            {
+                "x": self.x,
+                "y": self.y,
+                "width": self.width,
+                "height": self.height,
+            },
+        )()
 
 
 # Default screen list for testing

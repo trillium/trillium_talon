@@ -52,7 +52,9 @@ def _get_listening_ports() -> dict[int, list[int]]:
     try:
         out = subprocess.check_output(
             ["lsof", "-iTCP", "-sTCP:LISTEN", "-nP", "-F", "pcn"],
-            text=True, timeout=5, stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=5,
+            stderr=subprocess.DEVNULL,
         )
         current_pid = None
         for line in out.strip().split("\n"):
@@ -69,7 +71,7 @@ def _get_listening_ports() -> dict[int, list[int]]:
                 colon = addr.rfind(":")
                 if colon >= 0:
                     try:
-                        port = int(addr[colon + 1:])
+                        port = int(addr[colon + 1 :])
                         pid_ports.setdefault(current_pid, []).append(port)
                     except ValueError:
                         pass
@@ -85,7 +87,9 @@ def _get_processes() -> list[ProcessRow]:
     try:
         out = subprocess.check_output(
             ["ps", "-eo", "pid,pcpu,rss,comm"],
-            text=True, timeout=5, stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=5,
+            stderr=subprocess.DEVNULL,
         )
     except (subprocess.SubprocessError, FileNotFoundError):
         return []

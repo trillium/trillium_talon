@@ -12,8 +12,13 @@ import os
 
 from talon import Module, actions, clip, cron, ui
 
-from .window_tracker import snapshot_windows, poll_for_new_window
-from .readiness_poller import record_titles, poll_for_stability, poll_for_marker, HAPPY_MARKER
+from .readiness_poller import (
+    HAPPY_MARKER,
+    poll_for_marker,
+    poll_for_stability,
+    record_titles,
+)
+from .window_tracker import poll_for_new_window, snapshot_windows
 
 TERMINAL_BUNDLE = "com.apple.Terminal"
 
@@ -74,7 +79,9 @@ class Actions:
 
     def happy_launch_prompt_and_close():
         """Full lifecycle: launch → happy → prompt → 2s → close"""
-        actions.user.happy_run_full("/tmp", "please just chill for a minute, gonna close you", close_after_s=2)
+        actions.user.happy_run_full(
+            "/tmp", "please just chill for a minute, gonna close you", close_after_s=2
+        )
 
     def happy_run_full(directory: str, prompt: str, close_after_s: int = 0):
         """Launch happy in a directory, inject prompt, optionally close after N seconds"""
@@ -98,7 +105,9 @@ class Actions:
                     actions.sleep("200ms")
                     _inject_prompt(prompt, app, window)
                     if close_after_s > 0:
-                        cron.after(f"{close_after_s}s", lambda: _close_window(app, window))
+                        cron.after(
+                            f"{close_after_s}s", lambda: _close_window(app, window)
+                        )
 
                 poll_for_marker(app, window, HAPPY_MARKER, on_happy_ready)
 

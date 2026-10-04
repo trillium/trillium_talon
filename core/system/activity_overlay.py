@@ -87,6 +87,7 @@ def kill_by_index(n: int) -> tuple[bool, str]:
 
 # ── Drawing callback ──
 
+
 def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     draw_panel(c, overlay, _rows, _sort_mode, _killed_index, _kill_message)
 
@@ -102,7 +103,9 @@ def _on_overlay_hide():
         _on_hide_callback()
 
 
-_overlay = DismissibleOverlay(on_draw=_on_draw, auto_hide="30s", on_hide=_on_overlay_hide)
+_overlay = DismissibleOverlay(
+    on_draw=_on_draw, auto_hide="30s", on_hide=_on_overlay_hide
+)
 
 
 def set_on_hide(callback):
@@ -112,6 +115,7 @@ def set_on_hide(callback):
 
 
 # ── Auto-refresh ──
+
 
 def _start_auto_refresh():
     global _auto_refresh_job
@@ -128,18 +132,22 @@ def _stop_auto_refresh():
 
 # ── Public API ──
 
+
 def show():
     gather()
     _overlay.show()
     _start_auto_refresh()
 
+
 def hide():
     _stop_auto_refresh()
     _overlay.hide()
 
+
 def refresh():
     gather()
     _overlay.freeze()
+
 
 def is_showing() -> bool:
     return _overlay.is_showing

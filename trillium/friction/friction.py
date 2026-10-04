@@ -76,7 +76,9 @@ class Actions:
         if state.pending_scope and not state.current_issue_id:
             scope, needs_review, _ = state.pending_scope
             context = state.pending_context or ""  # may not be ready yet
-            state.current_issue_id = ops.create_issue(text, context, scope, needs_review)
+            state.current_issue_id = ops.create_issue(
+                text, context, scope, needs_review
+            )
             print(f"[friction] Created issue: {state.current_issue_id}")
             state.last_issue_id = state.current_issue_id
             if state.current_issue_id:

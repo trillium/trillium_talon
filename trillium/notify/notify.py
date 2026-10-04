@@ -1,5 +1,6 @@
-from talon import Module, imgui, cron
 import time
+
+from talon import Module, cron, imgui
 
 module = Module()
 
@@ -66,7 +67,7 @@ class Actions:
         notifications[level] = {
             "message": message,
             "timestamp": time.time(),
-            "duration": duration
+            "duration": duration,
         }
 
         # Cancel any existing auto-hide job for this level
@@ -78,7 +79,9 @@ class Actions:
 
         # Set up auto-hide if duration > 0
         if duration > 0:
-            auto_hide_jobs[level] = cron.interval("1s", lambda lvl=level: auto_hide_level(lvl))
+            auto_hide_jobs[level] = cron.interval(
+                "1s", lambda lvl=level: auto_hide_level(lvl)
+            )
 
         guis[level].show()
 

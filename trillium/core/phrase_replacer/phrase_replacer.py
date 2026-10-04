@@ -22,9 +22,10 @@ Format: type,replacement,original
 """
 
 import sys
-from talon import Module, Context, speech_system, app
-from talon.grammar import Phrase
 from pathlib import Path
+
+from talon import Context, Module, app, speech_system
+from talon.grammar import Phrase
 
 mod = Module()
 ctx = Context()
@@ -38,7 +39,11 @@ _phrase_index = {}
 def _find_module(suffix):
     """Find a loaded Talon module by path suffix."""
     for name, module in sys.modules.items():
-        if hasattr(module, "__file__") and module.__file__ and module.__file__.endswith(suffix):
+        if (
+            hasattr(module, "__file__")
+            and module.__file__
+            and module.__file__.endswith(suffix)
+        ):
             return module
     return None
 
@@ -53,8 +58,8 @@ def _load_replacements():
         return
 
     symbol_entries = []  # (character, spoken_form)
-    word_entries = []    # (replacement, original)
-    command_entries = [] # (replacement, original)
+    word_entries = []  # (replacement, original)
+    command_entries = []  # (replacement, original)
 
     for line in REPLACEMENTS_FILE.read_text().splitlines():
         line = line.strip()
@@ -86,8 +91,12 @@ def _load_replacements():
                     symbols_mod.symbol_key_dict[spoken_form] = character
 
                 # Reassign ctx.lists to trigger Talon grammar update
-                keys_mod.ctx.lists["user.punctuation"] = dict(symbols_mod.punctuation_dict)
-                keys_mod.ctx.lists["user.symbol_key"] = dict(symbols_mod.symbol_key_dict)
+                keys_mod.ctx.lists["user.punctuation"] = dict(
+                    symbols_mod.punctuation_dict
+                )
+                keys_mod.ctx.lists["user.symbol_key"] = dict(
+                    symbols_mod.symbol_key_dict
+                )
                 print(f"[phrase_replacer] Injected {len(symbol_entries)} symbol forms")
             else:
                 print("[phrase_replacer] Could not find symbols/keys modules")
@@ -104,7 +113,9 @@ def _load_replacements():
                     vocab_mod.phrases_to_replace[original.lower()] = replacement
 
                 vocab_mod.phrase_replacer.update(vocab_mod.phrases_to_replace)
-                print(f"[phrase_replacer] Injected {len(word_entries)} word replacements")
+                print(
+                    f"[phrase_replacer] Injected {len(word_entries)} word replacements"
+                )
             else:
                 print("[phrase_replacer] Could not find vocabulary module")
         except Exception as e:

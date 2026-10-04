@@ -7,7 +7,10 @@ Activated automatically after any snap or recall command. Deactivates after
 from talon import Context, Module, actions, cron, settings, speech_system, ui
 
 mod = Module()
-mod.tag("window_bumping", desc="Active after a snap/move command, enables bump/widen/narrow commands")
+mod.tag(
+    "window_bumping",
+    desc="Active after a snap/move command, enables bump/widen/narrow commands",
+)
 mod.setting(
     "window_bump_step",
     type=float,
@@ -85,6 +88,7 @@ class Actions:
     def window_bump_show_settings():
         """Show the window bump settings overlay."""
         from . import window_bump_overlay
+
         window_bump_overlay.show()
 
     def window_bump(direction: str, steps: int = 1):
@@ -101,7 +105,9 @@ class Actions:
         else:
             return
 
-        window.rect = ui.Rect(round(new_x), round(rect.y), round(rect.width), round(rect.height))
+        window.rect = ui.Rect(
+            round(new_x), round(rect.y), round(rect.width), round(rect.height)
+        )
         _activate()
 
     def window_resize(direction: str, steps: int = 1):
@@ -121,7 +127,9 @@ class Actions:
             return
 
         # Test if the OS will actually accept the new width before moving x
-        window.rect = ui.Rect(round(rect.x), round(rect.y), round(new_width), round(rect.height))
+        window.rect = ui.Rect(
+            round(rect.x), round(rect.y), round(new_width), round(rect.height)
+        )
         actual_width = window.rect.width
         if abs(actual_width - rect.width) < 2:
             # OS refused the resize — restore and bail
@@ -131,5 +139,7 @@ class Actions:
         # Width changed, now center the window around the new width
         width_change = actual_width - rect.width
         new_x = rect.x - round(width_change / 2)
-        window.rect = ui.Rect(round(new_x), round(rect.y), round(actual_width), round(rect.height))
+        window.rect = ui.Rect(
+            round(new_x), round(rect.y), round(actual_width), round(rect.height)
+        )
         _activate()

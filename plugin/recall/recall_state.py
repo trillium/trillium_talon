@@ -12,13 +12,16 @@ This module is the foundation of the recall system. It owns:
 
 import json
 from pathlib import Path
-from talon import Module, Context, actions
+
+from talon import Context, Module, actions
 
 mod = Module()
 ctx = Context()
 
 # Tags
-mod.tag("recall_pending_input", desc="Waiting for second input in a two-step recall command")
+mod.tag(
+    "recall_pending_input", desc="Waiting for second input in a two-step recall command"
+)
 mod.tag("recall_overlay_visible", desc="A recall overlay is currently showing")
 pending_ctx = Context()
 overlay_ctx = Context()
@@ -41,10 +44,14 @@ archived_windows = {}
 _persistent_highlight_enabled: bool = False
 
 # Forbidden names are defined in forbidden_recall_names.talon-list
-mod.list("forbidden_recall_names", desc="Words that cannot be used as recall window names")
+mod.list(
+    "forbidden_recall_names", desc="Words that cannot be used as recall window names"
+)
 
 # Named commands for recall config (defined in recall_commands.talon-list)
-mod.list("recall_commands", desc="Named commands that can be assigned to recall windows")
+mod.list(
+    "recall_commands", desc="Named commands that can be assigned to recall windows"
+)
 
 mod.list("saved_window_names", desc="Names of saved windows for recall")
 

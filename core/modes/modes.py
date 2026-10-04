@@ -65,6 +65,7 @@ class Actions:
     def speech_mode_rotate():
         """Rotate speech modes: sleep -> command -> command+dictation -> sleep"""
         from talon import scope
+
         modes = scope.get("mode", set())
         if "sleep" in modes:
             actions.speech.enable()

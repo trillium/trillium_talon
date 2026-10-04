@@ -32,4 +32,3 @@ mode: dictation
 
 ^go right <user.text>$:
     user.go_right_by_text(text)
-

@@ -3,7 +3,7 @@
 Called by the central on_phrase.py orchestrator, not self-registering.
 """
 
-from talon import scope, actions, cron
+from talon import actions, cron, scope
 
 _pending_mimics: list[list[str]] = []
 

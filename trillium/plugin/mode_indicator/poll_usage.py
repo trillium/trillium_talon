@@ -30,20 +30,28 @@ _last_logged = (None, None)  # (five_hour_util, seven_day_util)
 
 
 def get_token():
-    raw = subprocess.check_output([
-        "security", "find-generic-password",
-        "-s", "Claude Code-credentials",
-        "-w",
-    ], text=True).strip()
+    raw = subprocess.check_output(
+        [
+            "security",
+            "find-generic-password",
+            "-s",
+            "Claude Code-credentials",
+            "-w",
+        ],
+        text=True,
+    ).strip()
     data = json.loads(raw)
     return data["claudeAiOauth"]["accessToken"]
 
 
 def fetch_usage(token):
-    req = urllib.request.Request(API_URL, headers={
-        "Authorization": f"Bearer {token}",
-        "anthropic-beta": "oauth-2025-04-20",
-    })
+    req = urllib.request.Request(
+        API_URL,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "anthropic-beta": "oauth-2025-04-20",
+        },
+    )
     with urllib.request.urlopen(req, timeout=5) as resp:
         return json.loads(resp.read())
 
@@ -124,13 +132,15 @@ def log_usage(usage):
         writer = csv.DictWriter(f, fieldnames=LOG_FIELDS)
         if write_header:
             writer.writeheader()
-        writer.writerow({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "five_hour_util": usage["five_hour"]["utilization"],
-            "five_hour_resets_at": usage["five_hour"].get("resets_at", ""),
-            "seven_day_util": usage["seven_day"]["utilization"],
-            "seven_day_resets_at": usage["seven_day"].get("resets_at", ""),
-        })
+        writer.writerow(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "five_hour_util": usage["five_hour"]["utilization"],
+                "five_hour_resets_at": usage["five_hour"].get("resets_at", ""),
+                "seven_day_util": usage["seven_day"]["utilization"],
+                "seven_day_resets_at": usage["seven_day"].get("resets_at", ""),
+            }
+        )
 
 
 def update_state(usage):

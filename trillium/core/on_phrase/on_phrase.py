@@ -7,8 +7,8 @@ Sub-modules export plain functions — they do NOT register their own hooks.
 from talon import Module, actions, speech_system
 from talon.grammar import Phrase
 
-from .abort.abort import abort_update_phrase
 from . import then_mimic
+from .abort.abort import abort_update_phrase
 from .analyze_phrase.analyze_phrase import analyze_phrase
 from .command_logger.command_logger import log_analyzed_phrase
 

@@ -8,10 +8,10 @@ inherit the phrase and commands from the last voice entry so consumers
 see equivalent records regardless of input source.
 """
 
-from datetime import datetime
-from pathlib import Path
 import json
 import re
+from datetime import datetime
+from pathlib import Path
 
 from talon import actions, scope, ui
 
@@ -67,14 +67,18 @@ def get_context_data():
     try:
         current_mode = scope.get("mode")
         if current_mode:
-            context["mode"] = list(current_mode) if isinstance(current_mode, set) else current_mode
+            context["mode"] = (
+                list(current_mode) if isinstance(current_mode, set) else current_mode
+            )
     except Exception:
         pass
 
     try:
         current_tags = scope.get("tag")
         if current_tags:
-            context["tags"] = list(current_tags) if isinstance(current_tags, set) else current_tags
+            context["tags"] = (
+                list(current_tags) if isinstance(current_tags, set) else current_tags
+            )
     except Exception:
         pass
 
@@ -101,17 +105,19 @@ def _build_commands(analyzed: AnalyzedPhrase) -> list[dict]:
     """Build serializable command entries from an AnalyzedPhrase."""
     commands = []
     for cmd in analyzed.commands:
-        commands.append({
-            "phrase": cmd.phrase,
-            "rule": cmd.rule,
-            "code": cmd.code,
-            "path": cmd.path,
-            "line": cmd.line,
-            "captures": [
-                {"phrase": cap.phrase, "value": str(cap.value), "name": cap.name}
-                for cap in cmd.captures
-            ],
-        })
+        commands.append(
+            {
+                "phrase": cmd.phrase,
+                "rule": cmd.rule,
+                "code": cmd.code,
+                "path": cmd.path,
+                "line": cmd.line,
+                "captures": [
+                    {"phrase": cap.phrase, "value": str(cap.value), "name": cap.name}
+                    for cap in cmd.captures
+                ],
+            }
+        )
     return commands
 
 
@@ -145,7 +151,9 @@ def log_analyzed_phrase(analyzed: AnalyzedPhrase):
             "source": "voice",
             "timestamp": timestamp.isoformat(),
             "phrase": analyzed.phrase,
-            "words": [{"text": w.text, "start": w.start, "end": w.end} for w in analyzed.words],
+            "words": [
+                {"text": w.text, "start": w.start, "end": w.end} for w in analyzed.words
+            ],
             "commands": commands,
             "context": get_context_data(),
             "metadata": {
@@ -197,14 +205,20 @@ def log_parrot_command(
 
         # Use last voice entry's phrase/commands, fall back to trigger
         phrase_text = _last_voice_phrase or display or command_trigger
-        commands = _last_voice_commands if _last_voice_commands else [{
-            "phrase": display or command_trigger,
-            "rule": command_trigger,
-            "code": None,
-            "path": None,
-            "line": None,
-            "captures": [],
-        }]
+        commands = (
+            _last_voice_commands
+            if _last_voice_commands
+            else [
+                {
+                    "phrase": display or command_trigger,
+                    "rule": command_trigger,
+                    "code": None,
+                    "path": None,
+                    "line": None,
+                    "captures": [],
+                }
+            ]
+        )
 
         # source directly answers: voice, repeat, or reverse
         if action == "repeat":

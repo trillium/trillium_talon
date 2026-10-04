@@ -9,7 +9,7 @@ from talon.skia.imagefilter import ImageFilter
 from talon.types.point import Point2d
 from talon.ui import Rect
 
-from .sysmon_graph import measure_graph_width, draw_graph
+from .sysmon_graph import draw_graph, measure_graph_width
 
 canvas: Canvas = None
 mod = Module()
@@ -87,7 +87,12 @@ mod.setting("mode_indicator_color_dictation", type=str)
 mod.setting("mode_indicator_color_mixed", type=str)
 mod.setting("mode_indicator_color_command", type=str)
 mod.setting("mode_indicator_color_other", type=str)
-mod.setting("mode_indicator_color_friction", type=str, default="7d0000", desc="Color when friction capture mode is active")
+mod.setting(
+    "mode_indicator_color_friction",
+    type=str,
+    default="7d0000",
+    desc="Color when friction capture mode is active",
+)
 mod.setting(
     "mode_indicator_bar_height",
     type=float,
@@ -184,7 +189,7 @@ def get_alpha_color() -> str:
 
 def get_gradient_color(color: str) -> str:
     factor = settings.get("user.mode_indicator_color_gradient")
-    (r, g, b) = tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
+    r, g, b = tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
     r, g, b = int(r * factor), int(g * factor), int(b * factor)
     return f"{r:02x}{g:02x}{b:02x}"
 
@@ -213,16 +218,24 @@ def on_draw(c: SkiaCanvas):
     command_text = _state["command_text"]
     cmd_display = ""
     if command_text:
-        cmd_display = command_text[:17] + "..." if len(command_text) > 20 else command_text
+        cmd_display = (
+            command_text[:17] + "..." if len(command_text) > 20 else command_text
+        )
 
     opposite_text = _state["opposite_text"]
     opp_display = ""
     if opposite_text:
-        opp_display = opposite_text[:17] + "..." if len(opposite_text) > 20 else opposite_text
+        opp_display = (
+            opposite_text[:17] + "..." if len(opposite_text) > 20 else opposite_text
+        )
 
-    static_text = str(_state['static_percent'])
+    static_text = str(_state["static_percent"])
     week_remaining = _state.get("week_remaining", "")
-    week_text = f"{_state['week_percent']}%  {week_remaining}" if week_remaining else f"{_state['week_percent']}%"
+    week_text = (
+        f"{_state['week_percent']}%  {week_remaining}"
+        if week_remaining
+        else f"{_state['week_percent']}%"
+    )
 
     # --- Calculate sysmon graph dimensions ---
     per_core = _state.get("cpu_per_core", [])
@@ -247,7 +260,8 @@ def on_draw(c: SkiaCanvas):
         c.paint.color = "222222cc"
         sp_rect = skia.RoundRect.from_rect(
             Rect(sp_left, rect.top, sp_w, bar_height),
-            x=sp_rad, y=sp_rad,
+            x=sp_rad,
+            y=sp_rad,
         )
         c.draw_rrect(sp_rect)
 
@@ -304,12 +318,16 @@ def on_draw(c: SkiaCanvas):
     path.line_to(bx + bw, by + bh - rad)
     path.arc_to_with_oval(
         Rect(bx + bw - rad * 2, by + bh - rad * 2, rad * 2, rad * 2),
-        0, 90, False,
+        0,
+        90,
+        False,
     )
     path.line_to(bx + rad, by + bh)
     path.arc_to_with_oval(
         Rect(bx, by + bh - rad * 2, rad * 2, rad * 2),
-        90, 90, False,
+        90,
+        90,
+        False,
     )
     path.close()
     c.draw_path(path)
@@ -368,7 +386,9 @@ def on_draw(c: SkiaCanvas):
     )
 
     c.paint.shader = skia.Shader.radial_gradient(
-        Point2d(circle_x, circle_y), radius, [f"{circle_color}{circle_alpha}", circle_gradient]
+        Point2d(circle_x, circle_y),
+        radius,
+        [f"{circle_color}{circle_alpha}", circle_gradient],
     )
     c.paint.imagefilter = ImageFilter.drop_shadow(1, 1, 1, 1, circle_gradient)
     c.paint.style = c.paint.Style.FILL
@@ -385,7 +405,6 @@ def on_draw(c: SkiaCanvas):
     else:
         c.paint.color = "aa0000ff"  # Red
     c.draw_circle(circle_x, circle_y, radius)
-
 
     # Draw circle text: pondering timer or mic name
     pondering_seconds = _state.get("pondering_seconds")

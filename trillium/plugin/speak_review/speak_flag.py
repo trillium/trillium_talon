@@ -27,17 +27,19 @@ REWRITES_FILE = Path("/Users/trilliumsmith/code/speak/config/rewrites.json")
 
 # Talon's subprocess environment is stripped — speak needs uv, python3, ffplay
 _env = os.environ.copy()
-_env["PATH"] = ":".join([
-    "/opt/homebrew/bin",
-    "/opt/homebrew/sbin",
-    "/Users/trilliumsmith/.local/bin",
-    "/usr/local/bin",
-    "/usr/bin",
-    "/bin",
-    "/usr/sbin",
-    "/sbin",
-    _env.get("PATH", ""),
-])
+_env["PATH"] = ":".join(
+    [
+        "/opt/homebrew/bin",
+        "/opt/homebrew/sbin",
+        "/Users/trilliumsmith/.local/bin",
+        "/usr/local/bin",
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin",
+        _env.get("PATH", ""),
+    ]
+)
 
 # Module state
 _scratchpad_path: Path | None = None
@@ -48,7 +50,10 @@ def _fetch_history() -> list[str]:
     try:
         result = subprocess.run(
             [SPEAK, "--history", "10"],
-            capture_output=True, text=True, env=_env, timeout=5,
+            capture_output=True,
+            text=True,
+            env=_env,
+            timeout=5,
         )
         if result.returncode != 0:
             return []
@@ -87,6 +92,7 @@ def _build_file() -> Path:
 
 def _open_and_wait(path: Path):
     """Open VS Code --wait in a background thread, process on tab close."""
+
     def _worker():
         try:
             subprocess.run(["code", "--wait", str(path)], env=_env)
@@ -250,15 +256,20 @@ def _process():
     elif not collisions:
         subprocess.Popen(
             [SPEAK, "--enqueue", "Scratchpad closed, no changes."],
-            start_new_session=True, env=_env,
+            start_new_session=True,
+            env=_env,
         )
 
     # Open collision file if needed
     if collisions:
         subprocess.Popen(
-            [SPEAK, "--enqueue",
-             f"{len(collisions)} collisions found, opening review file."],
-            start_new_session=True, env=_env,
+            [
+                SPEAK,
+                "--enqueue",
+                f"{len(collisions)} collisions found, opening review file.",
+            ],
+            start_new_session=True,
+            env=_env,
         )
         _open_collisions(collisions)
 
@@ -289,5 +300,6 @@ class Actions:
         _cleanup()
         subprocess.Popen(
             [SPEAK, "--enqueue", "Scratchpad cancelled."],
-            start_new_session=True, env=_env,
+            start_new_session=True,
+            env=_env,
         )

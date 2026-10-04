@@ -57,7 +57,9 @@ def poll_for_marker(app, window, marker, callback, check_count=0):
     )
 
 
-def poll_for_stability(app, window, callback, previous_title=None, stable_count=0, check_count=0):
+def poll_for_stability(
+    app, window, callback, previous_title=None, stable_count=0, check_count=0
+):
     """Poll until window title stabilizes (stops changing).
 
     Fallback for when there's no known marker to look for
@@ -142,11 +144,13 @@ def record_titles(app, window, check_count=0, previous_title=None):
 
     # Only record on diff
     if current_title != previous_title:
-        _recording.append({
-            "elapsed_s": check_count * 0.5,
-            "window_id": current_window.id,
-            "title": current_title,
-        })
+        _recording.append(
+            {
+                "elapsed_s": check_count * 0.5,
+                "window_id": current_window.id,
+                "title": current_title,
+            }
+        )
 
     cron.after(
         POLL_INTERVAL,
@@ -170,10 +174,12 @@ def _save_recording():
         with open(path) as f:
             existing = json.load(f)
 
-    existing.append({
-        "changes": len(_recording),
-        "entries": _recording,
-    })
+    existing.append(
+        {
+            "changes": len(_recording),
+            "entries": _recording,
+        }
+    )
 
     with open(path, "w") as f:
         json.dump(existing, f, indent=2)
