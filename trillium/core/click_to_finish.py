@@ -11,12 +11,17 @@ Pondering never touches parrot on/off or command/dictation mode —
 it only rescopes the tongue-click action and adjusts VAD timeout.
 """
 
-from talon import Module, Context, actions, clip, cron, settings, speech_system
+import re
+
+from talon import Context, Module, actions, clip, cron, settings, speech_system, ui
 
 mod = Module()
 
 mod.tag("pondering", desc="Pondering mode — extended speech listening active")
-mod.tag("pondering_listening", desc="Pondering is listening — tongue-click routes to pondering exit")
+mod.tag(
+    "pondering_listening",
+    desc="Pondering is listening — tongue-click routes to pondering exit",
+)
 
 mod.setting(
     "pondering_timeout",
@@ -131,6 +136,47 @@ def _tick_timer(_=None):
         actions.user.mode_indicator_set_pondering(pondering_seconds)
 
 
+# Submit method used by the click-to-finish Enter, only when focused app is Pi.
+# "follow" = follow-on message (alt-enter, delivered after the agent finishes),
+# "steer"  = steering message (plain enter, delivered mid-run).
+SUBMIT_METHODS = {"follow": "alt-enter", "steer": "enter"}
+submit_method = "follow"
+
+# Pi sets its terminal title to "π - <cwd>"; detect from the window title only.
+_PI_TITLE_RE = re.compile(r"^\s*(π|pi)\b", re.IGNORECASE)
+
+
+def _is_pi_terminal() -> bool:
+    """True when the focused window title looks like a Pi terminal."""
+    try:
+        title = ui.active_window().title or ""
+    except Exception:
+        return False
+    return bool(_PI_TITLE_RE.match(title))
+
+
+def _setting_word(words):
+    """Return "follow"/"steer" if the phrase is exactly that one word, else None."""
+    if len(words) != 1:
+        return None
+    word = str(words[0]).split("\\")[0].strip().lower()
+    return word if word in SUBMIT_METHODS else None
+
+
+def _set_submit_method(method: str):
+    global submit_method
+    submit_method = method
+    print(f"[pondering] submit method set to {method}")
+
+
+def _submit():
+    """Send the finishing Enter; in a Pi terminal use the chosen submit method."""
+    if _is_pi_terminal():
+        actions.key(SUBMIT_METHODS[submit_method])
+    else:
+        actions.key("enter")
+
+
 _skip_next_post_phrase = False
 
 
@@ -155,10 +201,15 @@ def _on_post_phrase(d):
     # Check if any text was actually captured
     phrase_words = d.get("phrase", [])
     has_text = bool(phrase_words)
+    setting = _setting_word(phrase_words)
+    if setting:
+        # "follow"/"steer" alone are settings: swallow, don't submit.
+        _set_submit_method(setting)
+        has_text = False
     if exiting:
         exiting = False
         if has_text:
-            actions.key("enter")
+            _submit()
             print(f"[pondering] post:phrase (click) — pasted, sent enter")
         else:
             print("[pondering] post:phrase (click) — no text captured, skipping enter")
@@ -169,10 +220,12 @@ def _on_post_phrase(d):
         if timer_job:
             cron.cancel(timer_job)
         if has_text:
-            actions.key("enter")
+            _submit()
             print(f"[pondering] post:phrase (timeout) — sent enter")
         else:
-            print("[pondering] post:phrase (timeout) — no text captured, skipping enter")
+            print(
+                "[pondering] post:phrase (timeout) — no text captured, skipping enter"
+            )
 
 
 def enable():
@@ -254,6 +307,11 @@ class Actions:
     def pondering_disable():
         """Disable pondering mode"""
         disable()
+
+    def pondering_set_submit_method(method: str):
+        """Set the Pi submit method for the pondering Enter click: follow or steer"""
+        if method in SUBMIT_METHODS:
+            _set_submit_method(method)
 
     def pondering_end_phrase():
         """Force end the current phrase"""
