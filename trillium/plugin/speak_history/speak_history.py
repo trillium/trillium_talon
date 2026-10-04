@@ -10,7 +10,7 @@ import sqlite3
 import subprocess
 from datetime import datetime, timezone
 
-from talon import Module, Context, actions, cron
+from talon import Context, Module, actions, cron
 
 from . import speak_history_overlay as overlay
 
@@ -26,17 +26,19 @@ DB_PATH = f"/tmp/speak-{os.environ.get('USER', 'trilliumsmith')}-history.db"
 PAGE_SIZE = 8
 
 _env = os.environ.copy()
-_env["PATH"] = ":".join([
-    "/opt/homebrew/bin",
-    "/opt/homebrew/sbin",
-    "/Users/trilliumsmith/.local/bin",
-    "/usr/local/bin",
-    "/usr/bin",
-    "/bin",
-    "/usr/sbin",
-    "/sbin",
-    _env.get("PATH", ""),
-])
+_env["PATH"] = ":".join(
+    [
+        "/opt/homebrew/bin",
+        "/opt/homebrew/sbin",
+        "/Users/trilliumsmith/.local/bin",
+        "/usr/local/bin",
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin",
+        _env.get("PATH", ""),
+    ]
+)
 
 _page: int = 0
 _caller_filter: str = ""

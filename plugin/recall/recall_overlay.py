@@ -18,7 +18,14 @@ from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
-from ...trillium.utils.overlay_kit import DismissibleOverlay, draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_rounded_rect, draw_separator
+from ...trillium.utils.overlay_kit import (
+    DismissibleOverlay,
+    draw_close_hint,
+    draw_dim_backdrop,
+    draw_panel_frame,
+    draw_rounded_rect,
+    draw_separator,
+)
 
 canvas: Canvas = None
 _hide_job = None
@@ -54,8 +61,9 @@ COMBINE_CORNER_RADIUS = 16
 
 def _get_saved_windows():
     """Import saved_windows lazily to avoid circular imports."""
-    from .recall_state import saved_windows
     from .recall_commands import find_window_by_id
+    from .recall_state import saved_windows
+
     return saved_windows, find_window_by_id
 
 
@@ -63,6 +71,7 @@ def _resolve_command_display(stored: str) -> str:
     """Resolve a stored command to its spoken name for display.
     If stored as a shell command, reverse-lookup the spoken name."""
     from .recall_state import ctx
+
     commands = ctx.lists.get("user.recall_commands", {})
     if stored in commands:
         return stored
@@ -75,6 +84,7 @@ def _resolve_command_display(stored: str) -> str:
 def _resolve_command_shell(stored: str) -> str | None:
     """Resolve a stored command to the actual shell command it will run."""
     from .recall_state import ctx
+
     commands = ctx.lists.get("user.recall_commands", {})
     if stored in commands:
         return commands[stored]
@@ -87,7 +97,13 @@ def _resolve_command_shell(stored: str) -> str | None:
 def _update_overlay_tag():
     """Set or clear the overlay_visible tag based on active canvases."""
     from .recall_state import overlay_ctx
-    if canvas or _status_overlay.is_showing or _help_overlay.is_showing or _prompt_overlay.is_showing:
+
+    if (
+        canvas
+        or _status_overlay.is_showing
+        or _help_overlay.is_showing
+        or _prompt_overlay.is_showing
+    ):
         overlay_ctx.tags = ["user.recall_overlay_visible"]
     else:
         overlay_ctx.tags = []
@@ -95,8 +111,12 @@ def _update_overlay_tag():
 
 def _pills_overlap(a: Rect, b: Rect) -> bool:
     """Check if two pill rects overlap."""
-    return (a.x < b.x + b.width and a.x + a.width > b.x and
-            a.y < b.y + b.height and a.y + a.height > b.y)
+    return (
+        a.x < b.x + b.width
+        and a.x + a.width > b.x
+        and a.y < b.y + b.height
+        and a.y + a.height > b.y
+    )
 
 
 def on_draw(c: SkiaCanvas):
@@ -131,7 +151,7 @@ def on_draw(c: SkiaCanvas):
             if rect.width <= 0 or rect.height <= 0:
                 continue
 
-            is_active = (info["id"] == active_id)
+            is_active = info["id"] == active_id
 
             # Center label on window
             center_x = rect.x + rect.width / 2
@@ -253,6 +273,7 @@ HELP_COMMANDS = [
 
 # ── Status overlay (saved windows panel) ─────────────────────────────
 
+
 def _on_draw_status(c: SkiaCanvas, overlay: DismissibleOverlay):
     saved_windows, find_window_by_id = _get_saved_windows()
     screen = ui.main_screen()
@@ -267,7 +288,10 @@ def _on_draw_status(c: SkiaCanvas, overlay: DismissibleOverlay):
     # Sort: alphabetically by name, active windows first within that
     window_names = sorted(
         saved_windows.keys(),
-        key=lambda n: (0 if find_window_by_id(saved_windows[n]["id"]) else 1, n.lower()),
+        key=lambda n: (
+            0 if find_window_by_id(saved_windows[n]["id"]) else 1,
+            n.lower(),
+        ),
     )
 
     # Pre-calculate panel height
@@ -291,7 +315,9 @@ def _on_draw_status(c: SkiaCanvas, overlay: DismissibleOverlay):
     # Draw panel
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
     overlay.set_panel_rect(panel_rect)
-    draw_panel_frame(c, panel_rect, HELP_CORNER_RADIUS, HELP_PANEL_COLOR, HELP_PANEL_BORDER)
+    draw_panel_frame(
+        c, panel_rect, HELP_CORNER_RADIUS, HELP_PANEL_COLOR, HELP_PANEL_BORDER
+    )
 
     c.save()
     c.clip_rect(panel_rect)
@@ -305,7 +331,16 @@ def _on_draw_status(c: SkiaCanvas, overlay: DismissibleOverlay):
     c.paint.color = HELP_TEXT_COLOR
     c.draw_text("Recall Windows", cx, cy + HELP_HEADER_SIZE)
 
-    draw_close_hint(c, '"recall close" or Esc', HELP_DETAIL_SIZE, HELP_DIM_COLOR, panel_x, panel_y, panel_w, HELP_PANEL_PAD)
+    draw_close_hint(
+        c,
+        '"recall close" or Esc',
+        HELP_DETAIL_SIZE,
+        HELP_DIM_COLOR,
+        panel_x,
+        panel_y,
+        panel_w,
+        HELP_PANEL_PAD,
+    )
 
     cy += HELP_HEADER_SIZE + 20
 
@@ -374,6 +409,7 @@ def _on_draw_status(c: SkiaCanvas, overlay: DismissibleOverlay):
 
 # ── Help overlay (commands reference panel) ──────────────────────────
 
+
 def _on_draw_help(c: SkiaCanvas, overlay: DismissibleOverlay):
     screen = ui.main_screen()
     sr = screen.rect
@@ -400,7 +436,9 @@ def _on_draw_help(c: SkiaCanvas, overlay: DismissibleOverlay):
     # Draw panel
     panel_rect = Rect(panel_x, panel_y, panel_w, panel_h)
     overlay.set_panel_rect(panel_rect)
-    draw_panel_frame(c, panel_rect, HELP_CORNER_RADIUS, HELP_PANEL_COLOR, HELP_PANEL_BORDER)
+    draw_panel_frame(
+        c, panel_rect, HELP_CORNER_RADIUS, HELP_PANEL_COLOR, HELP_PANEL_BORDER
+    )
 
     c.save()
     c.clip_rect(panel_rect)
@@ -414,7 +452,16 @@ def _on_draw_help(c: SkiaCanvas, overlay: DismissibleOverlay):
     c.paint.color = HELP_TEXT_COLOR
     c.draw_text("Commands", rx, ry + HELP_HEADER_SIZE)
 
-    draw_close_hint(c, '"recall close" or Esc', HELP_DETAIL_SIZE, HELP_DIM_COLOR, panel_x, panel_y, panel_w, HELP_PANEL_PAD)
+    draw_close_hint(
+        c,
+        '"recall close" or Esc',
+        HELP_DETAIL_SIZE,
+        HELP_DIM_COLOR,
+        panel_x,
+        panel_y,
+        panel_w,
+        HELP_PANEL_PAD,
+    )
 
     ry += HELP_HEADER_SIZE + 20
 
@@ -427,8 +474,7 @@ def _on_draw_help(c: SkiaCanvas, overlay: DismissibleOverlay):
     else:
         ender_label = "bravely"
     commands = [
-        (cmd.replace("<ender>", ender_label), desc)
-        for cmd, desc in HELP_COMMANDS
+        (cmd.replace("<ender>", ender_label), desc) for cmd, desc in HELP_COMMANDS
     ]
 
     # Command rows
@@ -499,6 +545,7 @@ def _on_draw_prompt(c: SkiaCanvas, overlay: DismissibleOverlay):
 def _on_prompt_hide():
     """Called when prompt overlay is dismissed — cancel pending state."""
     from .recall_state import _cancel_pending
+
     _cancel_pending()
     _update_overlay_tag()
 
@@ -506,13 +553,19 @@ def _on_prompt_hide():
 # ── DismissibleOverlay instances ──────────────────────────────────────
 
 _status_overlay = DismissibleOverlay(
-    on_draw=_on_draw_status, auto_hide=None, on_hide=_update_overlay_tag,
+    on_draw=_on_draw_status,
+    auto_hide=None,
+    on_hide=_update_overlay_tag,
 )
 _help_overlay = DismissibleOverlay(
-    on_draw=_on_draw_help, auto_hide=None, on_hide=_update_overlay_tag,
+    on_draw=_on_draw_help,
+    auto_hide=None,
+    on_hide=_update_overlay_tag,
 )
 _prompt_overlay = DismissibleOverlay(
-    on_draw=_on_draw_prompt, auto_hide=PROMPT_DURATION, on_hide=_on_prompt_hide,
+    on_draw=_on_draw_prompt,
+    auto_hide=PROMPT_DURATION,
+    on_hide=_on_prompt_hide,
 )
 
 
@@ -722,7 +775,11 @@ def on_draw_highlight(c: SkiaCanvas):
 
         # Text
         c.paint.color = "ffffffff"
-        c.draw_text(_highlight_name, pill_x + HIGHLIGHT_LABEL_PAD_X, pill_y + HIGHLIGHT_LABEL_PAD_Y + text_h)
+        c.draw_text(
+            _highlight_name,
+            pill_x + HIGHLIGHT_LABEL_PAD_X,
+            pill_y + HIGHLIGHT_LABEL_PAD_Y + text_h,
+        )
 
 
 _highlight_show_job = None
@@ -832,12 +889,16 @@ def on_draw_persistent(c: SkiaCanvas):
         path.move_to(pill_x, pill_y + rad)
         path.arc_to_with_oval(
             Rect(pill_x, pill_y, rad * 2, rad * 2),
-            180, 90, False,
+            180,
+            90,
+            False,
         )
         path.line_to(pill_x + pill_w - rad, pill_y)
         path.arc_to_with_oval(
             Rect(pill_x + pill_w - rad * 2, pill_y, rad * 2, rad * 2),
-            270, 90, False,
+            270,
+            90,
+            False,
         )
         path.line_to(pill_x + pill_w, pill_y + pill_h)
         path.line_to(pill_x, pill_y + pill_h)
@@ -846,7 +907,11 @@ def on_draw_persistent(c: SkiaCanvas):
 
         # Text
         c.paint.color = "ffffffff"
-        c.draw_text(display_name, pill_x + PERSISTENT_LABEL_PAD_X, pill_y + PERSISTENT_LABEL_PAD_Y + text_h)
+        c.draw_text(
+            display_name,
+            pill_x + PERSISTENT_LABEL_PAD_X,
+            pill_y + PERSISTENT_LABEL_PAD_Y + text_h,
+        )
 
 
 def _persistent_check_geometry():
@@ -888,7 +953,9 @@ def show_persistent_highlight(window, name: str):
 
     # Start geometry polling if not already running
     if not _persistent_poll_job:
-        _persistent_poll_job = cron.interval(PERSISTENT_POLL_INTERVAL, _persistent_check_geometry)
+        _persistent_poll_job = cron.interval(
+            PERSISTENT_POLL_INTERVAL, _persistent_check_geometry
+        )
 
 
 def hide_persistent_highlight():

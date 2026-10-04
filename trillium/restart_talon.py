@@ -8,7 +8,8 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from talon import Module, app, scope, actions
+
+from talon import Module, actions, app, scope
 
 mod = Module()
 
@@ -25,7 +26,7 @@ MODE_STATE_FILE = Path.home() / ".talon" / "mode_state.json"
 # 5. Brief pause for clean state
 # 6. Relaunch with 'open' command
 # 7. Poll until timestamp file changes (confirms Talon is ready)
-RESTART_SCRIPT_MACOS = '''
+RESTART_SCRIPT_MACOS = """
 TIMESTAMP_FILE="$HOME/.talon/launch_timestamp"
 RESTART_MARKER="$HOME/.talon/restart_marker"
 
@@ -65,9 +66,9 @@ for i in $(seq 1 60); do
     fi
     sleep 0.5
 done
-'''
+"""
 
-RESTART_SCRIPT_LINUX = '''
+RESTART_SCRIPT_LINUX = """
 TIMESTAMP_FILE="$HOME/.talon/launch_timestamp"
 RESTART_MARKER="$HOME/.talon/restart_marker"
 TALON_RUN="$HOME/talon/run.sh"
@@ -101,7 +102,7 @@ for i in $(seq 1 60); do
     fi
     sleep 0.5
 done
-'''
+"""
 
 
 def get_current_state() -> dict:
@@ -114,7 +115,9 @@ def get_current_state() -> dict:
     try:
         current_modes = scope.get("mode")
         if current_modes:
-            state["modes"] = list(current_modes) if isinstance(current_modes, set) else current_modes
+            state["modes"] = (
+                list(current_modes) if isinstance(current_modes, set) else current_modes
+            )
     except Exception:
         state["modes"] = []
 
@@ -123,9 +126,14 @@ def get_current_state() -> dict:
         current_tags = scope.get("tag")
         if current_tags:
             # Only save user-controlled tags we care about restoring
-            tags_to_save = [t for t in current_tags if t in [
-                "user.parrot_on",
-            ]]
+            tags_to_save = [
+                t
+                for t in current_tags
+                if t
+                in [
+                    "user.parrot_on",
+                ]
+            ]
             state["tags"] = tags_to_save
     except Exception:
         state["tags"] = []
@@ -223,7 +231,9 @@ def on_ready():
             ("dictation" in modes) or ("user.parrot_on" in tags)
         ):
             restore_state(mode_state)
-            print(f"[restart_talon] Restored mode from previous session: modes={modes}, tags={tags}")
+            print(
+                f"[restart_talon] Restored mode from previous session: modes={modes}, tags={tags}"
+            )
 
 
 app.register("ready", on_ready)
@@ -235,9 +245,11 @@ class Actions:
         """Quit and restart Talon, preserving current state"""
         save_state()
 
-        script = RESTART_SCRIPT_LINUX if sys.platform == "linux" else RESTART_SCRIPT_MACOS
+        script = (
+            RESTART_SCRIPT_LINUX if sys.platform == "linux" else RESTART_SCRIPT_MACOS
+        )
         subprocess.Popen(
-            ['/bin/bash', '-c', script],
+            ["/bin/bash", "-c", script],
             start_new_session=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

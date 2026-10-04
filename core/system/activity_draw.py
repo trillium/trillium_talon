@@ -34,7 +34,7 @@ HOG_DOT_COLOR = "ff6b6b"
 HOG_DOT_RADIUS = 4
 
 # ── Resource hog thresholds ──
-CPU_HOG_THRESHOLD = 10.0   # % CPU to flag when sorting by mem
+CPU_HOG_THRESHOLD = 10.0  # % CPU to flag when sorting by mem
 MEM_HOG_THRESHOLD = 500_000  # ~500MB RSS in KB, flag when sorting by cpu
 
 # ── Font sizes ──
@@ -78,12 +78,18 @@ def is_mem_hog(mem_rss: int) -> bool:
 
 
 def draw_row(
-    c: SkiaCanvas, row: ProcessRow, i: int, label: str,
-    cx: float, cy: float, content_w: float,
-    killed_index: int | None, sort_mode: str = "cpu",
+    c: SkiaCanvas,
+    row: ProcessRow,
+    i: int,
+    label: str,
+    cx: float,
+    cy: float,
+    content_w: float,
+    killed_index: int | None,
+    sort_mode: str = "cpu",
 ):
     """Draw a single process row at the given y position."""
-    is_killed = (killed_index == i)
+    is_killed = killed_index == i
     col_x = cx
     # Flag processes that are hogs in the non-sorted dimension
     flag_cpu = sort_mode == "mem" and is_cpu_hog(row.cpu)
@@ -134,9 +140,12 @@ def _draw_hog_dot(c: SkiaCanvas, x: float, y: float):
 
 
 def draw_panel(
-    c: SkiaCanvas, overlay: DismissibleOverlay,
-    rows: list[ProcessRow], sort_mode: str,
-    killed_index: int | None, kill_message: str | None,
+    c: SkiaCanvas,
+    overlay: DismissibleOverlay,
+    rows: list[ProcessRow],
+    sort_mode: str,
+    killed_index: int | None,
+    kill_message: str | None,
 ):
     """Draw the full activity monitor panel."""
     screen = ui.main_screen()
@@ -145,11 +154,20 @@ def draw_panel(
     row_count = len(rows)
     c.paint.textsize = FONT_SIZE
 
-    panel_w = PANEL_PAD * 2 + NUM_COL_W + NAME_COL_W + CPU_COL_W + MEM_COL_W + PORT_COL_W
+    panel_w = (
+        PANEL_PAD * 2 + NUM_COL_W + NAME_COL_W + CPU_COL_W + MEM_COL_W + PORT_COL_W
+    )
     panel_h = (
-        PANEL_PAD + HEADER_SIZE + 8 + SUBTITLE_SIZE + 16
-        + ROW_HEIGHT + ROW_HEIGHT * max(row_count, 1)
-        + 16 + HINT_SIZE + PANEL_PAD
+        PANEL_PAD
+        + HEADER_SIZE
+        + 8
+        + SUBTITLE_SIZE
+        + 16
+        + ROW_HEIGHT
+        + ROW_HEIGHT * max(row_count, 1)
+        + 16
+        + HINT_SIZE
+        + PANEL_PAD
     )
     panel_x = sr.x + (sr.width - panel_w) / 2
     panel_y = sr.y + (sr.height - panel_h) / 2
@@ -170,12 +188,15 @@ def draw_panel(
     cy += HEADER_SIZE + 8
 
     # Subtitle
-    sort_label = {"cpu": "CPU", "mem": "MEM", "combined": "CPU+MEM"}.get(sort_mode, sort_mode.upper())
+    sort_label = {"cpu": "CPU", "mem": "MEM", "combined": "CPU+MEM"}.get(
+        sort_mode, sort_mode.upper()
+    )
     c.paint.textsize = SUBTITLE_SIZE
     c.paint.color = DIM_COLOR
     c.draw_text(
         f'{row_count} processes  \u00b7  sort: {sort_label}  \u00b7  "kill <n>" to SIGTERM',
-        cx, cy + SUBTITLE_SIZE,
+        cx,
+        cy + SUBTITLE_SIZE,
     )
     cy += SUBTITLE_SIZE + 16
 
@@ -215,5 +236,9 @@ def draw_panel(
         c.draw_text(kill_message, cx, cy + HINT_SIZE)
     else:
         c.paint.color = DIM_COLOR
-        c.draw_text('"sort cpu" / "sort memory" / "sort hogs" to change sort', cx, cy + HINT_SIZE)
+        c.draw_text(
+            '"sort cpu" / "sort memory" / "sort hogs" to change sort',
+            cx,
+            cy + HINT_SIZE,
+        )
     c.restore()

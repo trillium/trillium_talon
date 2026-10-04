@@ -12,6 +12,7 @@ Note: Tags are stored in CSV without brackets, but printed with brackets.
 
 import csv
 from pathlib import Path
+
 from talon import Module, resource
 
 mod = Module()
@@ -31,10 +32,12 @@ def load_ignored_tags(file):
     try:
         rows = list(csv.DictReader(file))
         for row in rows:
-            tag = row.get('tag', '').strip()
+            tag = row.get("tag", "").strip()
             if tag:
                 _ignored_tags.add(tag)
-        print(f"[boolean_print] Loaded {len(_ignored_tags)} ignored tags: {_ignored_tags}")
+        print(
+            f"[boolean_print] Loaded {len(_ignored_tags)} ignored tags: {_ignored_tags}"
+        )
     except Exception as e:
         print(f"[boolean_print] Error loading ignored tags: {e}")
 
@@ -54,7 +57,7 @@ class Actions:
         # Lazy load on first call
         if _ignored_tags is None:
             if CSV_PATH.exists():
-                with open(CSV_PATH, 'r') as f:
+                with open(CSV_PATH, "r") as f:
                     load_ignored_tags(f)
             else:
                 _ignored_tags = set()

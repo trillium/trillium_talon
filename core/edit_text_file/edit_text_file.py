@@ -44,7 +44,11 @@ class MacActions:
         path = get_full_path(file)
         # Open in VS Code / Cursor via 'code' CLI (non-blocking, full path).
         resolved = str(path.expanduser().resolve())
-        subprocess.Popen(["/opt/homebrew/bin/code", resolved], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(
+            ["/opt/homebrew/bin/code", resolved],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
 
 @ctx_linux.action_class("user")

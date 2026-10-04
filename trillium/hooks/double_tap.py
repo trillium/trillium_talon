@@ -1,5 +1,6 @@
-from talon import actions, clip, Context, Module
 import time
+
+from talon import Context, Module, actions, clip
 
 mod = Module()
 ctx = Context()
@@ -14,6 +15,7 @@ state["count"] = 1
 #         """Utility function to change actions based on repeated pressing of a key/noise"""
 #         actions.user.hud_add_log("event", "short_repeat")
 
+
 @mod.action_class
 class Actions:
     def short_repeat():
@@ -24,7 +26,7 @@ class Actions:
         state["last_press_time"] = now
         # actions.user.hud_add_log("event", f"short_repeat" + " " + str(t0))
 
-        timeout = .5
+        timeout = 0.5
 
         # actions.user.hud_add_log("event", f"short_repeat" + " " + str(state["count"]) + f" {str((now - prev) > timeout)}")
 
@@ -36,7 +38,7 @@ class Actions:
             # phrase = "2: toggle, 3: mic_main, 4: mic_none"
             # # actions.user.hud_add_log("warning", phrase)
 
-        #Actions
+        # Actions
         if state["count"] == 2:
             # actions.speech.toggle()
             # actions.user.hud_add_log("event", f"toggle sleep" + " " + str(state["count"]))
@@ -53,4 +55,3 @@ class Actions:
         if state["count"] == 5:
             actions.user.mic_none()
             actions.speech.disable()
-            

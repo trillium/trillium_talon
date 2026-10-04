@@ -15,11 +15,11 @@ ctx.matches = r"""
 app: zoom.us
 """
 
+
 @mod.action_class
 class zoom_actions:
     def zoom_mute():
         """Toggle mute"""
-    
+
     def zoom_toggle_video():
         """Toggle zoom video"""
-

@@ -1,4 +1,3 @@
-
 from talon import Module, actions, app
 
 mod = Module()

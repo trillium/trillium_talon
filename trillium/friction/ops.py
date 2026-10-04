@@ -12,7 +12,9 @@ from pathlib import Path
 FRICTION_LOG = Path.home() / ".talon" / "friction.jsonl"
 
 
-def create_issue(title: str, notes: str, scope: str = "general", needs_review: bool = False) -> str | None:
+def create_issue(
+    title: str, notes: str, scope: str = "general", needs_review: bool = False
+) -> str | None:
     """Create a friction entry and return the entry ID."""
     issue_id = f"friction-{uuid.uuid4().hex[:6]}"
     labels = ["friction", "triage", scope]

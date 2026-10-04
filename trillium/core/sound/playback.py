@@ -98,7 +98,9 @@ def _play_files(files: list[Path], start_index: int = 0):
     span_secs = newest_time - oldest_time
     span_min = int(span_secs // 60)
     span_sec = int(span_secs % 60)
-    print(f"[playback] Playing {len(remaining)} recordings spanning {span_min}m{span_sec:02d}s")
+    print(
+        f"[playback] Playing {len(remaining)} recordings spanning {span_min}m{span_sec:02d}s"
+    )
     _playback_start_time = time.time()
 
     # Create a temp file to track progress
@@ -107,14 +109,14 @@ def _play_files(files: list[Path], start_index: int = 0):
     _progress_file = Path(progress_path)
 
     # Build bash script that writes the current index before playing each file
-    lines = [f'echo {start_index} > {progress_path!r}']
+    lines = [f"echo {start_index} > {progress_path!r}"]
     # Prime audio
-    lines.append(f'{FFPLAY} -nodisp -autoexit {str(SILENCE.resolve())!r} 2>/dev/null')
+    lines.append(f"{FFPLAY} -nodisp -autoexit {str(SILENCE.resolve())!r} 2>/dev/null")
     for i, f in enumerate(remaining, start=start_index):
-        lines.append(f'echo {i} > {progress_path!r}')
-        lines.append(f'{FFPLAY} -nodisp -autoexit {str(f)!r} 2>/dev/null')
+        lines.append(f"echo {i} > {progress_path!r}")
+        lines.append(f"{FFPLAY} -nodisp -autoexit {str(f)!r} 2>/dev/null")
     # Mark complete
-    lines.append(f'echo done > {progress_path!r}')
+    lines.append(f"echo done > {progress_path!r}")
     script = "\n".join(lines)
 
     _playback_process = subprocess.Popen(
@@ -176,14 +178,16 @@ def _cleanup_progress():
 def _play_range_batch():
     """Play the next batch from _range_files starting at _range_offset."""
     global _range_offset
-    batch = _range_files[_range_offset:_range_offset + _range_batch_size]
+    batch = _range_files[_range_offset : _range_offset + _range_batch_size]
     if not batch:
         print(f"[playback] All {len(_range_files)} recordings played — no more batches")
         return
     batch_start = datetime.fromtimestamp(batch[0].stat().st_mtime).strftime("%H:%M:%S")
     batch_end = datetime.fromtimestamp(batch[-1].stat().st_mtime).strftime("%H:%M:%S")
     remaining = len(_range_files) - _range_offset - len(batch)
-    print(f"[playback] Batch {_range_offset + 1}–{_range_offset + len(batch)} of {len(_range_files)} ({batch_start}–{batch_end}), {remaining} remaining")
+    print(
+        f"[playback] Batch {_range_offset + 1}–{_range_offset + len(batch)} of {len(_range_files)} ({batch_start}–{batch_end}), {remaining} remaining"
+    )
     _range_offset += len(batch)
     _play_files(batch)
 
@@ -218,7 +222,9 @@ class Actions:
             elapsed = time.time() - _playback_start_time if _playback_start_time else 0
             mins = int(elapsed // 60)
             secs = int(elapsed % 60)
-            print(f"[playback] Paused at {idx + 1}/{len(_current_playlist)} ({mins}m{secs:02d}s in)")
+            print(
+                f"[playback] Paused at {idx + 1}/{len(_current_playlist)} ({mins}m{secs:02d}s in)"
+            )
         else:
             print("[playback] Nothing playing")
 
@@ -244,7 +250,9 @@ class Actions:
         global _current_playlist
         _current_playlist = []
 
-    def playback_range(start_iso: str, end_iso: str, batch_size: int = 20, last: int = 0):
+    def playback_range(
+        start_iso: str, end_iso: str, batch_size: int = 20, last: int = 0
+    ):
         """Play .flac recordings between two ISO timestamps in batches.
 
         Args:
@@ -269,7 +277,9 @@ class Actions:
         _range_batch_size = batch_size
         first_ts = datetime.fromtimestamp(flacs[0].stat().st_mtime).strftime("%H:%M:%S")
         last_ts = datetime.fromtimestamp(flacs[-1].stat().st_mtime).strftime("%H:%M:%S")
-        print(f"[playback] Found {len(flacs)} recordings ({first_ts}–{last_ts}), batch size {batch_size}")
+        print(
+            f"[playback] Found {len(flacs)} recordings ({first_ts}–{last_ts}), batch size {batch_size}"
+        )
         _play_range_batch()
 
     def playback_next():

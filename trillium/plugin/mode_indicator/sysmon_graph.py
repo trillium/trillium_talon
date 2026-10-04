@@ -3,9 +3,9 @@
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
-BAR_W = 3       # width of each CPU bar in pixels
-BAR_GAP = 1     # gap between bars
-PADDING = 4     # padding around the graph area
+BAR_W = 3  # width of each CPU bar in pixels
+BAR_GAP = 1  # gap between bars
+PADDING = 4  # padding around the graph area
 
 # Cache last-known core count so width never drops to 0
 _last_num_cores = 10
@@ -73,11 +73,11 @@ def draw_graph(
     mem_y = bottom - (mem_pct * graph_h)
 
     if mem_pressure >= 4:
-        mem_color = "ff3333ee"   # red = critical
+        mem_color = "ff3333ee"  # red = critical
     elif mem_pressure >= 2:
-        mem_color = "ffaa33ee"   # orange = warn
+        mem_color = "ffaa33ee"  # orange = warn
     else:
-        mem_color = "33ccffee"   # cyan = normal
+        mem_color = "33ccffee"  # cyan = normal
 
     c.paint.color = mem_color
     c.paint.style = c.paint.Style.STROKE

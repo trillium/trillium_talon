@@ -1,11 +1,12 @@
-from talon import Context, Module, settings, actions, speech_system
-from talon import resource
-import time
 import csv
+import time
 from pathlib import Path
-from .opposite_mappings import REVERSE_MODIFIERS, REVERSE_SPECIAL_KEYS, OPPOSITES
-from . import parrot_logger
+
+from talon import Context, Module, actions, resource, settings, speech_system
+
 from ...core.on_phrase.command_logger.command_logger import log_parrot_command
+from . import parrot_logger
+from .opposite_mappings import OPPOSITES, REVERSE_MODIFIERS, REVERSE_SPECIAL_KEYS
 
 # Import parrot_integration to access confidence score
 try:
@@ -74,7 +75,10 @@ class Actions:
             )
 
             # Save navigation steps if applicable
-            if last_repeatable_cmd.trigger == "go <user.navigation_step>+" and last_repeatable_capture:
+            if (
+                last_repeatable_cmd.trigger == "go <user.navigation_step>+"
+                and last_repeatable_capture
+            ):
                 steps = []
                 for i in range(1, len(last_repeatable_capture)):
                     item = last_repeatable_capture[i]
@@ -84,7 +88,10 @@ class Actions:
                     state["navigation_steps"] = steps
 
             # Save special key if applicable
-            if last_repeatable_cmd.trigger == "<user.special_key>" and last_repeatable_capture:
+            if (
+                last_repeatable_cmd.trigger == "<user.special_key>"
+                and last_repeatable_capture
+            ):
                 state["special_key"] = str(last_repeatable_capture).strip()
 
         return state
@@ -101,7 +108,9 @@ class Actions:
         if "navigation_steps" in state:
             steps = state["navigation_steps"]
             # Set override to perform these navigation steps
-            actions.user.set_next_repeat_action("user", "repeater_perform_navigation", [steps])
+            actions.user.set_next_repeat_action(
+                "user", "repeater_perform_navigation", [steps]
+            )
 
             # Set opposite to perform reversed steps
             reversed_steps = []
@@ -110,7 +119,9 @@ class Actions:
                 if rev_mod:
                     reversed_steps.append({"modifier": rev_mod, "count": step["count"]})
             if reversed_steps:
-                actions.user.set_next_opposite_action("user", "repeater_perform_navigation", [reversed_steps])
+                actions.user.set_next_opposite_action(
+                    "user", "repeater_perform_navigation", [reversed_steps]
+                )
 
             actions.user.boolean_print("repeater", f"Restored navigation: {display}")
 
@@ -128,7 +139,12 @@ class Actions:
 
         # Update mode indicator
         try:
-            opposite_text = "reverse" if "navigation_steps" in state or REVERSE_SPECIAL_KEYS.get(state.get("special_key")) else ""
+            opposite_text = (
+                "reverse"
+                if "navigation_steps" in state
+                or REVERSE_SPECIAL_KEYS.get(state.get("special_key"))
+                else ""
+            )
             actions.user.mode_indicator_set_command_text(display, opposite_text)
         except Exception:
             pass
@@ -299,10 +315,10 @@ mode: dictation
 """
 
 # Acceleration state for rapid repeats
-accel_command = None      # Command trigger being accelerated (e.g. "wheel down")
-accel_count = 0           # Number of repeats in current window
-accel_last_time = 0       # Timestamp of last accelerated action
-ACCEL_WINDOW = 1.0        # Seconds before acceleration resets
+accel_command = None  # Command trigger being accelerated (e.g. "wheel down")
+accel_count = 0  # Number of repeats in current window
+accel_last_time = 0  # Timestamp of last accelerated action
+ACCEL_WINDOW = 1.0  # Seconds before acceleration resets
 ACCEL_COMMANDS = {"wheel up", "wheel down"}  # Commands that support acceleration
 
 
@@ -341,7 +357,9 @@ def update_accel_state(command: str) -> int:
             accel_count = 1
         accel_last_time = now
         multiplier = get_accel_multiplier(accel_count)
-        actions.user.boolean_print("repeater", f"Accel: {command} count={accel_count} mult={multiplier}x")
+        actions.user.boolean_print(
+            "repeater", f"Accel: {command} count={accel_count} mult={multiplier}x"
+        )
         return multiplier
     else:
         # Non-accelerating command resets state
@@ -409,12 +427,14 @@ def reverse_navigation_steps(capture):
 
 def get_parrot_confidence():
     """Get the last parrot confidence score if available"""
-    if parrot_integration and hasattr(parrot_integration, 'last_parrot_confidence'):
+    if parrot_integration and hasattr(parrot_integration, "last_parrot_confidence"):
         return parrot_integration.last_parrot_confidence
     return None
 
 
-def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None, sound="tongue_click"):
+def repeat_last_repeatable(
+    cmd_to_log=None, capture_to_log=None, confidence=None, sound="tongue_click"
+):
     """Repeat the last repeatable command (excluding filtered commands)
 
     Args:
@@ -427,7 +447,8 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
     if override_repeat_action:
         namespace, action_name, args = override_repeat_action
         actions.user.boolean_print(
-            "repeater", f"Using override repeat action: {namespace}.{action_name}({args})"
+            "repeater",
+            f"Using override repeat action: {namespace}.{action_name}({args})",
         )
         success = True
         try:
@@ -443,7 +464,12 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
                 "repeat", cmd_to_log, capture_to_log, success, confidence
             )
             if success:
-                log_parrot_command(f"{namespace}.{action_name}", sound=sound, action="repeat", confidence=confidence)
+                log_parrot_command(
+                    f"{namespace}.{action_name}",
+                    sound=sound,
+                    action="repeat",
+                    confidence=confidence,
+                )
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log repeat action: {e}")
         return
@@ -486,7 +512,9 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
                 multiplier = update_accel_state(command_trigger)
                 execute_accelerated_scroll(command_trigger, multiplier)
             except Exception as e:
-                actions.user.boolean_print("repeater", f"Failed to execute accelerated scroll: {e}")
+                actions.user.boolean_print(
+                    "repeater", f"Failed to execute accelerated scroll: {e}"
+                )
                 success = False
         else:
             try:
@@ -501,8 +529,18 @@ def repeat_last_repeatable(cmd_to_log=None, capture_to_log=None, confidence=None
                 "repeat", cmd_to_log, capture_to_log, success, confidence
             )
             if success:
-                display = format_command_for_display(command_trigger) if command_trigger else ""
-                log_parrot_command(command_trigger, display, sound=sound, action="repeat", confidence=confidence)
+                display = (
+                    format_command_for_display(command_trigger)
+                    if command_trigger
+                    else ""
+                )
+                log_parrot_command(
+                    command_trigger,
+                    display,
+                    sound=sound,
+                    action="repeat",
+                    confidence=confidence,
+                )
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log repeat action: {e}")
 
@@ -546,7 +584,8 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None, sound="cmere
     if override_opposite_action:
         namespace, action_name, args = override_opposite_action
         actions.user.boolean_print(
-            "repeater", f"Using override opposite action: {namespace}.{action_name}({args})"
+            "repeater",
+            f"Using override opposite action: {namespace}.{action_name}({args})",
         )
         success = True
         try:
@@ -562,7 +601,12 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None, sound="cmere
                 "reverse", cmd_to_log, capture_to_log, success, confidence
             )
             if success:
-                log_parrot_command(f"{namespace}.{action_name}", sound=sound, action="reverse", confidence=confidence)
+                log_parrot_command(
+                    f"{namespace}.{action_name}",
+                    sound=sound,
+                    action="reverse",
+                    confidence=confidence,
+                )
         except Exception as e:
             actions.user.boolean_print("repeater", f"Failed to log reverse action: {e}")
         return
@@ -618,7 +662,12 @@ def opposite(cmd_to_log=None, capture_to_log=None, confidence=None, sound="cmere
             opposite_trigger = ""
             if command_name in OPPOSITES:
                 opposite_trigger = OPPOSITES[command_name].get("trigger", command_name)
-            log_parrot_command(opposite_trigger or command_name, sound=sound, action="reverse", confidence=confidence)
+            log_parrot_command(
+                opposite_trigger or command_name,
+                sound=sound,
+                action="reverse",
+                confidence=confidence,
+            )
     except Exception as e:
         actions.user.boolean_print("repeater", f"Failed to log reverse action: {e}")
 

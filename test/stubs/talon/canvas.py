@@ -28,9 +28,16 @@ class Canvas:
     """
 
     def __init__(self, x=0, y=0, width=1920, height=1080):
-        self.rect = type("rect", (), {
-            "x": x, "y": y, "width": width, "height": height,
-        })()
+        self.rect = type(
+            "rect",
+            (),
+            {
+                "x": x,
+                "y": y,
+                "width": width,
+                "height": height,
+            },
+        )()
         self._callbacks = {}
         self._visible = False
         self._frozen = False

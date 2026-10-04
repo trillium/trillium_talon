@@ -1,7 +1,9 @@
-_V = "0.0.3"; print(f"[v{_V}] {__name__}")
+_V = "0.0.3"
+print(f"[v{_V}] {__name__}")
 
 import subprocess
 from pathlib import Path
+
 from talon import Module, actions
 
 mod = Module()

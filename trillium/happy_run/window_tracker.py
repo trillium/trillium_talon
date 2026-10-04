@@ -52,7 +52,9 @@ def poll_for_new_window(bundle_id, windows_before, callback, check_count=0):
         # App not running yet, keep waiting
         cron.after(
             POLL_INTERVAL,
-            lambda: poll_for_new_window(bundle_id, windows_before, callback, check_count + 1),
+            lambda: poll_for_new_window(
+                bundle_id, windows_before, callback, check_count + 1
+            ),
         )
         return
 
@@ -70,5 +72,7 @@ def poll_for_new_window(bundle_id, windows_before, callback, check_count=0):
     # No new window yet, keep polling
     cron.after(
         POLL_INTERVAL,
-        lambda: poll_for_new_window(bundle_id, windows_before, callback, check_count + 1),
+        lambda: poll_for_new_window(
+            bundle_id, windows_before, callback, check_count + 1
+        ),
     )

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import talon
 from talon import Context, Module, actions, app, fs, imgui, ui
+
 try:
     from ....trillium_obs.config import SAFE_APPS
 except (ImportError, ModuleNotFoundError):
@@ -363,7 +364,6 @@ class Actions:
         #     actions.user.obs_get_clear()
         #     rect = ui.active_app().windows()[0].rect
         #     actions.user.draw_mask_on_image_inplace(rect)
-            
 
     def switcher_focus_print_backup(name: str):
         """Focus a new application by name"""
@@ -380,11 +380,11 @@ class Actions:
             # Pretty sure it's suppose to be app.windows()[1]
             for num, item in enumerate(app.windows()):
                 print(num, item.title)
-                
+
             # Focus new app
             actions.app.window_next()
 
-            time.sleep(.5)
+            time.sleep(0.5)
             ui.active_app()
             print("[actual        ] -> ", app.windows()[0].title)
             for num, item in enumerate(app.windows()):
@@ -415,7 +415,9 @@ class Actions:
                 if not _retried:
                     # First timeout: log diagnostics then retry with app.focus()
                     _aw = ui.active_window()
-                    print(f"[focus_debug] TIMEOUT focus_returned={_focus_result} target={window.app.name}:{window.id} active={_aw.app.name}:{_aw.id} eq={_aw == window} id_eq={_aw.id == window.id}")
+                    print(
+                        f"[focus_debug] TIMEOUT focus_returned={_focus_result} target={window.app.name}:{window.id} active={_aw.app.name}:{_aw.id} eq={_aw == window} id_eq={_aw.id == window.id}"
+                    )
                     _retried = True
                     try:
                         window.app.focus()
@@ -494,7 +496,6 @@ def gui_running(gui: imgui.GUI):
 
 def update_launch_list():
     launch = get_apps()
-
 
     ctx.lists["self.launch"] = actions.user.create_spoken_forms_from_map(
         launch, words_to_exclude

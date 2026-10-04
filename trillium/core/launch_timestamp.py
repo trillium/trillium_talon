@@ -6,6 +6,7 @@ Used by restart scripts to detect when Talon has fully started.
 import os
 import time
 from pathlib import Path
+
 from talon import app
 
 TIMESTAMP_FILE = Path.home() / ".talon" / "launch_timestamp"

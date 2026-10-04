@@ -1,6 +1,6 @@
 """Twitch Talon actions: stream status, chat connect/disconnect, title management."""
-from talon import Module, actions, settings
 
+from talon import Module, actions, settings
 
 mod = Module()
 
@@ -12,7 +12,10 @@ class TwitchActions:
         channel = settings.get("user.twitch_channel")
         if not channel:
             return "Twitch: no channel configured"
-        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import get_stream_status
+        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import (
+            get_stream_status,
+        )
+
         status = get_stream_status(channel)
         if status is None:
             return "Offline"
@@ -23,7 +26,10 @@ class TwitchActions:
         channel = settings.get("user.twitch_channel")
         if not channel:
             return 0
-        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import get_stream_status
+        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import (
+            get_stream_status,
+        )
+
         status = get_stream_status(channel)
         if status is None:
             return 0
@@ -32,12 +38,14 @@ class TwitchActions:
     def twitch_chat_connect():
         """Start the Twitch IRC chat client."""
         from user.trillium_talon.trillium.plugin.twitch.twitch_irc import client
+
         client.start()
         print("Twitch: chat client started")
 
     def twitch_chat_disconnect():
         """Stop the Twitch IRC chat client."""
         from user.trillium_talon.trillium.plugin.twitch.twitch_irc import client
+
         client.stop()
         print("Twitch: chat client stopped")
 
@@ -47,7 +55,10 @@ class TwitchActions:
         if not channel:
             actions.user.hud_add_log("warning", "Twitch: no channel configured")
             return
-        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import get_channel_title
+        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import (
+            get_channel_title,
+        )
+
         title = get_channel_title(channel)
         if title:
             actions.user.hud_add_log("event", f"Title: {title}")
@@ -60,7 +71,10 @@ class TwitchActions:
         if not channel:
             actions.user.hud_add_log("warning", "Twitch: no channel configured")
             return
-        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import set_channel_title
+        from user.trillium_talon.trillium.plugin.twitch.twitch_helix import (
+            set_channel_title,
+        )
+
         success = set_channel_title(channel, title)
         if success:
             actions.user.hud_add_log("success", f"Title set: {title}")

@@ -64,7 +64,7 @@ def extract_dictated_text(record):
     # Remove known command prefixes (prose formatters)
     for prefix in ["say ", "sentence ", "title ", "word ", "NOOP "]:
         if raw.startswith(prefix):
-            raw = raw[len(prefix):]
+            raw = raw[len(prefix) :]
             break
 
     return raw.strip().lower()
@@ -185,17 +185,26 @@ def find_correction_sequences(records):
                         text_before = extract_dictated_text(r1)
                         text_after = extract_dictated_text(r3)
 
-                        if (text_before and text_after
-                                and text_before != text_after
-                                and similar_enough(text_before, text_after)):
-                            sequences.append({
-                                "heard": text_before,
-                                "meant": text_after,
-                                "correction_cmd": trigger2,
-                                "timestamp": r1["_ts"].isoformat(),
-                                "app": r1.get("context", {}).get("app", {}).get("name", ""),
-                                "window": r1.get("context", {}).get("window", {}).get("title", ""),
-                            })
+                        if (
+                            text_before
+                            and text_after
+                            and text_before != text_after
+                            and similar_enough(text_before, text_after)
+                        ):
+                            sequences.append(
+                                {
+                                    "heard": text_before,
+                                    "meant": text_after,
+                                    "correction_cmd": trigger2,
+                                    "timestamp": r1["_ts"].isoformat(),
+                                    "app": r1.get("context", {})
+                                    .get("app", {})
+                                    .get("name", ""),
+                                    "window": r1.get("context", {})
+                                    .get("window", {})
+                                    .get("title", ""),
+                                }
+                            )
                         i = k
                         found = True
                         break
@@ -255,7 +264,7 @@ def main():
 
     for (heard, meant), count in pair_counter.most_common(50):
         example = pair_examples[(heard, meant)]
-        print(f"\n  [{count}x] \"{heard}\" -> \"{meant}\"")
+        print(f'\n  [{count}x] "{heard}" -> "{meant}"')
         print(f"         via: {example['correction_cmd']}")
         print(f"         app: {example['app']}  window: {example['window'][:50]}")
 

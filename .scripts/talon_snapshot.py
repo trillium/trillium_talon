@@ -33,6 +33,7 @@ REMOVABLE_REPOS = {"MouseControlChicken"}
 # Git helpers
 # ---------------------------------------------------------------------------
 
+
 def _git(args: list[str], cwd: str) -> tuple[int, str]:
     """Run a git command, return (returncode, stdout stripped)."""
     result = subprocess.run(
@@ -67,7 +68,9 @@ def snapshot_git_repo(dir_path: str) -> dict:
     git["head_sha"] = out if rc == 0 else None
 
     # Tracking branch
-    rc, out = _git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], dir_path)
+    rc, out = _git(
+        ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], dir_path
+    )
     git["tracking"] = out if rc == 0 and out else None
 
     # Ahead/behind
@@ -85,7 +88,9 @@ def snapshot_git_repo(dir_path: str) -> dict:
     # from porcelain output (e.g. " M src/foo.py" becomes "M src/foo.py")
     porcelain = subprocess.run(
         ["git", "status", "--porcelain"],
-        cwd=dir_path, capture_output=True, text=True,
+        cwd=dir_path,
+        capture_output=True,
+        text=True,
     )
     dirty_files = []
     untracked_files = []
@@ -168,6 +173,7 @@ def _parse_gitmodules(path: str) -> list[dict]:
 # Plain directory helpers
 # ---------------------------------------------------------------------------
 
+
 def _sha256_file(path: str) -> str | None:
     """Compute sha256 hex digest of a file, or None if too large."""
     try:
@@ -237,18 +243,24 @@ def find_collisions(talon_user_path: str) -> dict:
         if not os.path.isdir(top_full) or top.startswith("."):
             continue
         for root, dirs, files in os.walk(top_full):
-            dirs[:] = [d for d in dirs if d not in (".git", "__pycache__") and not d.startswith(".")]
+            dirs[:] = [
+                d
+                for d in dirs
+                if d not in (".git", "__pycache__") and not d.startswith(".")
+            ]
             for name in files:
                 if not any(name.endswith(ext) for ext in COLLISION_EXTENSIONS):
                     continue
                 full = os.path.join(root, name)
                 rel = os.path.relpath(full, talon_user_path)
                 sha = _sha256_file(full)
-                by_name.setdefault(name, []).append({
-                    "rel_path": rel,
-                    "full_path": full,
-                    "sha256": sha,
-                })
+                by_name.setdefault(name, []).append(
+                    {
+                        "rel_path": rel,
+                        "full_path": full,
+                        "sha256": sha,
+                    }
+                )
 
     return {name: entries for name, entries in by_name.items() if len(entries) > 1}
 
@@ -275,24 +287,29 @@ def dump_collision_files(collisions: dict, script_dir: str) -> list[dict]:
                 size = os.path.getsize(entry["full_path"])
                 if size <= COLLISION_SIZE_LIMIT:
                     import shutil
+
                     shutil.copy2(entry["full_path"], dest)
                     copied = True
                 else:
                     copied = False
             except OSError:
                 copied = False
-            copies.append({
-                "rel_path": entry["rel_path"],
-                "sanitized_filename": sanitized,
-                "sha256": entry["sha256"],
-                "copied": copied,
-            })
+            copies.append(
+                {
+                    "rel_path": entry["rel_path"],
+                    "sanitized_filename": sanitized,
+                    "sha256": entry["sha256"],
+                    "copied": copied,
+                }
+            )
 
-        records.append({
-            "filename": bare_name,
-            "all_identical": all_identical,
-            "copies": copies,
-        })
+        records.append(
+            {
+                "filename": bare_name,
+                "all_identical": all_identical,
+                "copies": copies,
+            }
+        )
 
     return records
 
@@ -300,6 +317,7 @@ def dump_collision_files(collisions: dict, script_dir: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Hostname file scanner
 # ---------------------------------------------------------------------------
+
 
 def find_hostname_files(talon_user_path: str) -> list[dict]:
     """Scan .talon and .talon-list files for hostname: context matchers."""
@@ -318,10 +336,12 @@ def find_hostname_files(talon_user_path: str) -> list[dict]:
                 matches = hostname_re.findall(content)
                 if matches:
                     rel = os.path.relpath(full, talon_user_path)
-                    results.append({
-                        "path": rel,
-                        "hostnames_referenced": [m.strip() for m in matches],
-                    })
+                    results.append(
+                        {
+                            "path": rel,
+                            "hostnames_referenced": [m.strip() for m in matches],
+                        }
+                    )
             except OSError:
                 continue
 
@@ -332,6 +352,7 @@ def find_hostname_files(talon_user_path: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Snapshot orchestrator
 # ---------------------------------------------------------------------------
+
 
 def create_snapshot(talon_user_path: str) -> dict:
     """Create a full snapshot of the Talon user directory."""
@@ -366,7 +387,9 @@ def create_snapshot(talon_user_path: str) -> dict:
     return snapshot
 
 
-def run_collision_detection(snapshot: dict, talon_user_path: str, script_dir: str) -> None:
+def run_collision_detection(
+    snapshot: dict, talon_user_path: str, script_dir: str
+) -> None:
     """Detect collisions, dump files, and attach results to snapshot in place."""
     print("Scanning for filename collisions...", file=sys.stderr)
     collisions = find_collisions(talon_user_path)
@@ -378,6 +401,7 @@ def run_collision_detection(snapshot: dict, talon_user_path: str, script_dir: st
 # ---------------------------------------------------------------------------
 # Diff
 # ---------------------------------------------------------------------------
+
 
 def compute_diff(snap_a: dict, snap_b: dict) -> dict:
     """Compare two snapshots and produce a structured diff."""
@@ -397,12 +421,10 @@ def compute_diff(snap_a: dict, snap_b: dict) -> dict:
 
     # Add detail for dirs only on one side
     diff["only_in_a_detail"] = {
-        name: _summarize_dir(snap_a["directories"][name])
-        for name in diff["only_in_a"]
+        name: _summarize_dir(snap_a["directories"][name]) for name in diff["only_in_a"]
     }
     diff["only_in_b_detail"] = {
-        name: _summarize_dir(snap_b["directories"][name])
-        for name in diff["only_in_b"]
+        name: _summarize_dir(snap_b["directories"][name]) for name in diff["only_in_b"]
     }
 
     for name in sorted(dirs_a & dirs_b):
@@ -463,11 +485,13 @@ def _diff_git(ga: dict, gb: dict) -> dict:
     d = {}
 
     d["branch"] = {
-        "a": ga["branch"], "b": gb["branch"],
+        "a": ga["branch"],
+        "b": gb["branch"],
         "match": ga["branch"] == gb["branch"],
     }
     d["head_sha"] = {
-        "a": ga["head_sha"], "b": gb["head_sha"],
+        "a": ga["head_sha"],
+        "b": gb["head_sha"],
         "match": ga["head_sha"] == gb["head_sha"],
     }
 
@@ -533,12 +557,14 @@ def _diff_plain(files_a: list[dict], files_b: list[dict]) -> dict:
         elif fa.get("size") == fb.get("size"):
             same.append(p)
         else:
-            different.append({
-                "path": p,
-                "a_size": fa.get("size"),
-                "b_size": fb.get("size"),
-                "note": "hash unavailable, sizes differ",
-            })
+            different.append(
+                {
+                    "path": p,
+                    "a_size": fa.get("size"),
+                    "b_size": fb.get("size"),
+                    "note": "hash unavailable, sizes differ",
+                }
+            )
 
     return {
         "files_a_only": sorted(paths_a - paths_b),
@@ -551,6 +577,7 @@ def _diff_plain(files_a: list[dict], files_b: list[dict]) -> dict:
 # ---------------------------------------------------------------------------
 # Reconciliation report
 # ---------------------------------------------------------------------------
+
 
 def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
     """Produce a Markdown reconciliation report from two snapshots."""
@@ -636,8 +663,13 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
                 has_branch_divergence = True
             elif not gd["head_sha"]["match"]:
                 has_commit_divergence = True
-            if (gd["dirty_a_only"] or gd["dirty_b_only"] or gd["dirty_both"]
-                    or gd["untracked_a_only"] or gd["untracked_b_only"]):
+            if (
+                gd["dirty_a_only"]
+                or gd["dirty_b_only"]
+                or gd["dirty_both"]
+                or gd["untracked_a_only"]
+                or gd["untracked_b_only"]
+            ):
                 has_dirty = True
         if "plain_diff" in entry:
             pd = entry["plain_diff"]
@@ -653,7 +685,9 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
                 w(f"### `{name}`")
                 w(f"- {host_a}: {entry['type_a']}")
                 w(f"- {host_b}: {entry['type_b']}")
-                w(f"- **Action:** Investigate — one machine has this as a git repo, the other doesn't")
+                w(
+                    f"- **Action:** Investigate — one machine has this as a git repo, the other doesn't"
+                )
                 w("")
 
     # Branch divergence
@@ -679,9 +713,13 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
                     break
             if is_hostname_branch:
                 w(f"- **Expected:** These appear to be hostname-specific branches")
-                w(f"- **Action:** Verify both branches are pushed to origin. Consider merging shared changes into a common branch (e.g. `main`)")
+                w(
+                    f"- **Action:** Verify both branches are pushed to origin. Consider merging shared changes into a common branch (e.g. `main`)"
+                )
             else:
-                w(f"- **Action:** Determine which branch is correct and switch the other machine")
+                w(
+                    f"- **Action:** Determine which branch is correct and switch the other machine"
+                )
             w("")
 
     # Commit divergence (same branch, different SHA)
@@ -706,16 +744,26 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
             if ahead_a is not None and behind_a is not None:
                 if ahead_a > 0 and behind_a == 0:
                     w(f"- {host_a} is **{ahead_a} commits ahead** of remote")
-                    w(f"- **Action on {host_a}:** `cd ~/.talon/user/{name} && git push`")
-                    w(f"- **Action on {host_b}:** `cd ~/.talon/user/{name} && git pull`")
+                    w(
+                        f"- **Action on {host_a}:** `cd ~/.talon/user/{name} && git push`"
+                    )
+                    w(
+                        f"- **Action on {host_b}:** `cd ~/.talon/user/{name} && git pull`"
+                    )
                 elif behind_a > 0 and ahead_a == 0:
                     w(f"- {host_a} is **{behind_a} commits behind** remote")
-                    w(f"- **Action on {host_a}:** `cd ~/.talon/user/{name} && git pull`")
+                    w(
+                        f"- **Action on {host_a}:** `cd ~/.talon/user/{name} && git pull`"
+                    )
                 elif ahead_a > 0 and behind_a > 0:
-                    w(f"- {host_a}: {ahead_a} ahead, {behind_a} behind remote — **diverged**")
+                    w(
+                        f"- {host_a}: {ahead_a} ahead, {behind_a} behind remote — **diverged**"
+                    )
                     w(f"- **Action:** Manual resolution needed — rebase or merge")
                 else:
-                    w(f"- **Action:** One machine needs to push, then the other pulls. Check which is newer.")
+                    w(
+                        f"- **Action:** One machine needs to push, then the other pulls. Check which is newer."
+                    )
             else:
                 w(f"- No tracking info — compare SHAs manually:")
                 w(f"  ```bash")
@@ -770,8 +818,12 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
     if clone_diffs:
         w("## Local Changes in Plain Clones")
         w("")
-        w("These repos are plain clones (not forks). Local changes exist only on that machine.")
-        w("Diffs are captured so you can verify they match across machines or identify divergence.")
+        w(
+            "These repos are plain clones (not forks). Local changes exist only on that machine."
+        )
+        w(
+            "Diffs are captured so you can verify they match across machines or identify divergence."
+        )
         w("")
         for name, diff_a, diff_b in clone_diffs:
             w(f"### `{name}`")
@@ -819,7 +871,9 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
             if "plain_diff" not in entry:
                 continue
             pd = entry["plain_diff"]
-            if not (pd["files_a_only"] or pd["files_b_only"] or pd["files_both_different"]):
+            if not (
+                pd["files_a_only"] or pd["files_b_only"] or pd["files_both_different"]
+            ):
                 continue
 
             w(f"### `{name}`")
@@ -835,14 +889,20 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
                 w(f"**Content differs:**")
                 for f in pd["files_both_different"]:
                     w(f"  - `{f['path']}` — {f.get('note', 'hash mismatch')}")
-            w(f"- **Action:** Compare and reconcile manually. These are unversioned files.")
+            w(
+                f"- **Action:** Compare and reconcile manually. These are unversioned files."
+            )
             w("")
 
     # Hostname-specific files
     w("## Hostname-Specific Files")
     w("")
-    w("These files use Talon's `hostname:` context matcher and are **expected to differ** between machines.")
-    w("They should exist on **both** machines — Talon's hostname matcher ensures only the correct one activates.")
+    w(
+        "These files use Talon's `hostname:` context matcher and are **expected to differ** between machines."
+    )
+    w(
+        "They should exist on **both** machines — Talon's hostname matcher ensures only the correct one activates."
+    )
     w("")
     all_hostname_files = {}
     for hf in diff["hostname_analysis"].get("hostname_files_a", []):
@@ -864,8 +924,12 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
         w("## Filename Collisions (Consolidation Candidates)")
         w("")
         w("These filenames appear in multiple repos/directories on the same machine.")
-        w("Each copy has been written to `.scripts/collisions/` with a sanitized path name.")
-        w("**Action:** Pick a canonical location and naming convention, remove duplicates.")
+        w(
+            "Each copy has been written to `.scripts/collisions/` with a sanitized path name."
+        )
+        w(
+            "**Action:** Pick a canonical location and naming convention, remove duplicates."
+        )
         w("")
         for fname in all_collision_names:
             ca = collisions_a.get(fname)
@@ -875,10 +939,16 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
                 if not collision:
                     continue
                 identical = collision.get("all_identical", False)
-                status = "all copies identical" if identical else "**copies differ — review needed**"
+                status = (
+                    "all copies identical"
+                    if identical
+                    else "**copies differ — review needed**"
+                )
                 w(f"**{host}** ({status}):")
                 for copy in collision["copies"]:
-                    w(f"  - `{copy['rel_path']}` → `collisions/{copy['sanitized_filename']}`")
+                    w(
+                        f"  - `{copy['rel_path']}` → `collisions/{copy['sanitized_filename']}`"
+                    )
             w("")
 
     # Summary of all actions
@@ -901,6 +971,7 @@ def generate_reconciliation(snap_a: dict, snap_b: dict) -> str:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def cmd_snapshot(args):
     talon_path = args.talon_user or DEFAULT_TALON_USER
@@ -952,8 +1023,14 @@ def cmd_diff(args):
         json.dump(diff, f, indent=2)
 
     print(f"Diff written to {out_path}", file=sys.stderr)
-    print(f"  Only on {diff['compared']['a']['hostname']}: {len(diff['only_in_a'])} dirs", file=sys.stderr)
-    print(f"  Only on {diff['compared']['b']['hostname']}: {len(diff['only_in_b'])} dirs", file=sys.stderr)
+    print(
+        f"  Only on {diff['compared']['a']['hostname']}: {len(diff['only_in_a'])} dirs",
+        file=sys.stderr,
+    )
+    print(
+        f"  Only on {diff['compared']['b']['hostname']}: {len(diff['only_in_b'])} dirs",
+        file=sys.stderr,
+    )
     print(f"  In common: {len(diff['directories'])} dirs", file=sys.stderr)
 
 
@@ -985,7 +1062,9 @@ def main():
     # snapshot
     p_snap = sub.add_parser("snapshot", help="Capture state of ~/.talon/user/")
     p_snap.add_argument("--output", "-o", help="Output JSON file path")
-    p_snap.add_argument("--talon-user", help=f"Talon user directory (default: {DEFAULT_TALON_USER})")
+    p_snap.add_argument(
+        "--talon-user", help=f"Talon user directory (default: {DEFAULT_TALON_USER})"
+    )
 
     # diff
     p_diff = sub.add_parser("diff", help="Compare two snapshots")

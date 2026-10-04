@@ -3,15 +3,17 @@
 Connects to Twitch IRC on app ready, maintains a buffer of recent messages,
 and exposes callbacks for consumers (e.g. HUD bridge) to receive messages.
 """
-from talon import app, settings
+
+import re
 import socket
 import ssl
 import threading
 import time
-import re
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable, Optional
+
+from talon import app, settings
 
 _PRIVMSG_RE = re.compile(
     r"(?:@\S+ )?:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.+)"
@@ -67,7 +69,10 @@ class TwitchChatClient:
         self.connected = False
 
     def _get_token(self) -> str:
-        from user.trillium_talon.trillium.plugin.twitch.twitch_auth import get_oauth_token
+        from user.trillium_talon.trillium.plugin.twitch.twitch_auth import (
+            get_oauth_token,
+        )
+
         return get_oauth_token()
 
     def _send(self, msg: str):
@@ -91,7 +96,10 @@ class TwitchChatClient:
                             self._send(f"PONG{line[4:]}")
                         except Exception:
                             print("Twitch IRC: error sending PONG during welcome")
-                    elif "Login authentication failed" in line or "Improperly formatted auth" in line:
+                    elif (
+                        "Login authentication failed" in line
+                        or "Improperly formatted auth" in line
+                    ):
                         print(f"Twitch IRC: auth failed: {line}")
                         return False
                     elif " 001 " in line:
@@ -109,7 +117,10 @@ class TwitchChatClient:
         try:
             raw_sock = socket.socket()
             ctx = ssl.create_default_context()
-            for ca_path in ["/etc/ssl/cert.pem", "/opt/homebrew/etc/openssl@3/cert.pem"]:
+            for ca_path in [
+                "/etc/ssl/cert.pem",
+                "/opt/homebrew/etc/openssl@3/cert.pem",
+            ]:
                 try:
                     ctx.load_verify_locations(ca_path)
                     break
@@ -118,7 +129,9 @@ class TwitchChatClient:
             self._sock = ctx.wrap_socket(raw_sock, server_hostname="irc.chat.twitch.tv")
             self._sock.settimeout(10.0)
             self._sock.connect(("irc.chat.twitch.tv", 6697))
-            self._send("CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands")
+            self._send(
+                "CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands"
+            )
             self._send(f"PASS {token}")
             self._send(f"NICK {username}")
             if not self._read_until_welcome():
@@ -149,7 +162,9 @@ class TwitchChatClient:
         username = settings.get("user.twitch_bot_username")
 
         if not channel or not username:
-            print(f"Twitch IRC: missing config (channel={channel!r}, username={username!r})")
+            print(
+                f"Twitch IRC: missing config (channel={channel!r}, username={username!r})"
+            )
             return
 
         backoff = 5
@@ -164,7 +179,10 @@ class TwitchChatClient:
 
             if not self._connect(channel, token, username):
                 print("Twitch IRC: connect failed, refreshing token...")
-                from user.trillium_talon.trillium.plugin.twitch.twitch_auth import refresh_oauth_token
+                from user.trillium_talon.trillium.plugin.twitch.twitch_auth import (
+                    refresh_oauth_token,
+                )
+
                 token = refresh_oauth_token()
                 if not token or not self._connect(channel, token, username):
                     print(f"Twitch IRC: reconnect failed, retrying in {backoff}s")
@@ -204,7 +222,9 @@ class TwitchChatClient:
                 self._stop_event.wait(backoff)
 
     def _handle_line(self, line: str):
-        if line.startswith("PING") or (line.startswith(":") and "PING" not in line and line.endswith("PING")):
+        if line.startswith("PING") or (
+            line.startswith(":") and "PING" not in line and line.endswith("PING")
+        ):
             try:
                 self._send(f"PONG{line[4:]}")
             except Exception:
@@ -220,7 +240,10 @@ class TwitchChatClient:
 
         if "Login authentication failed" in line:
             print("Twitch IRC: auth failed mid-session, refreshing token")
-            from user.trillium_talon.trillium.plugin.twitch.twitch_auth import refresh_oauth_token
+            from user.trillium_talon.trillium.plugin.twitch.twitch_auth import (
+                refresh_oauth_token,
+            )
+
             token = refresh_oauth_token()
             if token:
                 self._stop_event.set()
@@ -244,8 +267,9 @@ class TwitchChatClient:
 _previous_client = None
 try:
     import sys
+
     _prev_mod = sys.modules.get(__name__)
-    if _prev_mod and hasattr(_prev_mod, 'client'):
+    if _prev_mod and hasattr(_prev_mod, "client"):
         _previous_client = _prev_mod.client
         _previous_client.stop()
         print("Twitch IRC: stopped previous client instance on reload")
@@ -258,5 +282,6 @@ client = TwitchChatClient()
 
 def on_ready():
     client.start()
+
 
 app.register("ready", on_ready)

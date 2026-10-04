@@ -1,3 +1,3 @@
 import subprocess
 
-subprocess.run(['ls'])  # Replace 'ls' with your command
+subprocess.run(["ls"])  # Replace 'ls' with your command

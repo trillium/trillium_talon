@@ -1,19 +1,29 @@
 """OBS scene state: reads scene list directly from OBS config on disk."""
+
 import json
 import subprocess
 from pathlib import Path
-from talon import Module, Context, app
+
+from talon import Context, Module, app
 
 mod = Module()
 ctx = Context()
 
 mod.list("obs_scene_names", desc="Available OBS scene names")
 
-OBS_SCENE_FILE = Path.home() / "Library" / "Application Support" / "obs-studio" / "basic" / "scenes" / "Untitled.json"
+OBS_SCENE_FILE = (
+    Path.home()
+    / "Library"
+    / "Application Support"
+    / "obs-studio"
+    / "basic"
+    / "scenes"
+    / "Untitled.json"
+)
 _SYSTEM_PYTHON = "/Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python3"
 
 # Shared prelude injected into all OBS WebSocket scripts
-_OBS_PRELUDE = '''
+_OBS_PRELUDE = """
 import subprocess, sys
 pw = subprocess.run(
     ["security", "find-generic-password", "-s", "obs-websocket", "-w"],
@@ -21,7 +31,7 @@ pw = subprocess.run(
 ).stdout.strip()
 import obsws_python as obs
 cl = obs.ReqClient(host="localhost", port=4455, password=pw, timeout=2)
-'''
+"""
 
 _scenes: list[str] = []
 _current_scene: str = ""
@@ -32,7 +42,9 @@ def _run_obs_script(script: str, *args: str) -> str:
     try:
         result = subprocess.run(
             [_SYSTEM_PYTHON, "-c", script, *args],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode != 0 and result.stderr:
             print(f"OBS: {result.stderr.strip()}")
@@ -53,8 +65,9 @@ def get_current_scene() -> str:
 def _fetch_current_scene() -> str:
     """Query OBS websocket for the actual current program scene."""
     import subprocess
+
     _SYSTEM_PYTHON = "/Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python3"
-    _QUERY_SCRIPT = '''
+    _QUERY_SCRIPT = """
 import subprocess, json
 pw = subprocess.run(
     ["security", "find-generic-password", "-s", "obs-websocket", "-w"],
@@ -63,11 +76,13 @@ pw = subprocess.run(
 import obsws_python as obs
 cl = obs.ReqClient(host="localhost", port=4455, password=pw, timeout=2)
 print(cl.get_current_program_scene().scene_name)
-'''
+"""
     try:
         result = subprocess.run(
             [_SYSTEM_PYTHON, "-c", _QUERY_SCRIPT],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -104,8 +119,9 @@ def load_scenes():
 def switch_scene(name: str):
     """Switch OBS scene via websocket subprocess (file is read-only for current scene)."""
     import subprocess
+
     _SYSTEM_PYTHON = "/Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python3"
-    _SWITCH_SCRIPT = '''
+    _SWITCH_SCRIPT = """
 import subprocess, sys
 pw = subprocess.run(
     ["security", "find-generic-password", "-s", "obs-websocket", "-w"],
@@ -114,11 +130,12 @@ pw = subprocess.run(
 import obsws_python as obs
 cl = obs.ReqClient(host="localhost", port=4455, password=pw, timeout=2)
 cl.set_current_program_scene(name=sys.argv[1])
-'''
+"""
     try:
         subprocess.run(
             [_SYSTEM_PYTHON, "-c", _SWITCH_SCRIPT, name],
-            capture_output=True, timeout=5,
+            capture_output=True,
+            timeout=5,
         )
         global _current_scene
         _current_scene = name
@@ -159,5 +176,6 @@ for inp in cl.get_input_list().inputs:
 
 def on_ready():
     load_scenes()
+
 
 app.register("ready", on_ready)

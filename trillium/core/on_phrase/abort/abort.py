@@ -1,10 +1,11 @@
-from typing import Optional
-from talon import Module, Context, actions
-from talon.grammar import Phrase, Capture
-from talon.grammar.vm import VMCapture
-from talon.engines.w2l import DecodeWord
-from dataclasses import dataclass
 import time
+from dataclasses import dataclass
+from typing import Optional
+
+from talon import Context, Module, actions
+from talon.engines.w2l import DecodeWord
+from talon.grammar import Capture, Phrase
+from talon.grammar.vm import VMCapture
 
 mod = Module()
 ctx = Context()

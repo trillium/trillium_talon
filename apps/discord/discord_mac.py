@@ -84,7 +84,9 @@ else:
             actions.key("cmd-shift-e")
 
         def discord_mute():
-            ctrl.key_press("m", app=ui.apps(bundle="com.hnc.Discord")[0], super=True, shift=True)
+            ctrl.key_press(
+                "m", app=ui.apps(bundle="com.hnc.Discord")[0], super=True, shift=True
+            )
 
         def discord_deafen():
             actions.key("cmd-shift-d")

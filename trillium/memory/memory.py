@@ -10,7 +10,7 @@ to pick up external edits.
 import json
 from pathlib import Path
 
-from talon import Module, Context, fs
+from talon import Context, Module, fs
 
 from . import memory_overlay as overlay
 
@@ -92,6 +92,7 @@ class Actions:
         # Dismiss OBS scene overlay if open (shared canvas — only one panel at a time)
         try:
             from ...plugin.obs import obs_scene_overlay
+
             obs_scene_overlay.hide()
         except Exception:
             pass

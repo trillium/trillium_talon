@@ -50,3 +50,6 @@ repos:
     hooks:
       - id: talonfmt
         args: ["--in-place"]
+
+ci:
+  skip: [talonfmt]

@@ -1,10 +1,17 @@
 """OBS scene voice command actions."""
+
 from talon import Module
 
 from . import obs_scene_overlay
 from .obs_scene_state import (
-    switch_scene, get_current_scene, get_scenes,
-    start_stream, stop_stream, start_recording, stop_recording, set_mics_muted,
+    get_current_scene,
+    get_scenes,
+    set_mics_muted,
+    start_recording,
+    start_stream,
+    stop_recording,
+    stop_stream,
+    switch_scene,
 )
 
 mod = Module()
@@ -37,7 +44,7 @@ class Actions:
     def obs_switch_scene_by_letter(letter: str):
         """Switch to an OBS scene by its letter shortcut (a=first, b=second, etc.)"""
         scenes = get_scenes()
-        idx = ord(letter.lower()) - ord('a')
+        idx = ord(letter.lower()) - ord("a")
         if 0 <= idx < len(scenes):
             _switch_and_refresh(scenes[idx])
 

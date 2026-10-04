@@ -2,9 +2,10 @@
 happy_run - Create new iTerm2 window, run 'happy', then execute a command
 """
 
-import subprocess
 import os
-from talon import Module, actions, ctrl, ui, cron
+import subprocess
+
+from talon import Module, actions, cron, ctrl, ui
 
 mod = Module()
 
@@ -151,7 +152,10 @@ def poll_terminal_titles(terminal_app, check_count=0, previous_titles=None):
         return
 
     # Schedule next check
-    cron.after("500ms", lambda: poll_terminal_titles(terminal_app, new_check_count, current_titles))
+    cron.after(
+        "500ms",
+        lambda: poll_terminal_titles(terminal_app, new_check_count, current_titles),
+    )
 
 
 def poll_for_ready(terminal_app, new_window, command, previous_title, stable_count=0):
@@ -194,7 +198,12 @@ def poll_for_ready(terminal_app, new_window, command, previous_title, stable_cou
         new_stable_count = 0
 
     # Check again in 500ms
-    cron.after("500ms", lambda: poll_for_ready(terminal_app, new_window, command, current_title, new_stable_count))
+    cron.after(
+        "500ms",
+        lambda: poll_for_ready(
+            terminal_app, new_window, command, current_title, new_stable_count
+        ),
+    )
 
 
 def run_async(terminal_app, new_window, command):
@@ -208,7 +217,10 @@ def run_async(terminal_app, new_window, command):
 
     # Start polling for title stability (indicates happy is ready)
     # Wait 500ms before first check to let happy start
-    cron.after("500ms", lambda: poll_for_ready(terminal_app, new_window, command, initial_title, 0))
+    cron.after(
+        "500ms",
+        lambda: poll_for_ready(terminal_app, new_window, command, initial_title, 0),
+    )
 
 
 @mod.action_class
@@ -232,4 +244,3 @@ class Actions:
         terminal_app = ui.apps(bundle="com.googlecode.iterm2")[0]
 
         poll_terminal_titles(terminal_app)
-

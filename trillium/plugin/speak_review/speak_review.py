@@ -10,7 +10,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from talon import Module, Context, actions
+from talon import Context, Module, actions
 
 from . import speak_review_overlay as overlay
 
@@ -25,17 +25,19 @@ REVIEW_FILE = Path("/Users/trilliumsmith/code/speak/config/rewrites-review.json"
 
 # Talon's subprocess environment is stripped — speak needs uv, python3, ffplay
 _env = os.environ.copy()
-_env["PATH"] = ":".join([
-    "/opt/homebrew/bin",
-    "/opt/homebrew/sbin",
-    "/Users/trilliumsmith/.local/bin",
-    "/usr/local/bin",
-    "/usr/bin",
-    "/bin",
-    "/usr/sbin",
-    "/sbin",
-    _env.get("PATH", ""),
-])
+_env["PATH"] = ":".join(
+    [
+        "/opt/homebrew/bin",
+        "/opt/homebrew/sbin",
+        "/Users/trilliumsmith/.local/bin",
+        "/usr/local/bin",
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin",
+        _env.get("PATH", ""),
+    ]
+)
 
 # Transient state — speak CLI handles persistence
 _entries: list[dict] = []
@@ -73,11 +75,13 @@ def _load_entries(status_filter: str = "pending") -> list[dict]:
     for review_key, info in reviewed.items():
         if status_filter != "all" and info.get("status") != status_filter:
             continue
-        entries.append({
-            "section": info.get("section", ""),
-            "key": info.get("word", ""),
-            "value": info.get("value", ""),
-        })
+        entries.append(
+            {
+                "section": info.get("section", ""),
+                "key": info.get("word", ""),
+                "value": info.get("value", ""),
+            }
+        )
 
     # For "all", also include pending entries not yet in reviewed
     if status_filter == "all":
@@ -198,7 +202,8 @@ class Actions:
         """Bulk regenerate LLM alternatives for all rejected entries, then reload"""
         subprocess.Popen(
             [SPEAK, "--rewrites", "regenerate"],
-            start_new_session=True, env=_env,
+            start_new_session=True,
+            env=_env,
         )
 
     def speak_review_recent(filter: str = ""):

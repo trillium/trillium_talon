@@ -9,24 +9,30 @@ Uses DismissibleOverlay for lifecycle management.
 
 from talon import ui
 from talon.skia.canvas import Canvas as SkiaCanvas
-
-from ...utils.overlay_kit import DismissibleOverlay, draw_close_hint, draw_dim_backdrop, draw_panel_frame, draw_separator
 from talon.ui import Rect
+
+from ...utils.overlay_kit import (
+    DismissibleOverlay,
+    draw_close_hint,
+    draw_dim_backdrop,
+    draw_panel_frame,
+    draw_separator,
+)
 
 # ── Color palette (warm teal / amber — relaxing but distinct from recall) ──
 
-DIM_BG = "000000cc"            # full-screen dim backdrop
-PANEL_COLOR = "1a2e2eee"       # dark teal panel fill
-PANEL_BORDER = "4a8a7a"        # muted teal border
+DIM_BG = "000000cc"  # full-screen dim backdrop
+PANEL_COLOR = "1a2e2eee"  # dark teal panel fill
+PANEL_BORDER = "4a8a7a"  # muted teal border
 CORNER_RADIUS = 16
 PANEL_PAD = 40
 
 TEXT_COLOR = "ffffffff"
 DIM_COLOR = "aaaaaa"
-ACCENT = "5ab5a0"              # teal accent (value arrows, highlights)
-SECTION_COLOR = "8abfa5"       # soft sage for section label
-REMOVE_COLOR = "cc6644"        # warm red-orange for removals
-LINE_COLOR = "3a5a5a"          # subtle separator lines
+ACCENT = "5ab5a0"  # teal accent (value arrows, highlights)
+SECTION_COLOR = "8abfa5"  # soft sage for section label
+REMOVE_COLOR = "cc6644"  # warm red-orange for removals
+LINE_COLOR = "3a5a5a"  # subtle separator lines
 
 # ── Font sizes (matching recall tiers) ──
 
@@ -69,15 +75,15 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     draw_dim_backdrop(c, sr, DIM_BG)
 
     # Pre-calculate panel height
-    panel_h = PANEL_PAD                        # top padding
-    panel_h += HEADER_SIZE + 20                # "Rewrite Review" header + gap
-    panel_h += SECTION_SIZE + 12               # section label + gap
-    panel_h += KEY_SIZE + 12                   # key + gap
-    panel_h += VALUE_SIZE + 20                 # value + gap
-    panel_h += COUNTER_SIZE + 20               # counter + gap before separator
-    panel_h += 1 + ROW_PAD                     # separator + gap
+    panel_h = PANEL_PAD  # top padding
+    panel_h += HEADER_SIZE + 20  # "Rewrite Review" header + gap
+    panel_h += SECTION_SIZE + 12  # section label + gap
+    panel_h += KEY_SIZE + 12  # key + gap
+    panel_h += VALUE_SIZE + 20  # value + gap
+    panel_h += COUNTER_SIZE + 20  # counter + gap before separator
+    panel_h += 1 + ROW_PAD  # separator + gap
     panel_h += len(HINTS) * (HINT_CMD_SIZE + 10)  # hint rows
-    panel_h += PANEL_PAD                       # bottom padding
+    panel_h += PANEL_PAD  # bottom padding
 
     panel_w = sr.width * 0.40
 
@@ -106,7 +112,16 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     c.paint.color = TEXT_COLOR
     c.draw_text("Rewrite Review", cx, cy + HEADER_SIZE)
 
-    draw_close_hint(c, '"stop review"', HINT_DETAIL_SIZE, DIM_COLOR, panel_x, panel_y, panel_w, PANEL_PAD)
+    draw_close_hint(
+        c,
+        '"stop review"',
+        HINT_DETAIL_SIZE,
+        DIM_COLOR,
+        panel_x,
+        panel_y,
+        panel_w,
+        PANEL_PAD,
+    )
 
     cy += HEADER_SIZE + 20
 

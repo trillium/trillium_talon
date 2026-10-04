@@ -19,20 +19,32 @@ Features:
 import os
 import time
 from pathlib import Path
+
 from talon import Module, actions, app, ui
-from . import recall_overlay
-from . import recall_state
+
+from . import recall_overlay, recall_state
+from .recall_commands import (
+    _resolve_command,
+    _run_when_ready,
+    find_window_by_id,
+    rematch_window,
+)
 from .recall_state import (
-    saved_windows, archived_windows,
-    pending_ctx, is_forbidden,
-    save_to_disk, update_window_list, load_saved_windows,
-    _cancel_pending, find_name_for_window_id,
+    _cancel_pending,
+    archived_windows,
+    find_name_for_window_id,
+    is_forbidden,
+    load_saved_windows,
+    pending_ctx,
+    save_to_disk,
+    saved_windows,
+    update_window_list,
 )
 from .recall_terminal import (
-    is_terminal, detect_terminal_path, _parse_title_path, _launch_terminal,
-)
-from .recall_commands import (
-    find_window_by_id, rematch_window, _resolve_command, _run_when_ready,
+    _launch_terminal,
+    _parse_title_path,
+    detect_terminal_path,
+    is_terminal,
 )
 
 # Own Module for action registration — using recall_state.mod caused
@@ -145,7 +157,7 @@ class Actions:
                 saved_windows[existing_name]["aliases"] = aliases
                 save_to_disk()
                 update_window_list()
-                recall_overlay.flash(f'alias: {name} -> {existing_name}')
+                recall_overlay.flash(f"alias: {name} -> {existing_name}")
             return
 
         # Detect path for terminals and VS Code
@@ -155,6 +167,7 @@ class Actions:
         elif app_name == "Code":
             try:
                 from trillium.workspace.workspace import _get_current_workspace_path
+
                 path = _get_current_workspace_path()
             except Exception:
                 pass
@@ -186,7 +199,7 @@ class Actions:
             return
         saved_windows[name]["id"] = None
         save_to_disk()
-        recall_overlay.flash(f'{name}: detached')
+        recall_overlay.flash(f"{name}: detached")
 
     def recall_window(name: str):
         """Focus the saved window with the given name, with re-match fallback"""
@@ -409,7 +422,7 @@ class Actions:
 
         save_to_disk()
         update_window_list()
-        recall_overlay.flash(f'combined: {secondary} -> {primary}')
+        recall_overlay.flash(f"combined: {secondary} -> {primary}")
         print(f'[recall] combined: "{secondary}" is now an alias of "{primary}"')
 
     def recall_combine_start(primary: str):
@@ -440,11 +453,15 @@ class Actions:
 
     def recall_alias_start(name: str):
         """Start two-step alias: show prompt and wait for alias"""
-        print(f"[recall] alias_start: name={name!r}, pending_mode={recall_state._pending_mode!r}, pending_name={recall_state._pending_name!r}")
+        print(
+            f"[recall] alias_start: name={name!r}, pending_mode={recall_state._pending_mode!r}, pending_name={recall_state._pending_name!r}"
+        )
 
         # If we're already waiting for alias input, treat this as the alias
         if recall_state._pending_mode == "alias" and recall_state._pending_name:
-            print(f"[recall] alias_start: already pending — treating {name!r} as alias for {recall_state._pending_name!r}")
+            print(
+                f"[recall] alias_start: already pending — treating {name!r} as alias for {recall_state._pending_name!r}"
+            )
             actions.user.recall_pending_finish(name)
             return
 
@@ -455,7 +472,9 @@ class Actions:
         recall_state._pending_mode = "alias"
         recall_state._pending_name = name
         pending_ctx.tags = ["user.recall_pending_input"]
-        print(f"[recall] alias_start: tag set, pending_mode={recall_state._pending_mode!r}, pending_name={recall_state._pending_name!r}")
+        print(
+            f"[recall] alias_start: tag set, pending_mode={recall_state._pending_mode!r}, pending_name={recall_state._pending_name!r}"
+        )
         recall_overlay.show_prompt(
             f'Add alias for "{name}"',
             "Say the alias...",
@@ -463,7 +482,9 @@ class Actions:
 
     def recall_pending_finish(spoken: str):
         """Complete whichever two-step command is pending"""
-        print(f"[recall] pending_finish: raw spoken={spoken!r}, type={type(spoken).__name__}")
+        print(
+            f"[recall] pending_finish: raw spoken={spoken!r}, type={type(spoken).__name__}"
+        )
 
         # Normalize: <user.raw_prose> gives a Phrase/list, not a str
         if not isinstance(spoken, str):
@@ -482,7 +503,9 @@ class Actions:
             print(f"[recall] pending_finish: ABORT — empty mode/name/spoken")
             return
 
-        print(f"[recall] pending_finish: dispatching mode={mode!r} name={name!r} spoken={spoken!r}")
+        print(
+            f"[recall] pending_finish: dispatching mode={mode!r} name={name!r} spoken={spoken!r}"
+        )
         if mode == "combine":
             actions.user.recall_combine(name, spoken)
         elif mode == "rename":
@@ -527,8 +550,10 @@ class Actions:
 
         save_to_disk()
         update_window_list()
-        recall_overlay.flash(f'promoted: {spoken_name} (was {canonical})')
-        print(f'[recall] promoted: "{spoken_name}" is now canonical (was alias of "{canonical}")')
+        recall_overlay.flash(f"promoted: {spoken_name} (was {canonical})")
+        print(
+            f'[recall] promoted: "{spoken_name}" is now canonical (was alias of "{canonical}")'
+        )
 
     def recall_rename(name: str, new_name: str):
         """Rename a saved window to a completely new name"""
@@ -545,7 +570,7 @@ class Actions:
 
         save_to_disk()
         update_window_list()
-        recall_overlay.flash(f'renamed: {name} -> {new_name}')
+        recall_overlay.flash(f"renamed: {name} -> {new_name}")
 
     def add_recall_alias(name: str, alias: str):
         """Add an alias spoken form for a saved window"""
@@ -565,7 +590,7 @@ class Actions:
             saved_windows[name]["aliases"] = aliases
             save_to_disk()
             update_window_list()
-            recall_overlay.flash(f'alias: {alias} -> {name}')
+            recall_overlay.flash(f"alias: {alias} -> {name}")
 
     def remove_recall_alias(alias: str):
         """Remove an alias from whichever window owns it"""
@@ -578,7 +603,7 @@ class Actions:
                 info["aliases"] = [a for a in aliases if a.lower() != spoken]
                 save_to_disk()
                 update_window_list()
-                recall_overlay.flash(f'removed alias: {alias} (was {name})')
+                recall_overlay.flash(f"removed alias: {alias} (was {name})")
                 return
 
         recall_overlay.flash(f'"{alias}" is not an alias')
@@ -593,7 +618,7 @@ class Actions:
         shell_cmd = _resolve_command(command_name)
         path = saved_windows[name].get("path", "~")
         subtitle = f"cd {path} && {shell_cmd}" if shell_cmd else ""
-        recall_overlay.flash(f'{name}: command = {command_name}', subtitle)
+        recall_overlay.flash(f"{name}: command = {command_name}", subtitle)
 
     def recall_clear_command(name: str):
         """Remove the default command from a saved window"""
@@ -601,7 +626,7 @@ class Actions:
             return
         saved_windows[name].pop("command", None)
         save_to_disk()
-        recall_overlay.flash(f'{name}: command cleared')
+        recall_overlay.flash(f"{name}: command cleared")
 
     def recall_edit_commands():
         """Open the recall commands list in the default editor"""
@@ -617,11 +642,13 @@ class Actions:
         saved_windows[name]["auto_assign"] = not current
         save_to_disk()
         state = "ON" if not current else "OFF"
-        recall_overlay.flash(f'{name}: auto-assign {state}')
+        recall_overlay.flash(f"{name}: auto-assign {state}")
 
     def recall_toggle_border():
         """Toggle the persistent window border on/off"""
-        recall_state._persistent_highlight_enabled = not recall_state._persistent_highlight_enabled
+        recall_state._persistent_highlight_enabled = (
+            not recall_state._persistent_highlight_enabled
+        )
         save_to_disk()
         if recall_state._persistent_highlight_enabled:
             _activate_persistent_highlight()
@@ -641,6 +668,7 @@ class Actions:
 
         if app_name == "Code" and path:
             import subprocess
+
             if not os.path.isdir(path):
                 print(f"[recall] restore: VS Code path no longer exists: {path}")
                 actions.user.recall_window(name)

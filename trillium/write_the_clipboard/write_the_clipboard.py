@@ -1,7 +1,8 @@
-from talon import Module, Context, actions, clip, settings, app
+from talon import Context, Module, actions, app, clip, settings
 
 mod = Module()
 ctx = Context()
+
 
 @mod.action_class
 class Actions:
@@ -19,6 +20,7 @@ class Actions:
             clip.set_mime(mime)
             actions.edit.paste()
             actions.sleep("150ms")
+
 
 @ctx.action_class("user")
 class Actions:

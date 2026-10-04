@@ -186,7 +186,7 @@ SYSMON_STATS = Path.home() / "code" / "system-monitor" / "data" / "stats.json"
 
 import subprocess
 
-_OBS_POLL_SCRIPT = '''
+_OBS_POLL_SCRIPT = """
 import json, subprocess
 try:
     pw = subprocess.run(
@@ -201,15 +201,21 @@ try:
     print(json.dumps({"streaming": s.output_active, "recording": r.output_active, "scene": sc.scene_name}))
 except Exception:
     print(json.dumps({"streaming": False, "recording": False, "scene": ""}))
-'''
+"""
 
 
 def _poll_obs_status():
     """Poll OBS streaming/recording via system Python (obsws_python not in Talon's Python)."""
     try:
         result = subprocess.run(
-            ["/Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python3", "-c", _OBS_POLL_SCRIPT],
-            capture_output=True, text=True, timeout=5,
+            [
+                "/Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python3",
+                "-c",
+                _OBS_POLL_SCRIPT,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
             data = json.loads(result.stdout.strip())

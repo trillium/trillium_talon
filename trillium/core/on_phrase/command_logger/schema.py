@@ -8,6 +8,7 @@ Usage (Python):
 """
 
 from typing import Optional
+
 from typing_extensions import TypedDict
 
 
@@ -57,7 +58,8 @@ class Metadata(TypedDict):
 
 class SoundInfo(TypedDict, total=False):
     """Present when source is "repeat" or "reverse"."""
-    name: Optional[str]          # e.g. "tongue_click", "cmere"
+
+    name: Optional[str]  # e.g. "tongue_click", "cmere"
     confidence: Optional[float]  # detection confidence
 
 
@@ -72,11 +74,12 @@ class CommandHistoryEntry(TypedDict):
     - "repeat"  — sound triggered a repeat of the last command
     - "reverse" — sound triggered the reverse/opposite of the last command
     """
-    version: str            # "2.1"
-    action_type: str        # "command"
-    source: str             # "voice" | "repeat" | "reverse"
-    timestamp: str          # ISO 8601
-    phrase: str             # Raw spoken words (same for voice and sound)
+
+    version: str  # "2.1"
+    action_type: str  # "command"
+    source: str  # "voice" | "repeat" | "reverse"
+    timestamp: str  # ISO 8601
+    phrase: str  # Raw spoken words (same for voice and sound)
     words: list[WordEntry]  # Per-word timing (empty for sound entries)
     commands: list[CommandEntry]  # Per-command breakdown (inherited for sound)
     sound: Optional[SoundInfo]  # Present when source is "repeat" or "reverse"

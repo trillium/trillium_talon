@@ -4,11 +4,12 @@ Supports two layers of exclusion:
   1. Setting-based (user.microphone_excluded) — static, comma-separated substrings
   2. Dynamic (voice commands) — persisted via talon.storage, exact mic names
 """
+
 from talon import Module, actions, settings, storage
 from talon.skia.canvas import Canvas as SkiaCanvas
 
-from .microphone_selection_draw import draw_overlay
 from ...utils.overlay_kit import DismissibleOverlay
+from .microphone_selection_draw import draw_overlay
 
 mod = Module()
 mod.setting(
@@ -115,7 +116,8 @@ def _get_active_mic() -> str:
 
 def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     draw_overlay(
-        c, overlay,
+        c,
+        overlay,
         mics=_get_mics(),
         excluded=_get_excluded_mics(),
         active=_get_active_mic(),

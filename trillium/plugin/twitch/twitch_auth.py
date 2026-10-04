@@ -1,4 +1,5 @@
 """Twitch authentication helpers: keychain access, OAuth token management, HTTP requests."""
+
 import json
 import subprocess
 
@@ -8,8 +9,17 @@ _KEYCHAIN_ACCOUNT = "talon_chat_assistant"
 def keychain_get(service: str) -> str:
     """Read a value from macOS keychain."""
     result = subprocess.run(
-        ["security", "find-generic-password", "-s", service, "-a", _KEYCHAIN_ACCOUNT, "-w"],
-        capture_output=True, text=True,
+        [
+            "security",
+            "find-generic-password",
+            "-s",
+            service,
+            "-a",
+            _KEYCHAIN_ACCOUNT,
+            "-w",
+        ],
+        capture_output=True,
+        text=True,
     )
     return result.stdout.strip() if result.returncode == 0 else ""
 
@@ -21,7 +31,16 @@ def keychain_set(service: str, value: str):
         capture_output=True,
     )
     subprocess.run(
-        ["security", "add-generic-password", "-a", _KEYCHAIN_ACCOUNT, "-s", service, "-w", value],
+        [
+            "security",
+            "add-generic-password",
+            "-a",
+            _KEYCHAIN_ACCOUNT,
+            "-s",
+            service,
+            "-w",
+            value,
+        ],
         capture_output=True,
     )
 
@@ -34,12 +53,23 @@ def refresh_oauth_token() -> str:
     if not client_id or not client_secret or not refresh_token:
         return ""
     result = subprocess.run(
-        ["curl", "-s", "-X", "POST", "https://id.twitch.tv/oauth2/token",
-         "-d", f"client_id={client_id}",
-         "-d", f"client_secret={client_secret}",
-         "-d", f"refresh_token={refresh_token}",
-         "-d", "grant_type=refresh_token"],
-        capture_output=True, text=True,
+        [
+            "curl",
+            "-s",
+            "-X",
+            "POST",
+            "https://id.twitch.tv/oauth2/token",
+            "-d",
+            f"client_id={client_id}",
+            "-d",
+            f"client_secret={client_secret}",
+            "-d",
+            f"refresh_token={refresh_token}",
+            "-d",
+            "grant_type=refresh_token",
+        ],
+        capture_output=True,
+        text=True,
     )
     try:
         data = json.loads(result.stdout)
@@ -74,7 +104,9 @@ def get_client_id() -> str:
     return keychain_get("twitch_client_id")
 
 
-def http_request(url: str, headers: dict = None, method: str = "GET", data: str = None) -> dict:
+def http_request(
+    url: str, headers: dict = None, method: str = "GET", data: str = None
+) -> dict:
     """Make an HTTP request via curl subprocess and return parsed JSON."""
     cmd = ["curl", "-s", "-X", method]
     if headers:

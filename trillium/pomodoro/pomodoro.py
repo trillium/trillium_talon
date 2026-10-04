@@ -1,13 +1,13 @@
-from talon import Module, actions, app, cron, ui
-from talon.canvas import Canvas
-from talon.skia.canvas import Canvas as SkiaCanvas
-from talon.types import Rect
-
 import datetime
 import math
 import threading
 import time
 from typing import Optional, Union
+
+from talon import Module, actions, app, cron, ui
+from talon.canvas import Canvas
+from talon.skia.canvas import Canvas as SkiaCanvas
+from talon.types import Rect
 
 from ..utils.overlay_kit import draw_rounded_rect
 
@@ -107,9 +107,7 @@ def _get_display_text() -> str:
         if pomodoro_type is None:
             return ""
         current_time = pause_time if pause_time else time.monotonic()
-        remaining_time = math.ceil(
-            (current_duration + start_time - current_time) / 60
-        )
+        remaining_time = math.ceil((current_duration + start_time - current_time) / 60)
         if remaining_time <= 0:
             flashes_per_second = 1.5
             suffix = (
@@ -143,8 +141,7 @@ def _draw(c: SkiaCanvas):
     # Flash red when finished
     with lock:
         is_finished = (
-            start_time is not None
-            and time.monotonic() > start_time + current_duration
+            start_time is not None and time.monotonic() > start_time + current_duration
         )
     c.paint.color = FINISHED_COLOR if is_finished else TEXT_COLOR
     c.draw_text(text, pill_x + PAD_X, pill_y + PAD_Y + text_rect.height)
@@ -264,13 +261,11 @@ class Actions:
         global current_duration, start_time
         global start_time, pomodoro_type, pause_time, current_duration
         current_time = pause_time if pause_time else time.monotonic()
-        remaining_time = math.ceil(
-            (current_duration + start_time - current_time) / 60
-        )
+        remaining_time = math.ceil((current_duration + start_time - current_time) / 60)
 
-        timestamp = datetime.datetime.now(
-            datetime.timezone.utc
-        ) + datetime.timedelta(minutes=remaining_time)
+        timestamp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+            minutes=remaining_time
+        )
         local_timestamp = timestamp.astimezone().replace(microsecond=0)
 
         if fmt is None:
@@ -279,18 +274,14 @@ class Actions:
 
     def get_time_local(fmt: str = None) -> str:
         """Return the current local time with timezone info."""
-        local_timestamp = (
-            datetime.datetime.now().astimezone().replace(microsecond=0)
-        )
+        local_timestamp = datetime.datetime.now().astimezone().replace(microsecond=0)
         if fmt is None:
             return local_timestamp.isoformat()
         return local_timestamp.strftime(fmt)
 
     def get_time_local_ago(minutes: int, fmt: str = None) -> str:
         """Return the local time minus the given number of minutes."""
-        local_timestamp = (
-            datetime.datetime.now().astimezone().replace(microsecond=0)
-        )
+        local_timestamp = datetime.datetime.now().astimezone().replace(microsecond=0)
         ago_timestamp = local_timestamp - datetime.timedelta(minutes=minutes)
         if fmt is None:
             return ago_timestamp.isoformat()
@@ -298,12 +289,8 @@ class Actions:
 
     def get_time_local_future(minutes: int, fmt: str = None) -> str:
         """Return the local time plus the given number of minutes."""
-        local_timestamp = (
-            datetime.datetime.now().astimezone().replace(microsecond=0)
-        )
-        future_timestamp = local_timestamp + datetime.timedelta(
-            minutes=minutes
-        )
+        local_timestamp = datetime.datetime.now().astimezone().replace(microsecond=0)
+        future_timestamp = local_timestamp + datetime.timedelta(minutes=minutes)
         if fmt is None:
             return future_timestamp.isoformat()
         return future_timestamp.strftime(fmt)

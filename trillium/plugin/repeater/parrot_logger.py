@@ -4,12 +4,12 @@ Parrot Logger - Logs metadata when repeat/reverse parrot sounds are used
 Schema version 1.1 - unified with command_logger
 """
 
-from talon import actions, ui, scope
-from datetime import datetime
-from pathlib import Path
 import json
 import re
+from datetime import datetime
+from pathlib import Path
 
+from talon import actions, scope, ui
 
 # Path to the parrot recordings directory
 PARROT_RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "parrot"
@@ -60,7 +60,9 @@ def get_context_data():
     try:
         current_mode = scope.get("mode")
         if current_mode:
-            context["mode"] = list(current_mode) if isinstance(current_mode, set) else current_mode
+            context["mode"] = (
+                list(current_mode) if isinstance(current_mode, set) else current_mode
+            )
     except Exception:
         pass
 
@@ -68,7 +70,9 @@ def get_context_data():
     try:
         current_tags = scope.get("tag")
         if current_tags:
-            context["tags"] = list(current_tags) if isinstance(current_tags, set) else current_tags
+            context["tags"] = (
+                list(current_tags) if isinstance(current_tags, set) else current_tags
+            )
     except Exception:
         pass
 
@@ -201,7 +205,9 @@ def extract_capture_data(capture):
         return None
 
 
-def generate_json_payload(action_type, last_cmd, capture, success=True, confidence=None):
+def generate_json_payload(
+    action_type, last_cmd, capture, success=True, confidence=None
+):
     """Generate the complete JSON payload for logging (unified schema v1.1)"""
     timestamp = datetime.now()
 

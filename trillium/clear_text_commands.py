@@ -31,7 +31,10 @@ class Actions:
         if not history:
             # No history — fall back to character-count deletion
             length = len(text)
-            print(TAG, f"clear_back_to_word fallback (no history) text='{text}' length={length}")
+            print(
+                TAG,
+                f"clear_back_to_word fallback (no history) text='{text}' length={length}",
+            )
             for _ in range(length):
                 actions.key("backspace")
             return
@@ -48,14 +51,20 @@ class Actions:
         if match_pos == -1:
             # Not found — fall back to character-count deletion
             length = len(text)
-            print(TAG, f"clear_back_to_word fallback (not found) text='{text}' length={length}")
+            print(
+                TAG,
+                f"clear_back_to_word fallback (not found) text='{text}' length={length}",
+            )
             for _ in range(length):
                 actions.key("backspace")
             return
 
         # Characters from match start to end of buffer
         chars_to_delete = len(buffer) - match_pos
-        print(TAG, f"clear_back_to_word text='{text}' match_pos={match_pos} chars_to_delete={chars_to_delete}")
+        print(
+            TAG,
+            f"clear_back_to_word text='{text}' match_pos={match_pos} chars_to_delete={chars_to_delete}",
+        )
 
         for _ in range(chars_to_delete):
             actions.key("backspace")

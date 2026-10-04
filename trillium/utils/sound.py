@@ -1,9 +1,9 @@
-import os
 import logging
+import os
+
 from talon import Module
 
 from ._wav import load_wav, play_wav
-
 
 LOGGER = logging.getLogger(__name__)
 

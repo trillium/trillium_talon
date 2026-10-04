@@ -7,7 +7,7 @@ auto-ends after timeout or say "brain end". Like friction but for ideas.
 import os
 import subprocess
 
-from talon import Module, Context, actions, cron
+from talon import Context, Module, actions, cron
 
 mod = Module()
 ctx = Context()
@@ -18,17 +18,19 @@ SPEAK = "/Users/trilliumsmith/code/speak/bin/speak"
 TIMEOUT_MS = 90_000  # 90 seconds
 
 _env = os.environ.copy()
-_env["PATH"] = ":".join([
-    "/opt/homebrew/bin",
-    "/opt/homebrew/sbin",
-    "/Users/trilliumsmith/.local/bin",
-    "/usr/local/bin",
-    "/usr/bin",
-    "/bin",
-    "/usr/sbin",
-    "/sbin",
-    _env.get("PATH", ""),
-])
+_env["PATH"] = ":".join(
+    [
+        "/opt/homebrew/bin",
+        "/opt/homebrew/sbin",
+        "/Users/trilliumsmith/.local/bin",
+        "/usr/local/bin",
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin",
+        _env.get("PATH", ""),
+    ]
+)
 
 # State
 _active = False

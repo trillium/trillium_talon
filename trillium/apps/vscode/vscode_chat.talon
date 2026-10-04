@@ -13,4 +13,3 @@ win.title: /focus:\[Chat\]/
     key(cmd-a)
     insert("yes")
     key(enter)
-

@@ -26,9 +26,9 @@ SOURCE = Path(__file__).parent / "vscode-settings.jsonc"
 def strip_jsonc(text: str) -> str:
     """Strip // comments and trailing commas so standard json can parse it."""
     # Remove single-line comments
-    text = re.sub(r'//[^\n]*', '', text)
+    text = re.sub(r"//[^\n]*", "", text)
     # Remove trailing commas before } or ]
-    text = re.sub(r',\s*([}\]])', r'\1', text)
+    text = re.sub(r",\s*([}\]])", r"\1", text)
     return text
 
 
@@ -50,7 +50,9 @@ def main():
     # Parse source cursorless settings
     source_text = SOURCE.read_text()
     source_data = json.loads(strip_jsonc(source_text))
-    cursorless_keys = {k: v for k, v in source_data.items() if k.startswith("cursorless.")}
+    cursorless_keys = {
+        k: v for k, v in source_data.items() if k.startswith("cursorless.")
+    }
 
     # Parse existing VSCode settings (JSONC)
     dest_text = dest.read_text()
@@ -96,7 +98,7 @@ def main():
     # Write back as JSONC with trailing commas (VSCode style)
     out = json.dumps(dest_data, indent=2)
     # Add trailing commas after each value line (VSCode expects JSONC)
-    out = re.sub(r'([^{[\s])(\n\s*[}\]])', r'\1,\2', out)
+    out = re.sub(r"([^{[\s])(\n\s*[}\]])", r"\1,\2", out)
     dest.write_text(out)
     print(f"Written to {dest}")
 

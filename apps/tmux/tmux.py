@@ -49,15 +49,30 @@ class TmuxActions:
     def tmux_scroll_up(lines: int):
         """Scroll up in tmux, entering copy-mode with auto-exit like mouse wheel"""
         subprocess.run(
-            ["tmux", "copy-mode", "-e", ";",
-             "send-keys", "-X", "-N", str(lines), "scroll-up"],
+            [
+                "tmux",
+                "copy-mode",
+                "-e",
+                ";",
+                "send-keys",
+                "-X",
+                "-N",
+                str(lines),
+                "scroll-up",
+            ],
         )
 
     def tmux_scroll_down(lines: int):
         """Scroll down in tmux copy-mode, auto-exiting at bottom like mouse wheel"""
         subprocess.run(
-            ["tmux", "if-shell", "-F", "#{pane_in_mode}",
-             f"send-keys -X -N {lines} scroll-down-and-cancel", ""],
+            [
+                "tmux",
+                "if-shell",
+                "-F",
+                "#{pane_in_mode}",
+                f"send-keys -X -N {lines} scroll-down-and-cancel",
+                "",
+            ],
         )
 
 
