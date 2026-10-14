@@ -371,6 +371,9 @@ class Actions:
     def dictate_to_window_and_enter(name: str, text: str):
         """Focus a saved window, type dictated text, and press Enter"""
         actions.user.recall_window(name)
+        # Focus is async; typing before the switch lands puts the line in
+        # the previous pane, so the target agent never sees the submit.
+        actions.sleep("50ms")
         actions.user.dictation_insert(text)
         actions.sleep("50ms")
         actions.key("enter")

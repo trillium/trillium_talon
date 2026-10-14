@@ -103,6 +103,9 @@
 ^<user.saved_window_names> {user.dictation_ender}$:
     user.recall_window_and_enter(saved_window_names)
 
+^<user.saved_window_names> <user.raw_prose> {user.dictation_ender}$:
+    user.dictate_to_window_and_enter(saved_window_names, raw_prose)
+
 ^<user.saved_window_names> <number_small>$:
     user.recall_number(saved_window_names, number_small)
 
