@@ -1,7 +1,5 @@
 mode: command
 -
-lap: key(enter)
-
 # <user.cursorless_wrapper_paired_delimiter> {user.cursorless_wrap_action} <user.cursorless_target>:
 #     user.private_cursorless_wrap_with_paired_delimiter(cursorless_wrap_action, cursorless_target, cursorless_wrapper_paired_delimiter)
 
