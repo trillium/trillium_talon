@@ -111,3 +111,18 @@ test/stubs/talon/
 ```
 
 <!-- END BEADS INTEGRATION -->
+
+## Talon runtime facts (verified live)
+
+- Palette HTTP feed lives in `trillium/palette_feed/`; usage and token setup in `docs/palette-feed.md`.
+- `~/.talon/bin/repl` takes one statement per line (use `exec(open(f).read())`); its `sim()` only prints. The real call is `speech_system._sim(phrase)`, which returns text and raises `RuntimeError("Failed to parse")`.
+- Talon logs a stack-trace warning for every thread a user script starts, and has no module-unload hook: a deleted module's threads keep running.
+- `actions.mimic` did nothing while the macOS session was locked (`CGSSessionScreenIsLocked`), even from the REPL. Verify mimic-driven code with the screen unlocked.
+- `~/.talon` is itself a git repo; keep secrets in `~/.config/...`, not under `~/.talon`.
+
+## Maintaining this file
+
+Keep this file for knowledge useful to almost every future agent session in this project.
+Do not repeat what the codebase already shows; point to the authoritative file or command instead.
+Prefer rewriting or pruning existing entries over appending new ones.
+When updating this file, preserve this bar for all agents and keep entries concise.
