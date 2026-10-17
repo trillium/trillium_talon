@@ -50,19 +50,25 @@ TOKEN=$(cat ~/.config/talon-palette/token)
 curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:7399/state
 ```
 
-| Method and path | What it returns |
-|---|---|
-| `GET /state` | `host`, `ts`, `rev`, `app{name,bundle}`, `window{title,filename,file_ext}`, `modes`, `tags`, `language`, `commands_rev` |
-| `GET /commands` | `commands_rev`, `count`, `commands[]`. `ETag` is the `commands_rev`. `?rev=<commands_rev>` or `If-None-Match` gives `304`. `?q=text` filters rules by substring. |
-| `GET /lists/<name>` | `{name, entries[]}` for a list used by an active rule (404 for any other name) |
-| `POST /execute` | Runs `{"phrase": "...", "id": "<command id>"}`. `id` is optional. |
+| Method and path     | What it returns                                                                                                                                                  |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /state`        | `host`, `ts`, `rev`, `app{name,bundle}`, `window{title,filename,file_ext}`, `modes`, `tags`, `language`, `commands_rev`                                          |
+| `GET /commands`     | `commands_rev`, `count`, `commands[]`. `ETag` is the `commands_rev`. `?rev=<commands_rev>` or `If-None-Match` gives `304`. `?q=text` filters rules by substring. |
+| `GET /lists/<name>` | `{name, entries[]}` for a list used by an active rule (404 for any other name)                                                                                   |
+| `POST /execute`     | Runs `{"phrase": "...", "id": "<command id>"}`. `id` is optional.                                                                                                |
 
 Each entry in `commands`:
 
 ```json
-{"id": "cb2eab42dd", "rule": "(abbreviate | brief) {user.abbreviation}", "kind": "list",
- "slots": [{"name": "user.abbreviation", "type": "list", "n": 826}],
- "context": "user.trillium_talon.core.text.text.talon", "lineno": 30, "shadowed": 0}
+{
+  "id": "cb2eab42dd",
+  "rule": "(abbreviate | brief) {user.abbreviation}",
+  "kind": "list",
+  "slots": [{ "name": "user.abbreviation", "type": "list", "n": 826 }],
+  "context": "user.trillium_talon.core.text.text.talon",
+  "lineno": 30,
+  "shadowed": 0
+}
 ```
 
 - `kind` is `literal`, `list` (has `{list}` slots), or `capture` (has `<capture>` slots).
@@ -114,7 +120,7 @@ The server refuses any non-loopback bind in `server.start`.
 ## Behavior to know
 
 - **Start and reload.** The server starts on Talon's `ready` event and stops the
-  previous instance on hot reload. Deleting the module does *not* stop it
+  previous instance on hot reload. Deleting the module does _not_ stop it
   (Talon has no unload hook); restart Talon, or from the REPL call
   `sys.modules["_trillium_palette_feed"].server.shutdown()`.
 - **Threads.** A pool of 4 worker threads plus the accept thread, all started once.
