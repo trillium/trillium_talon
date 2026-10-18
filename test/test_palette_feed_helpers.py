@@ -6,7 +6,15 @@ import threading
 
 import pytest
 
-from trillium.palette_feed import auth, denylist, dispatch, limits, serialize, simparse
+from trillium.palette_feed import (
+    auth,
+    denylist,
+    dispatch,
+    limits,
+    options,
+    serialize,
+    simparse,
+)
 
 TOKEN = "t" * 43
 
@@ -470,3 +478,121 @@ class TestSerialize:
         assert later["rev"] == state["rev"]  # rev ignores ts
         changed = serialize.serialize_state(**{**kwargs, "app": {"name": "Other"}})
         assert changed["rev"] != state["rev"]
+
+
+class TestTokenPlan:
+    """`plan_token` is the feed's whole start/disable decision."""
+
+    @staticmethod
+    def private_token(tmp_path):
+        path = tmp_path / "token"
+        path.write_text(TOKEN)
+        path.chmod(0o600)
+        return str(path)
+
+    def test_private_token_is_used_for_both_sides(self, tmp_path):
+        plan = auth.plan_token(self.private_token(tmp_path), None, False)
+        assert plan == auth.TokenPlan(TOKEN, False, "token loaded")
+
+    def test_missing_token_is_fatal_while_reads_are_authenticated(self, tmp_path):
+        plan = auth.plan_token(str(tmp_path / "absent"), None, False)
+        assert plan.fatal and plan.token is None
+        assert "not starting" in plan.message
+
+    def test_missing_token_still_serves_open_reads(self, tmp_path):
+        """The one asymmetric case: reads open means no token is not fatal."""
+        plan = auth.plan_token(str(tmp_path / "absent"), None, True)
+        assert not plan.fatal and plan.token is None
+        assert "/execute disabled" in plan.message
+
+    def test_unusable_token_is_fatal_only_when_reads_are_authenticated(self, tmp_path):
+        path = tmp_path / "token"
+        path.write_text(TOKEN)
+        path.chmod(0o644)
+        assert auth.plan_token(str(path), None, False).fatal
+        assert not auth.plan_token(str(path), None, True).fatal
+
+    def test_token_inside_the_repo_is_fatal_either_way(self, tmp_path):
+        path = self.private_token(tmp_path)
+        for open_reads in (False, True):
+            plan = auth.plan_token(path, str(tmp_path), open_reads)
+            assert plan.fatal and plan.token is None
+            assert "inside the repo" in plan.message
+
+
+class TestOptions:
+    def test_defaults_are_the_old_behavior(self):
+        opts = options.resolve({}, lambda name, default=None: default)
+        assert opts == options.Options(bind="127.0.0.1", open_reads=False)
+        assert not opts.allow_non_loopback
+
+    @pytest.mark.parametrize(
+        "host", ["0.0.0.0", "100.64.0.1", "192.168.1.5", "macbook", ""]
+    )
+    def test_only_a_real_loopback_address_is_loopback(self, host):
+        assert not options.is_loopback(host)
+        assert options.Options(bind=host).allow_non_loopback
+
+    @pytest.mark.parametrize("host", ["127.0.0.1", "127.0.0.53", "::1", " ::1 "])
+    def test_loopback_addresses_do_not_allow_the_exposed_bind(self, host):
+        assert options.is_loopback(host)
+        assert not options.Options(bind=host).allow_non_loopback
+
+    def test_env_beats_the_talon_setting(self):
+        opts = options.resolve(
+            {"TALON_PALETTE_BIND": "0.0.0.0", "TALON_PALETTE_OPEN_READS": "1"},
+            lambda name, default=None: "127.0.0.1",
+        )
+        assert opts == options.Options(bind="0.0.0.0", open_reads=True)
+        assert opts.allow_non_loopback
+
+    def test_the_talon_setting_is_used_when_the_env_is_unset(self):
+        values = {
+            "user.palette_feed_bind": "100.64.0.1",
+            "user.palette_feed_open_reads": True,
+        }
+        opts = options.resolve({}, lambda name, default=None: values.get(name, default))
+        assert opts.bind == "100.64.0.1" and opts.open_reads
+
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            ("1", True),
+            ("on", True),
+            (" yes ", True),
+            ("0", False),
+            ("off", False),
+            ("NO", False),
+            (True, True),
+            (False, False),
+        ],
+    )
+    def test_switch_values(self, value, expected):
+        assert options.parse_bool(value) is expected
+
+    @pytest.mark.parametrize("value", ["maybe", "", 3, None, []])
+    def test_unrecognized_switches_are_not_booleans(self, value):
+        assert options.parse_bool(value) is None
+
+    def test_an_unrecognized_env_switch_warns_and_falls_back(self):
+        opts = options.resolve(
+            {"TALON_PALETTE_OPEN_READS": "maybe"}, lambda name, default=None: default
+        )
+        assert not opts.open_reads
+        assert opts.warnings and "TALON_PALETTE_OPEN_READS" in opts.warnings[0]
+
+    def test_empty_env_values_fall_through_to_the_setting(self):
+        opts = options.resolve(
+            {"TALON_PALETTE_BIND": "   ", "TALON_PALETTE_OPEN_READS": ""},
+            lambda name, default=None: (
+                "100.64.0.1" if name == "user.palette_feed_bind" else True
+            ),
+        )
+        assert opts.bind == "100.64.0.1" and opts.open_reads
+
+    def test_describe_names_both_axes(self):
+        assert options.Options().describe() == "loopback only, reads token-gated"
+        assert (
+            options.Options(bind="0.0.0.0", open_reads=True).describe()
+            == "tailnet/network, reads open"
+        )

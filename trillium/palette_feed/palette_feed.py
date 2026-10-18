@@ -1,7 +1,11 @@
-"""Talon glue: serve /state, /commands, /execute on 127.0.0.1 for the phone palette.
+"""Talon glue: serve /state, /commands, /execute on the feed's configured bind.
 
-Publish tailnet-only with `tailscale serve`; see docs/palette-feed.md. The token lives in
-a mode-0600 file outside the repo; without it the server does not start.
+The bind defaults to `127.0.0.1` with reads requiring the bearer token. Set
+`TALON_PALETTE_BIND` and `TALON_PALETTE_OPEN_READS` (or `user.palette_feed_bind` and
+`user.palette_feed_open_reads`) to publish on the tailnet; see docs/palette-feed.md.
+`/execute` always needs the token, so an open bind never means open voice control. The
+token lives in a mode-0600 file outside the repo; without one the feed still starts
+while reads are open, and only `/execute` is disabled.
 """
 
 import os
@@ -10,17 +14,16 @@ import sys
 import time
 import types
 
-from talon import actions, app, cron, registry, scope, speech_system
+from talon import actions, app, cron, registry, scope, settings, speech_system
 
-from . import server
+from . import auth, options, server
 from .api import Config, PaletteApi
-from .auth import TokenError, find_repo_root, is_within, load_token
+from .auth import find_repo_root
 from .dispatch import DispatchTimeout, run_scheduled
 from .limits import RateLimiter
 from .serialize import RawImpl, impl_to_raw, serialize_commands, serialize_state
 from .simparse import NoMatch
 
-HOST = server.DEFAULT_HOST
 PORT = server.DEFAULT_PORT
 TOKEN_PATH = os.environ.get(
     "TALON_PALETTE_TOKEN_FILE", os.path.expanduser("~/.config/talon-palette/token")
@@ -92,25 +95,40 @@ class TalonBackend:
         )
 
 
+def _execution_note(plan: auth.TokenPlan) -> str:
+    return "/execute token-gated" if plan.token is not None else "/execute disabled"
+
+
 def start_server():
     if _holder.server is not None:
         server.stop(_holder.server)
         _holder.server = None
-    if REPO_ROOT and is_within(TOKEN_PATH, REPO_ROOT):
-        print(f"palette_feed: refusing token file inside the repo: {TOKEN_PATH}")
+    opts = options.resolve(os.environ, settings.get)
+    for warning in opts.warnings:
+        print(f"palette_feed: {warning}")
+    plan = auth.plan_token(TOKEN_PATH, REPO_ROOT, opts.open_reads)
+    if plan.fatal:
+        print(f"palette_feed: {plan.message}")
         return
+    if plan.token is None:
+        print(f"palette_feed: {plan.message}")
+    api = PaletteApi(
+        plan.token,
+        TalonBackend(),
+        RateLimiter(*EXECUTE_RATE),
+        Config(open_reads=opts.open_reads),
+    )
     try:
-        token = load_token(TOKEN_PATH)
-    except TokenError as exc:
-        print(f"palette_feed: not starting: {exc}")
-        return
-    api = PaletteApi(token, TalonBackend(), RateLimiter(*EXECUTE_RATE), Config())
-    try:
-        _holder.server, _ = server.start(api, HOST, PORT)
+        _holder.server, _ = server.start(
+            api, opts.bind, PORT, allow_non_loopback=opts.allow_non_loopback
+        )
     except OSError as exc:
-        print(f"palette_feed: cannot bind {HOST}:{PORT}: {exc.strerror}")
+        print(f"palette_feed: cannot bind {opts.bind}:{PORT}: {exc.strerror}")
         return
-    print(f"palette_feed: listening on {HOST}:{PORT}")
+    print(
+        f"palette_feed: listening on {opts.bind}:{PORT} "
+        f"({opts.describe()}, {_execution_note(plan)})"
+    )
 
 
 app.register("ready", start_server)

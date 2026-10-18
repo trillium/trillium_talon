@@ -1,15 +1,15 @@
 """Threaded stdlib HTTP server around PaletteApi. No Talon imports."""
 
-import ipaddress
 import json
 import queue
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from .api import PaletteApi
+from .options import DEFAULT_BIND, is_loopback
 
 REQUEST_TIMEOUT_S = 10
-DEFAULT_HOST = "127.0.0.1"
+DEFAULT_HOST = DEFAULT_BIND
 DEFAULT_PORT = 7399
 
 
@@ -103,14 +103,18 @@ class PaletteHTTPServer(HTTPServer):
 
 
 def start(
-    api: PaletteApi, host: str, port: int
+    api: PaletteApi, host: str, port: int, allow_non_loopback: bool = False
 ) -> tuple[PaletteHTTPServer, threading.Thread]:
-    try:
-        loopback = ipaddress.ip_address(host).is_loopback
-    except ValueError:
-        loopback = False
-    if not loopback:
-        raise ValueError(f"palette feed binds loopback only, got {host!r}")
+    """Serve `host:port`. A non-loopback host needs `allow_non_loopback=True`.
+
+    Only the option resolver passes that flag, and only for an address the operator
+    configured, so an accidental hardcoded host still refuses to expose the API.
+    """
+    if not allow_non_loopback and not is_loopback(host):
+        raise ValueError(
+            f"palette feed binds loopback only, pass allow_non_loopback=True for "
+            f"{host!r}"
+        )
     server = PaletteHTTPServer((host, port), make_handler(api))
     thread = threading.Thread(
         target=lambda: server.serve_forever(poll_interval=0.05),

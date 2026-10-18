@@ -85,6 +85,15 @@ settings():
     # Mouse grid border setting
     user.grid_narrow_expansion = 25
 
+    # Palette feed (trillium/palette_feed): the HTTP API for the phone palette.
+    # Defaults keep it on loopback with reads behind the bearer token. Set the bind to
+    # "0.0.0.0" (or this host's tailnet address) and open_reads to true to publish it on
+    # the tailnet; POST /execute always still needs the token. The env vars
+    # TALON_PALETTE_BIND and TALON_PALETTE_OPEN_READS win over these.
+    # Details and the bind/auth matrix: docs/palette-feed.md.
+    user.palette_feed_bind = "127.0.0.1"
+    user.palette_feed_open_reads = false
+
 # Uncomment to enable the curse yes/curse no commands (show/hide mouse cursor).
 # See issue #688 for more detail: https://github.com/talonhub/community/issues/688
 tag(): user.mouse_cursor_commands_enable

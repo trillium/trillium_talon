@@ -306,6 +306,76 @@ def call(port, method, path, headers=None, body=None):
     return resp.status, dict(resp.getheaders()), data
 
 
+class TestOpenReads:
+    """`Config(open_reads=True)`: reads are public, `/execute` is not."""
+
+    @pytest.fixture
+    def open_api(self, backend):
+        return PaletteApi(
+            TOKEN,
+            backend,
+            RateLimiter(100, 1.0),
+            Config(max_body_bytes=1024, open_reads=True),
+        )
+
+    @pytest.mark.parametrize(
+        "path", ["/state", "/commands", "/commands?q=tab", "/lists/user.tab_action"]
+    )
+    def test_reads_need_no_token(self, open_api, path):
+        resp = open_api.handle("GET", path, {})
+        assert resp.status in (200, 304)
+        assert "WWW-Authenticate" not in resp.headers
+
+    def test_the_token_still_works_on_reads(self, open_api):
+        assert open_api.handle("GET", "/state", AUTH).status == 200
+
+    def test_execute_still_needs_the_token(self, open_api, backend):
+        resp = post(open_api, {"phrase": "playback now"}, headers={})
+        assert resp.status == 401
+        assert resp.headers["WWW-Authenticate"] == "Bearer"
+        assert backend.executed == []
+
+    def test_execute_with_the_token_still_runs(self, open_api, backend):
+        assert post(open_api, {"phrase": "playback now"}).status == 200
+        assert backend.executed == ["playback now"]
+
+    @pytest.mark.parametrize(
+        "method, path", [("GET", "/nope"), ("POST", "/state"), ("DELETE", "/command")]
+    )
+    def test_open_reads_does_not_publish_other_routes(self, open_api, method, path):
+        assert open_api.handle(method, path, {}, io.BytesIO(b"{}")).status == 401
+
+    def test_no_token_file_still_serves_reads(self, backend):
+        api = PaletteApi(None, backend, RateLimiter(100, 1.0), Config(open_reads=True))
+        assert api.handle("GET", "/state", {}).status == 200
+        assert api.handle("GET", "/commands", {}).status == 200
+
+    def test_no_token_file_disables_execute(self, backend):
+        api = PaletteApi(None, backend, RateLimiter(100, 1.0), Config(open_reads=True))
+        resp = api.handle(
+            "POST", "/execute", {"Content-Length": "2"}, io.BytesIO(b"{}")
+        )
+        assert resp.status == 401
+        assert resp.headers["WWW-Authenticate"] == "Bearer"
+        assert backend.executed == []
+
+    @pytest.mark.parametrize(
+        "method, path",
+        [
+            ("GET", "/state"),
+            ("GET", "/commands"),
+            ("GET", "/lists/x"),
+            ("POST", "/execute"),
+        ],
+    )
+    def test_a_missing_token_fails_closed_when_reads_are_private(
+        self, backend, method, path
+    ):
+        api = PaletteApi(None, backend, RateLimiter(100, 1.0), Config())
+        resp = api.handle(method, path, {}, io.BytesIO(b"{}"))
+        assert resp.status == 401 and backend.executed == []
+
+
 class TestHttpServer:
     def test_round_trip_over_a_real_socket(self, live, backend):
         status, headers, data = call(live, "GET", "/state", AUTH)
@@ -351,6 +421,20 @@ class TestHttpServer:
         for host in ("0.0.0.0", "192.168.1.5", "100.64.0.1", "example.com"):
             with pytest.raises(ValueError, match="loopback"):
                 server.start(api, host, 0)
+
+    def test_opted_in_bind_serves_a_tailnet_address(self, backend):
+        """The tailnet path: a non-loopback bind, reached here over 127.0.0.1.
+
+        Bound to port 0 and stopped in `finally`, so the listener is brief.
+        """
+        api = PaletteApi(TOKEN, backend, RateLimiter(100, 1.0), Config(open_reads=True))
+        srv, _ = server.start(api, "0.0.0.0", 0, allow_non_loopback=True)
+        try:
+            assert srv.server_address[0] == "0.0.0.0"
+            status, _, data = call(srv.server_address[1], "GET", "/state")
+            assert status == 200 and json.loads(data)["host"] == "h"
+        finally:
+            server.stop(srv)
 
     def test_default_host_is_loopback(self):
         assert server.DEFAULT_HOST == "127.0.0.1"

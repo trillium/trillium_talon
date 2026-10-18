@@ -114,7 +114,7 @@ test/stubs/talon/
 
 ## Talon runtime facts (verified live)
 
-- Palette HTTP feed lives in `trillium/palette_feed/`; usage and token setup in `docs/palette-feed.md`.
+- Palette HTTP feed lives in `trillium/palette_feed/` on port 7399. Its bind address (`TALON_PALETTE_BIND`) and read auth (`TALON_PALETTE_OPEN_READS`) are per-host configurable, default to loopback with authenticated reads, and `/execute` is always token-gated. Usage, token setup and the bind/auth matrix: `docs/palette-feed.md`.
 - `~/.talon/bin/repl` takes one statement per line (use `exec(open(f).read())`); its `sim()` only prints. The real call is `speech_system._sim(phrase)`, which returns text and raises `RuntimeError("Failed to parse")`.
 - Talon logs a stack-trace warning for every thread a user script starts, and has no module-unload hook: a deleted module's threads keep running.
 - `actions.mimic` did nothing while the macOS session was locked (`CGSSessionScreenIsLocked`), even from the REPL. Verify mimic-driven code with the screen unlocked.
