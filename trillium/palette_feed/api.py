@@ -10,7 +10,8 @@ from .auth import is_authorized
 from .denylist import denied_by
 from .dispatch import DispatchTimeout
 from .limits import BodyError, RateLimiter, parse_content_length, read_body
-from .page import CONTENT_TYPE as PAGE_CONTENT_TYPE, html_page
+from .page import CONTENT_TYPE as PAGE_CONTENT_TYPE
+from .page import html_page
 from .serialize import referenced_lists
 from .simparse import NoMatch, normalize_rule, parse_sim
 

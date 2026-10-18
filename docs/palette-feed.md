@@ -65,26 +65,26 @@ so.
 `open_reads` decides read auth and `open_execute` decides execute auth; the bind only
 decides who can reach the socket. They are independent.
 
-| `bind`                      | `open_reads`      | `open_execute`    | `GET /`, `/state`, `/commands`, `/lists/<name>` | `POST /execute`    |
-| --------------------------- | ----------------- | ----------------- | ----------------------------------------------- | ------------------ |
-| `127.0.0.1` (default)       | `false` (default) | `false` (default) | bearer token                                    | bearer token       |
-| `127.0.0.1`                 | `true`            | `false`           | no token                                        | bearer token       |
-| `127.0.0.1`                 | `false`           | `true`            | bearer token                                    | no token           |
-| `127.0.0.1`                 | `true`            | `true`            | no token                                        | no token           |
-| `0.0.0.0` or the tailnet IP | `false`           | `false`           | bearer token                                    | bearer token       |
-| `0.0.0.0` or the tailnet IP | `true`            | `false`           | no token                                        | bearer token       |
-| `0.0.0.0` or the tailnet IP | `false`           | `true`            | bearer token                                    | **no token**       |
-| `0.0.0.0` or the tailnet IP | `true`            | `true`            | no token                                        | **no token**       |
+| `bind`                      | `open_reads`      | `open_execute`    | `GET /`, `/state`, `/commands`, `/lists/<name>` | `POST /execute` |
+| --------------------------- | ----------------- | ----------------- | ----------------------------------------------- | --------------- |
+| `127.0.0.1` (default)       | `false` (default) | `false` (default) | bearer token                                    | bearer token    |
+| `127.0.0.1`                 | `true`            | `false`           | no token                                        | bearer token    |
+| `127.0.0.1`                 | `false`           | `true`            | bearer token                                    | no token        |
+| `127.0.0.1`                 | `true`            | `true`            | no token                                        | no token        |
+| `0.0.0.0` or the tailnet IP | `false`           | `false`           | bearer token                                    | bearer token    |
+| `0.0.0.0` or the tailnet IP | `true`            | `false`           | no token                                        | bearer token    |
+| `0.0.0.0` or the tailnet IP | `false`           | `true`            | bearer token                                    | **no token**    |
+| `0.0.0.0` or the tailnet IP | `true`            | `true`            | no token                                        | **no token**    |
 
 A token is still accepted on an open route; it is simply not required. Whether a gated
 route is fatal when there is no usable token follows from the matrix, so the token file is
 the last input:
 
-| Token file at `TALON_PALETTE_TOKEN_FILE`  | nothing open                         | `open_reads=true`                                | `open_execute=true`                            |
-| ----------------------------------------- | ------------------------------------ | ------------------------------------------------ | ---------------------------------------------- |
-| `0600`, 32+ chars, outside every git repo | reads and `/execute` work            | reads open, `/execute` works                     | reads work, `/execute` open                    |
-| missing, unreadable, too short, or `0644` | the feed does not start (prints why) | the feed starts, reads open, `/execute` is `401` | the feed starts, reads `401`, `/execute` runs  |
-| inside the repo it was loaded from        | the feed does not start              | the feed does not start                          | the feed does not start                        |
+| Token file at `TALON_PALETTE_TOKEN_FILE`  | nothing open                         | `open_reads=true`                                | `open_execute=true`                           |
+| ----------------------------------------- | ------------------------------------ | ------------------------------------------------ | --------------------------------------------- |
+| `0600`, 32+ chars, outside every git repo | reads and `/execute` work            | reads open, `/execute` works                     | reads work, `/execute` open                   |
+| missing, unreadable, too short, or `0644` | the feed does not start (prints why) | the feed starts, reads open, `/execute` is `401` | the feed starts, reads `401`, `/execute` runs |
+| inside the repo it was loaded from        | the feed does not start              | the feed does not start                          | the feed does not start                       |
 
 A gated route failing closed with no configured token is deliberate: there is no
 credential to check a caller against, so the endpoint is disabled rather than open — except
@@ -152,7 +152,7 @@ curl -s -X POST -d '{"phrase":"playback now"}' http://$(tailscale ip -4):7399/ex
 
 | Method and path     | What it returns                                                                                                                                                  |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /`             | The phone page: one HTML file, `text/html; charset=utf-8`, `Cache-Control: no-store`. No secrets in it, so it follows `open_reads` like the other reads.          |
+| `GET /`             | The phone page: one HTML file, `text/html; charset=utf-8`, `Cache-Control: no-store`. No secrets in it, so it follows `open_reads` like the other reads.         |
 | `GET /state`        | `host`, `ts`, `rev`, `app{name,bundle}`, `window{title,filename,file_ext}`, `modes`, `tags`, `language`, `commands_rev`                                          |
 | `GET /commands`     | `commands_rev`, `count`, `commands[]`. `ETag` is the `commands_rev`. `?rev=<commands_rev>` or `If-None-Match` gives `304`. `?q=text` filters rules by substring. |
 | `GET /lists/<name>` | `{name, entries[]}` for a list used by an active rule (404 for any other name)                                                                                   |

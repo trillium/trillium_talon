@@ -67,9 +67,9 @@ def test_the_declarations_match_the_defaults_the_feed_uses(declared):
     _, by_name = declared
     for name, (kind, default) in EXPECTED.items():
         assert by_name[name]["type"] is kind, f"{name} is declared with the wrong type"
-        assert by_name[name]["default"] == default, (
-            f"{name} default disagrees with options"
-        )
+        assert (
+            by_name[name]["default"] == default
+        ), f"{name} default disagrees with options"
 
 
 def test_each_declaration_is_documented(declared):
@@ -77,9 +77,9 @@ def test_each_declaration_is_documented(declared):
     _, by_name = declared
     for name, kwargs in by_name.items():
         assert kwargs.get("desc"), f"{name} has no description"
-        assert len(kwargs["desc"]) > 20, (
-            f"{name}'s description is too thin to be useful"
-        )
+        assert (
+            len(kwargs["desc"]) > 20
+        ), f"{name}'s description is too thin to be useful"
 
 
 def test_the_declared_names_are_the_ones_options_resolves(declared):
