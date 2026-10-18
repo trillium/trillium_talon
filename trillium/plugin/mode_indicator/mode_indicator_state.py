@@ -2,17 +2,31 @@
 Mode Indicator State Writer
 
 Detects mode, microphone, and parrot state changes and writes them
-to a JSON file. The renderer (mode_indicator.py) watches this file
-via @resource.watch() and redraws when it changes.
+to a JSON file for external scripts, and pushes every change to the
+renderer (mode_indicator.py) in-process through add_listener().
+
+The slow pollers (OBS subprocess, sysmon file read, external-state file)
+run on one daemon worker thread and post results back to Talon's main
+thread with cron.after, so they never block the cron thread.
 """
 
 import json
+import os
+import shutil
+import subprocess
+import sys
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from talon import Module, actions, app, cron, registry, scope, settings
 
-STATE_FILE = Path(__file__).parent / "mode_indicator_state.json"
+# Outside ~/.talon so Talon's file watcher never sees our own writes.
+# poll_usage.py and other external scripts write the same file.
+STATE_FILE = Path(
+    os.environ.get("TALON_MODE_INDICATOR_STATE")
+    or Path.home() / ".cache" / "talon" / "mode_indicator_state.json"
+)
 
 mod = Module()
 mod.setting(
@@ -26,6 +40,13 @@ mod.setting(
     type=int,
     default=12,
     desc="Hour of day the usage limit resets (0-23, e.g. 12=noon, 20=8pm)",
+)
+
+mod.setting(
+    "mode_indicator_obs_python",
+    type=str,
+    default="",
+    desc="Python interpreter with obsws_python installed, used to poll OBS. Empty = python3 on PATH, then Talon's own.",
 )
 
 _state = {
@@ -86,8 +107,31 @@ def get_week_remaining() -> str:
     return f"{hours}h{minutes}m"
 
 
+_listeners = []
+_external = {}  # keys written by external scripts (static_percent, stream_*)
+
+
+def add_listener(fn):
+    """Call fn(full_state_dict) after every state change. Main thread only."""
+    _listeners.append(fn)
+
+
+def snapshot() -> dict:
+    """Own state merged over externally-managed keys."""
+    return {**_external, **_state}
+
+
+def _notify():
+    data = snapshot()
+    for fn in list(_listeners):
+        try:
+            fn(data)
+        except Exception:
+            pass
+
+
 def update(**kwargs):
-    """Merge changes into state and flush to disk if anything changed."""
+    """Merge changes into state, flush to disk and notify listeners if anything changed."""
     changed = False
     for key, value in kwargs.items():
         if key in _state and _state[key] != value:
@@ -95,6 +139,7 @@ def update(**kwargs):
             changed = True
     if changed:
         _flush()
+        _notify()
 
 
 def _flush():
@@ -105,8 +150,13 @@ def _flush():
     except Exception:
         on_disk = {}
     on_disk.update(_state)
-    with open(STATE_FILE, "w") as f:
-        json.dump(on_disk, f, indent=2)
+    try:
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = STATE_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(on_disk, indent=2))
+        os.replace(tmp, STATE_FILE)
+    except Exception:
+        pass
 
 
 def _on_update_contexts():
@@ -184,8 +234,6 @@ SYSMON_STATS = Path.home() / "code" / "system-monitor" / "data" / "stats.json"
 #   presence, or use a persistent websocket connection with event callbacks
 #   instead of repeated subprocess spawns.
 
-import subprocess
-
 _OBS_POLL_SCRIPT = """
 import json, subprocess
 try:
@@ -204,48 +252,111 @@ except Exception:
 """
 
 
-def _poll_obs_status():
-    """Poll OBS streaming/recording via system Python (obsws_python not in Talon's Python)."""
+def _obs_python() -> str:
+    try:
+        configured = settings.get("user.mode_indicator_obs_python")
+    except Exception:
+        configured = ""
+    return configured or shutil.which("python3") or sys.executable
+
+
+_OBS_OFF = {"obs_streaming": False, "obs_recording": False, "obs_scene": ""}
+
+
+def _fetch_obs_status(python: str) -> dict:
+    """Blocking: run the OBS query subprocess. Worker thread only."""
     try:
         result = subprocess.run(
-            [
-                "/Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python3",
-                "-c",
-                _OBS_POLL_SCRIPT,
-            ],
+            [python, "-c", _OBS_POLL_SCRIPT],
             capture_output=True,
             text=True,
             timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
             data = json.loads(result.stdout.strip())
-            update(
-                obs_streaming=data.get("streaming", False),
-                obs_recording=data.get("recording", False),
-                obs_scene=data.get("scene", ""),
-            )
-        else:
-            update(obs_streaming=False, obs_recording=False, obs_scene="")
+            return {
+                "obs_streaming": data.get("streaming", False),
+                "obs_recording": data.get("recording", False),
+                "obs_scene": data.get("scene", ""),
+            }
     except Exception:
-        update(obs_streaming=False, obs_recording=False, obs_scene="")
+        pass
+    return dict(_OBS_OFF)
 
 
-def _poll_sysmon():
-    """Read system monitor stats and merge CPU per-core + memory into state."""
+def _fetch_sysmon() -> dict:
+    """Blocking: read system monitor stats. Worker thread only."""
     try:
         data = json.loads(SYSMON_STATS.read_text())
         cpu = data.get("cpu", {})
         mem = data.get("memory", {})
-        per_core = cpu.get("per_core", [])
-        mem_percent = mem.get("percent", 0)
-        mem_pressure = mem.get("pressure", 0)
-        update(
-            cpu_per_core=per_core,
-            mem_percent=mem_percent,
-            mem_pressure=mem_pressure,
-        )
+        return {
+            "cpu_per_core": cpu.get("per_core", []),
+            "mem_percent": mem.get("percent", 0),
+            "mem_pressure": mem.get("pressure", 0),
+        }
     except Exception:
-        pass
+        return {}
+
+
+_external_mtime = None
+
+
+def _fetch_external():
+    """Blocking: re-read STATE_FILE if an external script changed it. Worker thread only."""
+    global _external_mtime
+    try:
+        mtime = STATE_FILE.stat().st_mtime_ns
+        if mtime == _external_mtime:
+            return None
+        data = json.loads(STATE_FILE.read_text())
+        _external_mtime = mtime
+        return {k: v for k, v in data.items() if k not in _state}
+    except Exception:
+        return None
+
+
+def _apply_external(ext):
+    if ext is not None and ext != _external:
+        _external.clear()
+        _external.update(ext)
+        _notify()
+
+
+OBS_INTERVAL_TICKS = 2  # worker ticks once per second
+
+_stop = threading.Event()
+_worker = None
+
+
+def _worker_loop(post=None):
+    """One daemon thread for every slow poll; results go back via cron.after."""
+    post = post or (lambda fn: cron.after("0ms", fn))
+    tick = 0
+    while not _stop.is_set():
+        try:
+            python = _obs_python() if tick % OBS_INTERVAL_TICKS == 0 else None
+            results = {}
+            if python is not None:
+                results.update(_fetch_obs_status(python))
+            results.update(_fetch_sysmon())
+            ext = _fetch_external()
+            post(lambda r=results, e=ext: (update(**r), _apply_external(e)))
+        except Exception:
+            pass
+        tick += 1
+        _stop.wait(1.0)
+
+
+def start_worker():
+    global _worker
+    if _worker is not None and _worker.is_alive():
+        return
+    _stop.clear()
+    _worker = threading.Thread(
+        target=_worker_loop, name="mode_indicator_pollers", daemon=True
+    )
+    _worker.start()
 
 
 def on_ready():
@@ -253,12 +364,12 @@ def on_ready():
     _state["week_percent"] = get_week_percent()
     _state["week_remaining"] = get_week_remaining()
     _flush()
+    _notify()
 
     registry.register("update_contexts", _on_update_contexts)
     cron.interval("500ms", _poll_microphone)
     cron.interval("60s", _poll_week_percent)
-    cron.interval("1s", _poll_sysmon)
-    cron.interval("2s", _poll_obs_status)
+    start_worker()
 
 
 app.register("ready", on_ready)

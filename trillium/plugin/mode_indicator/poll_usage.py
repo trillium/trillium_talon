@@ -7,13 +7,17 @@ Or via cron/systemd timer.
 
 import csv
 import json
+import os
 import subprocess
 import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-STATE_FILE = Path(__file__).parent / "mode_indicator_state.json"
+STATE_FILE = Path(
+    os.environ.get("TALON_MODE_INDICATOR_STATE")
+    or Path.home() / ".cache" / "talon" / "mode_indicator_state.json"
+)
 LOG_FILE = Path(__file__).parent / "usage_log.csv"
 API_URL = "https://api.anthropic.com/api/oauth/usage"
 INTERVAL = 300  # 5 minutes
@@ -160,6 +164,7 @@ def update_state(usage):
         state = {}
 
     state["static_percent"] = text
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     STATE_FILE.write_text(json.dumps(state, indent=2))
 
 

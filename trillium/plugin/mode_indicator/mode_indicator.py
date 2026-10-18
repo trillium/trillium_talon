@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from talon import Module, app, registry, resource, settings, skia, ui
+from talon import Module, app, registry, settings, skia, ui
 from talon.canvas import Canvas
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
@@ -9,12 +9,12 @@ from talon.skia.imagefilter import ImageFilter
 from talon.types.point import Point2d
 from talon.ui import Rect
 
+from . import mode_indicator_state
 from .sysmon_graph import draw_graph, measure_graph_width
 
 canvas: Canvas = None
 mod = Module()
 
-state_path = str(Path(__file__).parent / "mode_indicator_state.json")
 
 _state = {
     "mode": "",
@@ -467,15 +467,9 @@ def rebuild_indicator():
     update_indicator()
 
 
-@resource.watch(state_path)
-def on_state_change(f):
-    """Reload state from JSON and redraw."""
-    global _state
-    try:
-        data = json.load(f)
-        _state.update(data)
-    except Exception:
-        return
+def on_state_change(data):
+    """Receive state pushed in-process by mode_indicator_state and redraw."""
+    _state.update(data)
     update_indicator()
 
 
@@ -485,6 +479,7 @@ def on_update_settings(updated_settings: set[str]):
 
 
 def on_ready():
+    mode_indicator_state.add_listener(on_state_change)
     registry.register("update_settings", on_update_settings)
     ui.register("screen_change", lambda _: rebuild_indicator())
 
