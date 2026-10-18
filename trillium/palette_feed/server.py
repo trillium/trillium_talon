@@ -33,13 +33,17 @@ def make_handler(api: PaletteApi) -> type[BaseHTTPRequestHandler]:
                 self.end_headers()
                 self.wfile.write(body)
                 return
-            payload = (
-                b""
-                if response.body is None
-                else json.dumps(response.body, separators=(",", ":")).encode("utf-8")
-            )
+            if response.raw is not None:
+                payload = response.raw
+            elif response.body is None:
+                payload = b""
+            else:
+                payload = json.dumps(response.body, separators=(",", ":")).encode(
+                    "utf-8"
+                )
             self.send_response(response.status)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", response.content_type)
+            # no-store, so a reload always asks this host rather than a phone's cache.
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(payload)))
             for name, value in response.headers.items():

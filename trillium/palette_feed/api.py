@@ -10,6 +10,7 @@ from .auth import is_authorized
 from .denylist import denied_by
 from .dispatch import DispatchTimeout
 from .limits import BodyError, RateLimiter, parse_content_length, read_body
+from .page import CONTENT_TYPE as PAGE_CONTENT_TYPE, html_page
 from .serialize import referenced_lists
 from .simparse import NoMatch, normalize_rule, parse_sim
 
@@ -36,17 +37,26 @@ class Backend(Protocol):
 class Config:
     max_body_bytes: int = 4096
     require_command_mode: bool = True
-    # Read endpoints answer without a token. `/execute` always needs one; with no token
-    # configured at all it answers 401 (fail closed) rather than running anything.
+    # Read endpoints answer without a token. Gated routes need one; with no token
+    # configured at all they answer 401 (fail closed) rather than running anything.
     open_reads: bool = False
+    # `/execute` answers without a token too. Opt-in per host, for a bind whose network
+    # is the boundary: while this is on, any device that can reach the bind can run
+    # Talon commands. A valid token is still accepted; it is simply not required.
+    open_execute: bool = False
 
 
-# GETs that `open_reads` publishes to any tailnet caller.
-_READ_PATHS = ("/state", "/commands")
+# GETs that `open_reads` publishes to any tailnet caller. `/` is the static phone page:
+# it carries no secrets, and without it there is nothing for the phone to load.
+_READ_PATHS = ("/", "/state", "/commands")
 
 
 def _is_read(method: str, path: str) -> bool:
     return method == "GET" and (path in _READ_PATHS or path.startswith("/lists/"))
+
+
+def _is_execute(method: str, path: str) -> bool:
+    return method == "POST" and path == "/execute"
 
 
 @dataclass
@@ -54,6 +64,10 @@ class Response:
     status: int
     body: dict[str, Any] | None = None
     headers: dict[str, str] = field(default_factory=dict)
+    # `raw` is the exact response body; when it is set, `body` is ignored. It is how
+    # the HTML page is served without going through the JSON encoder.
+    content_type: str = "application/json"
+    raw: bytes | None = None
 
 
 def _error(status: int, code: str, **extra: Any) -> Response:
@@ -74,8 +88,14 @@ class PaletteApi:
         self._config = config
 
     def _permitted(self, method: str, path: str, headers: Mapping[str, str]) -> bool:
-        """Open reads first, then the token; an absent token can never authorize."""
+        """Open reads, then an open `/execute`, then the token.
+
+        An absent token can never authorize a gated route: it only stays out of the way
+        when that route was explicitly opened.
+        """
         if self._config.open_reads and _is_read(method, path):
+            return True
+        if self._config.open_execute and _is_execute(method, path):
             return True
         if self._token is None:
             return False
@@ -99,6 +119,8 @@ class PaletteApi:
         query = {k: v[-1] for k, v in parse_qs(url.query).items()}
         path = url.path
         if method == "GET":
+            if path == "/":
+                return Response(200, content_type=PAGE_CONTENT_TYPE, raw=html_page())
             if path == "/state":
                 return Response(200, self._backend.state())
             if path == "/commands":

@@ -2,8 +2,8 @@
 
 The bind/auth switches meet the token file here, and this is the only place the feed's
 start/disable decision is exercised end to end: `/state` answers with no token while reads
-are open, `/execute` never does, and a missing token is fatal only when reads are
-authenticated. Port 0 keeps every listener ephemeral.
+are open; `/execute` answers 401 unless it is explicitly opened, and a missing token is
+fatal only while some route is still gated. Port 0 keeps every listener ephemeral.
 """
 
 import http.client
@@ -36,6 +36,7 @@ def feed(tmp_path, monkeypatch):
     monkeypatch.setattr(palette_feed, "PORT", 0)
     monkeypatch.delenv("TALON_PALETTE_BIND", raising=False)
     monkeypatch.delenv("TALON_PALETTE_OPEN_READS", raising=False)
+    monkeypatch.delenv("TALON_PALETTE_OPEN_EXECUTE", raising=False)
     try:
         yield
     finally:
@@ -107,3 +108,40 @@ def test_an_unreadable_switch_value_is_reported_not_guessed(feed, monkeypatch, c
     out = capsys.readouterr().out
     assert "TALON_PALETTE_OPEN_READS" in out and "not a yes/no value" in out
     assert HOLDER.server is None  # fell back to the private-reads default
+
+
+def test_open_execute_lets_a_run_through_with_no_token(feed, monkeypatch, capsys):
+    """The captain's posture: the tailnet is the boundary, so /execute is open on it."""
+    monkeypatch.setenv("TALON_PALETTE_OPEN_READS", "1")
+    monkeypatch.setenv("TALON_PALETTE_OPEN_EXECUTE", "1")
+    palette_feed.start_server()
+    out = capsys.readouterr().out
+    assert HOLDER.server is not None
+    assert "/execute open (no token needed)" in out
+    assert "WARNING /execute is open" in out  # loud: this is the security-relevant one
+
+    port = port_of(HOLDER.server)
+    body = json.dumps({"phrase": "playback now"}).encode()
+    status, headers, data = call(port, "POST", "/execute", {}, body)
+    assert status != 401, data  # no token, and not refused for it
+    assert "WWW-Authenticate" not in headers
+
+
+def test_open_execute_still_starts_a_host_with_no_token_file(feed, monkeypatch, capsys):
+    monkeypatch.setenv("TALON_PALETTE_OPEN_EXECUTE", "1")
+    palette_feed.start_server()
+    out = capsys.readouterr().out
+    assert HOLDER.server is not None
+    assert "no usable token" in out and "reads token-gated, /execute open" in out
+    assert call(port_of(HOLDER.server), "GET", "/state")[0] == 401  # reads stay gated
+
+
+def test_a_repo_local_token_still_refuses_to_start_with_execute_open(
+    feed, monkeypatch, capsys
+):
+    monkeypatch.setenv("TALON_PALETTE_OPEN_EXECUTE", "1")
+    monkeypatch.setenv("TALON_PALETTE_OPEN_READS", "1")
+    monkeypatch.setattr(palette_feed, "TOKEN_PATH", __file__)
+    palette_feed.start_server()
+    assert HOLDER.server is None
+    assert "inside the repo" in capsys.readouterr().out

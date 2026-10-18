@@ -54,8 +54,9 @@ def find_repo_root(start: str) -> str | None:
 class TokenPlan:
     """What the feed does about the bearer token.
 
-    `token is None` means no credential is configured, so `/execute` answers 401 and
-    is effectively disabled. `fatal` means do not start the server at all.
+    `token is None` means no credential is configured, so every route that is not open
+    answers 401: with `open_execute` off that disables `/execute`. `fatal` means do not
+    start the server at all.
     """
 
     token: str | None
@@ -63,23 +64,32 @@ class TokenPlan:
     message: str
 
 
-def plan_token(path: str, repo_root: str | None, open_reads: bool) -> TokenPlan:
-    """Decide the token from `path`, given whether reads are open.
+def _without_token(open_reads: bool, open_execute: bool) -> str:
+    reads = "reads open" if open_reads else "reads token-gated"
+    execute = "/execute open" if open_execute else "/execute disabled"
+    return f"{reads}, {execute}"
+
+
+def plan_token(
+    path: str, repo_root: str | None, open_reads: bool, open_execute: bool = False
+) -> TokenPlan:
+    """Decide the token from `path`, given which routes are open.
 
     A token inside the repo is always fatal, whichever endpoints need it: it is one
-    commit away from leaking. Otherwise an unusable token is fatal only while reads are
-    authenticated; with reads open the feed still starts and only `/execute` is disabled.
+    commit away from leaking. Otherwise an unusable token is fatal only while some
+    route is still gated; when reads and `/execute` are both open the feed starts
+    without one.
     """
     if repo_root is not None and is_within(path, repo_root):
         return TokenPlan(None, True, f"refusing token file inside the repo: {path}")
     try:
         token = load_token(path)
     except TokenError as exc:
-        if open_reads:
+        if open_reads or open_execute:
             return TokenPlan(
                 None,
                 False,
-                f"no usable token ({exc}); reads are open, /execute disabled",
+                f"no usable token ({exc}); {_without_token(open_reads, open_execute)}",
             )
         return TokenPlan(None, True, f"not starting: {exc}")
     return TokenPlan(token, False, "token loaded")

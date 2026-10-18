@@ -114,7 +114,9 @@ test/stubs/talon/
 
 ## Talon runtime facts (verified live)
 
-- Palette HTTP feed lives in `trillium/palette_feed/` on port 7399. Its bind address (`TALON_PALETTE_BIND`) and read auth (`TALON_PALETTE_OPEN_READS`) are per-host configurable, default to loopback with authenticated reads, and `/execute` is always token-gated. Usage, token setup and the bind/auth matrix: `docs/palette-feed.md`.
+- Palette HTTP feed lives in `trillium/palette_feed/` on port 7399. Bind (`TALON_PALETTE_BIND` / `user.palette_feed_bind`), read auth (`TALON_PALETTE_OPEN_READS` / `user.palette_feed_open_reads`) and execute auth (`TALON_PALETTE_OPEN_EXECUTE` / `user.palette_feed_open_execute`) are per-host, all defaulting closed; while `open_execute` is on, the bind address and the tailnet are the whole boundary. `GET /` serves the phone search page (`page.html` via `page.py`), which holds no credential. Token setup, the full matrix and the phone page: `docs/palette-feed.md`.
+- Talon drops a `.talon` `settings():` assignment whose setting has no `mod.setting` declaration in Python (`palette_feed.py` declares its three): the log says "settings skipped because they have no matching declaration", `settings.get` keeps returning the default, and the host looks configured while ignoring the value. Verify a setting with `settings.get` in the REPL, not by reading the `.talon` file.
+- Verifying the palette page in a browser: `chrome-devtools-axi` launches Chrome but fails every page-scoped command (`pageId` never set; `robots-yujg4`). Drive headless Chrome over CDP instead, or run `test/palette_page_check.mjs` / `test/palette_page_dom_check.mjs`.
 - `~/.talon/bin/repl` takes one statement per line (use `exec(open(f).read())`); its `sim()` only prints. The real call is `speech_system._sim(phrase)`, which returns text and raises `RuntimeError("Failed to parse")`.
 - Talon logs a stack-trace warning for every thread a user script starts, and has no module-unload hook: a deleted module's threads keep running.
 - `actions.mimic` did nothing while the macOS session was locked (`CGSSessionScreenIsLocked`), even from the REPL. Verify mimic-driven code with the screen unlocked.

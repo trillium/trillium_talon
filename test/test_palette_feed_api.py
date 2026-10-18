@@ -376,6 +376,127 @@ class TestOpenReads:
         assert resp.status == 401 and backend.executed == []
 
 
+class TestOpenExecute:
+    """`Config(open_execute=True)`: the tailnet is the boundary, `/execute` needs no token.
+
+    Everything else about the endpoint is unchanged, so the two switches stay separable.
+    """
+
+    @pytest.fixture
+    def open_execute_api(self, backend):
+        return PaletteApi(
+            TOKEN,
+            backend,
+            RateLimiter(100, 1.0),
+            Config(max_body_bytes=1024, open_execute=True),
+        )
+
+    def test_a_run_needs_no_token(self, open_execute_api, backend):
+        assert (
+            post(open_execute_api, {"phrase": "playback now"}, headers={}).status == 200
+        )
+        assert backend.executed == ["playback now"]
+
+    def test_a_token_is_still_accepted(self, open_execute_api, backend):
+        assert post(open_execute_api, {"phrase": "playback now"}).status == 200
+        assert backend.executed == ["playback now"]
+
+    def test_a_wrong_token_is_simply_not_required(self, open_execute_api, backend):
+        resp = post(
+            open_execute_api,
+            {"phrase": "playback now"},
+            headers={"Authorization": "Bearer nope"},
+        )
+        assert resp.status == 200 and backend.executed == ["playback now"]
+
+    def test_no_token_configured_at_all_still_runs(self, backend):
+        api = PaletteApi(
+            None, backend, RateLimiter(100, 1.0), Config(open_execute=True)
+        )
+        assert post(api, {"phrase": "playback now"}, headers={}).status == 200
+        assert backend.executed == ["playback now"]
+
+    def test_open_execute_leaves_reads_private(self, open_execute_api):
+        assert open_execute_api.handle("GET", "/state", {}).status == 401
+        assert open_execute_api.handle("GET", "/commands", {}).status == 401
+        assert open_execute_api.handle("GET", "/", {}).status == 401
+
+    @pytest.mark.parametrize(
+        "method, path",
+        [
+            ("GET", "/execute"),
+            ("POST", "/nope"),
+            ("PUT", "/execute"),
+            ("POST", "/execute/"),
+            ("GET", "/lists/user.tab_action"),
+        ],
+    )
+    def test_open_execute_publishes_nothing_else(self, open_execute_api, method, path):
+        assert (
+            open_execute_api.handle(method, path, {}, io.BytesIO(b"{}")).status == 401
+        )
+
+    def test_the_denylist_still_applies(self, open_execute_api, backend):
+        for phrase in ("sudo restart talon", "innocent words"):
+            assert post(open_execute_api, {"phrase": phrase}, headers={}).status == 403
+        assert backend.executed == []
+
+    def test_command_mode_is_still_required(self, open_execute_api, backend):
+        backend.mode_set = {"all", "sleep"}
+        assert (
+            post(open_execute_api, {"phrase": "playback now"}, headers={}).status == 423
+        )
+        assert (
+            post(
+                open_execute_api, {"phrase": "playback now"}, "?force=1", headers={}
+            ).status
+            == 200
+        )
+
+    def test_the_rate_limit_still_applies(self, backend):
+        api = PaletteApi(
+            None,
+            backend,
+            RateLimiter(1, 60.0),
+            Config(open_execute=True),
+        )
+        assert post(api, {"phrase": "playback now"}, headers={}).status == 200
+        assert post(api, {"phrase": "playback now"}, headers={}).status == 429
+
+    def test_a_dry_run_still_does_not_run(self, open_execute_api, backend):
+        resp = post(
+            open_execute_api, {"phrase": "playback now"}, "?dry_run=1", headers={}
+        )
+        assert resp.status == 200 and resp.body["dry_run"] and backend.executed == []
+
+    def test_bad_bodies_are_still_rejected(self, open_execute_api, backend):
+        assert post(open_execute_api, {"phrase": ""}, headers={}).status == 400
+        assert post(open_execute_api, None, raw=b"{not json", headers={}).status == 400
+        assert backend.executed == []
+
+    @pytest.mark.parametrize(
+        "open_reads, open_execute, expected",
+        [
+            (False, False, 401),
+            (True, False, 401),
+            (False, True, 200),
+            (True, True, 200),
+        ],
+    )
+    def test_execute_auth_is_its_own_axis(
+        self, backend, open_reads, open_execute, expected
+    ):
+        api = PaletteApi(
+            TOKEN,
+            backend,
+            RateLimiter(100, 1.0),
+            Config(open_reads=open_reads, open_execute=open_execute),
+        )
+        resp = post(api, {"phrase": "playback now"}, headers={})
+        assert resp.status == expected
+        assert backend.executed == (["playback now"] if expected == 200 else [])
+
+
 class TestHttpServer:
     def test_round_trip_over_a_real_socket(self, live, backend):
         status, headers, data = call(live, "GET", "/state", AUTH)

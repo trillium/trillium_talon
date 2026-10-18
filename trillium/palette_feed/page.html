@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Palette</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --card2: #eef1f6; --text: #14161a;
+    --muted: #5b6270; --line: #dfe3ea; --accent: #2f6fed; --accent-ink: #ffffff;
+    --ok: #18794e; --ok-bg: #e7f6ed; --err: #b3261e; --err-bg: #fdecea;
+    --warn: #8a5300; --warn-bg: #fff4e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116; --card: #171b22; --card2: #1f2530; --text: #eef1f6;
+      --muted: #9aa4b4; --line: #2a303a; --accent: #6ea8fe; --accent-ink: #10151d;
+      --ok: #4ade80; --ok-bg: #12271b; --err: #ff8a80; --err-bg: #2b1513;
+      --warn: #f5c26b; --warn-bg: #2a2013;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 17px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    overscroll-behavior-y: none;
+  }
+  #app { max-width: 460px; margin: 0 auto; padding-bottom: 28px; }
+
+  /* sticky top: state header + search */
+  #top {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bg); border-bottom: 1px solid var(--line);
+    padding: 8px 12px 10px;
+  }
+  #state { font-size: 15px; }
+  #state .row1 { display: flex; align-items: baseline; gap: 8px; }
+  #state .host { font-weight: 650; }
+  #state .chips { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .chip {
+    font-size: 12px; font-weight: 600; letter-spacing: .01em; padding: 3px 8px;
+    border-radius: 999px; background: var(--card2); color: var(--muted);
+    border: 1px solid var(--line); white-space: nowrap;
+  }
+  .chip.on { background: var(--ok-bg); color: var(--ok); border-color: transparent; }
+  #state .row2 {
+    color: var(--muted); font-size: 14px; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #searchrow { margin-top: 8px; }
+  #q {
+    width: 100%; min-height: 48px; font-size: 17px; padding: 12px 14px;
+    color: var(--text); background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; appearance: none;
+  }
+  #q:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #meta { font-size: 13px; color: var(--muted); margin-top: 6px; display: flex; gap: 10px; align-items: center; }
+  #meta button { margin-left: auto; }
+
+  button {
+    font: inherit; font-size: 15px; font-weight: 600; touch-action: manipulation;
+    color: var(--text); background: var(--card2); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 12px; cursor: pointer;
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  button:active { transform: scale(.99); }
+
+  ul#results { list-style: none; margin: 8px 0 0; padding: 0 12px; }
+  li.cmd {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    margin-bottom: 8px; overflow: hidden;
+  }
+  .tap {
+    display: block; width: 100%; text-align: left; background: none; border: 0;
+    padding: 14px; min-height: 64px; border-radius: 0;
+  }
+  .tap .rule {
+    font-size: 17px; font-weight: 600; overflow-wrap: anywhere; display: block;
+  }
+  .tap .sub {
+    margin-top: 4px; font-size: 13px; color: var(--muted);
+    overflow-wrap: anywhere; display: block;
+  }
+  .tap .sub .needs { color: var(--warn); font-weight: 600; }
+  .form { border-top: 1px dashed var(--line); padding: 12px 14px 14px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; overflow-wrap: anywhere; }
+  .field input, .field select, .field textarea {
+    width: 100%; min-height: 44px; font: inherit; font-size: 16px; padding: 10px;
+    color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+  }
+  .field textarea { min-height: 76px; }
+  .form .buttons { display: flex; gap: 8px; margin-top: 12px; }
+  .form .buttons .primary { flex: 1; min-height: 48px; }
+  .sent { font-size: 12px; color: var(--muted); margin-top: 8px; overflow-wrap: anywhere; }
+
+  #guide { padding: 10px 12px 0; }
+  .card {
+    border-radius: 14px; padding: 14px; border: 1px solid transparent;
+    background: var(--err-bg); color: var(--text);
+  }
+  .card.warn { background: var(--warn-bg); }
+  .card.ok { background: var(--ok-bg); }
+  .card h2 { margin: 0 0 6px; font-size: 17px; font-weight: 700; color: var(--err); }
+  .card.warn h2 { color: var(--warn); }
+  .card.ok h2 { color: var(--ok); }
+  .card ol { margin: 6px 0 0 20px; padding: 0; }
+  .card li { margin-bottom: 6px; overflow-wrap: anywhere; }
+  .card code {
+    font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 1px 5px; overflow-wrap: anywhere;
+  }
+  .card .buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+  #toast {
+    position: fixed; left: 12px; right: 12px; bottom: 16px; max-width: 436px;
+    margin: 0 auto; z-index: 20; border-radius: 14px; padding: 12px 14px;
+    background: var(--card); border: 1px solid var(--line);
+    box-shadow: 0 8px 24px rgba(0,0,0,.18); font-size: 15px;
+  }
+  #toast.ok { background: var(--ok-bg); }
+  #toast.err { background: var(--err-bg); }
+  #toast.warn { background: var(--warn-bg); }
+  #toast[hidden] { display: none; }
+  #foot { padding: 14px 12px 0; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <div id="state">
+      <div class="row1">
+        <span class="host" id="host">&hellip;</span>
+        <span class="chips" id="chips"></span>
+      </div>
+      <div class="row2" id="context">connecting to the palette feed&hellip;</div>
+    </div>
+    <div id="searchrow">
+      <input id="q" type="search" inputmode="search" enterkeyhint="search"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+             placeholder="search commands" aria-label="search commands">
+    </div>
+    <div id="meta"><span id="count"></span><button type="button" id="refresh">Refresh</button></div>
+  </div>
+
+  <div id="guide" aria-live="polite"></div>
+  <ul id="results"></ul>
+
+  <div id="foot">
+    Tap a command to run it on the Mac. Commands with a slot open a small form first.
+  </div>
+</div>
+
+<div id="toast" hidden></div>
+
+<script>
+/* Palette page. One file, no build step, no network libraries, no credentials.
+   Reads (/state, /commands, /lists/<name>) and POST /execute are called with no
+   credentials at all: on a published host the bind address and the tailnet are the
+   boundary. Nothing here is stored on the phone. */
+(function () {
+  "use strict";
+
+  var MAX_ROWS = 60;
+  var STATE_MS = 5000;
+  var DOCS = "docs/palette-feed.md";
+
+  /* ---------------- pure logic (no DOM, exercised by test/palette_page_check.mjs) */
+
+  function norm(s) {
+    return String(s == null ? "" : s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  }
+
+  function subseq(tok, text, from) {
+    var ti = from, score = 0, run = 0, first = -1, last = -1;
+    for (var i = 0; i < tok.length; i++) {
+      var idx = text.indexOf(tok[i], ti);
+      if (idx < 0) return { score: -1, end: from };
+      if (first < 0) first = idx;
+      if (idx === last + 1) { run += 1; score += 12 + run * 6; }
+      else { run = 0; score += 10 - Math.min(9, idx - (last + 1)); }
+      if (idx === 0 || text[idx - 1] === " ") score += 14;
+      last = idx; ti = idx + 1;
+    }
+    return { score: score, end: last + 1 };
+  }
+
+  /* -1 = no match. Higher is a better match: a contiguous hit always beats a
+     subsequence hit, and a hit that covers more of the rule beats one that leaves a
+     tail behind. */
+  function fuzzy(query, text) {
+    var q = norm(query), t = norm(text);
+    if (!q) return 0;
+    if (!t) return -1;
+    var at = t.indexOf(q);
+    if (at >= 0) {
+      var tail = t.length - (at + q.length);
+      var s = 1000 + Math.max(0, 200 - at) + Math.max(0, 60 - tail);
+      if (at === 0) s += 300;
+      else if (t[at - 1] === " ") s += 150;
+      return s;
+    }
+    var tokens = q.split(" "), total = 0, from = 0;
+    for (var i = 0; i < tokens.length; i++) {
+      var r = subseq(tokens[i], t, from);
+      if (r.score < 0) return -1;
+      total += r.score;
+      from = r.end;
+    }
+    /* Kept under the 1000 an in-order hit scores, and positive so a real match is
+       never ranked away. */
+    return Math.max(1, Math.min(900, 400 + total - Math.min(200, t.length)));
+  }
+
+  function rank(commands, query, limit) {
+    var out = [];
+    if (!norm(query)) return out;
+    for (var i = 0; i < commands.length; i++) {
+      var c = commands[i];
+      var s = fuzzy(query, c.rule);
+      if (s >= 0) out.push({ command: c, score: s });
+    }
+    out.sort(function (a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      var la = a.command.rule.length, lb = b.command.rule.length;
+      if (la !== lb) return la - lb;
+      return a.command.rule < b.command.rule ? -1 : 1;
+    });
+    return limit ? out.slice(0, limit) : out;
+  }
+
+  /* The editable pieces of a rule template, in the order they appear in it. */
+  function partsOf(command) {
+    var rule = String(command && command.rule ? command.rule : "");
+    var slots = (command && command.slots) || [];
+    var byName = {};
+    for (var i = 0; i < slots.length; i++) byName[slots[i].name] = slots[i];
+    var re = /\(([^()]*\|[^()]*)\)|\{([A-Za-z0-9_.]+)\}|<([A-Za-z0-9_.]+)>/g;
+    var parts = [], m;
+    while ((m = re.exec(rule)) !== null) {
+      if (m[1] != null) {
+        var options = m[1].split("|").map(function (o) { return o.trim(); })
+          .filter(function (o) { return o.length > 0; });
+        if (options.length < 2) continue;
+        parts.push({ kind: "choice", raw: m[0], label: m[0], options: options });
+      } else {
+        var name = m[2] || m[3];
+        var info = byName[name] || {};
+        parts.push({
+          kind: m[2] != null ? "list" : "capture",
+          raw: m[0],
+          label: name,
+          list: m[2] != null ? name : null,
+          open: info.open === true,
+          n: typeof info.n === "number" ? info.n : null
+        });
+      }
+    }
+    return parts;
+  }
+
+  function needsInput(command) {
+    var parts = partsOf(command);
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].kind !== "choice") return true;
+    }
+    return false;
+  }
+
+  /* values: index into `parts` -> string. Missing/blank falls back to the default. */
+  function buildPhrase(command, values) {
+    var rule = String(command && command.rule ? command.rule : "");
+    var parts = partsOf(command);
+    var out = "", at = 0;
+    for (var i = 0; i < parts.length; i++) {
+      var raw = parts[i].raw;
+      var idx = rule.indexOf(raw, at);
+      if (idx < 0) continue;
+      out += rule.slice(at, idx);
+      var v = values && values[i] != null ? String(values[i]) : "";
+      if (parts[i].kind === "choice" && !v) v = parts[i].options[0];
+      if (v === "" && parts[i].kind !== "choice") v = raw; // leave the slot visible
+      out += v;
+      at = idx + raw.length;
+    }
+    return (out + rule.slice(at)).trim();
+  }
+
+  function parseError(text) {
+    try {
+      var data = JSON.parse(text);
+      if (data && typeof data === "object") return data;
+    } catch (err) { /* not JSON: the caller shows a generic guide */ }
+    return null;
+  }
+
+  /* Every failure becomes a title, numbered next steps, and an optional button.
+     Never a bare status or a raw JSON body, and never advice about credentials: this
+     page has none. */
+  function fixGuide(status, payload, ctx) {
+    var c = ctx || {};
+    var host = c.host || "the Mac";
+    var err = payload && typeof payload.error === "string" ? payload.error : null;
+    if (status === 401) {
+      return {
+        tone: "error", title: "The Mac will not run commands from this page", steps: [
+          "The feed on the Mac still asks for a bearer token on POST /execute.",
+          "On the Mac, set user.palette_feed_open_execute = true in a settings() block,",
+          "or export TALON_PALETTE_OPEN_EXECUTE=1.",
+          "Reload the feed: touch trillium/palette_feed/palette_feed.py, or restart",
+          "Talon.",
+          "Searching and browsing keep working either way."
+        ],
+        action: { label: "Try again", kind: "retry" }
+      };
+    }
+    if (status === 403 || err === "denied") {
+      return {
+        tone: "error", title: "That command is deliberately blocked", steps: [
+          "The feed's denylist stops system-level commands (sudo, restarting Talon,",
+          "reboot) from the network, whatever the token situation.",
+          "Run it by voice on the Mac instead.",
+          "The list is trillium/palette_feed/denylist.py; details in " + DOCS + "."
+        ]
+      };
+    }
+    if (status === 423 || err === "not_in_command_mode") {
+      return {
+        tone: "warn", title: "Talon is not in command mode", steps: [
+          "On the Mac, switch Talon to command mode, then tap the command again.",
+          "Or tap Run anyway: it skips the mode check and may run the command in the",
+          "wrong context."
+        ],
+        action: { label: "Run anyway", kind: "force" }
+      };
+    }
+    if (status === 429 || err === "rate_limited") {
+      var wait = c.retryAfter ? " Wait " + c.retryAfter + " seconds." : "";
+      return {
+        tone: "warn", title: "Too many taps at once." + wait, steps: [
+          "The feed allows 5 runs per second, counted per server.",
+          "Tap Try again in a moment."
+        ],
+        action: { label: "Try again", kind: "retry" }
+      };
+    }
+    if (err === "no_match") {
+      return {
+        tone: "warn", title: "Talon could not match that phrase", steps: [
+          "It sent: " + (c.phrase || ""),
+          "If the rule needs particular words, tap the command again and use Edit",
+          "phrase to fix it.",
+          "If it still fails, the Mac may not have this rule any more: tap Refresh."
+        ]
+      };
+    }
+    if (err === "not_single_command") {
+      var n = payload && payload.count ? payload.count : "several";
+      return {
+        tone: "warn", title: "That phrase matches " + n + " commands", steps: [
+          "Talon runs a phrase only when exactly one command matches it.",
+          "Tap the command again and use Edit phrase to make it more specific."
+        ]
+      };
+    }
+    if (err === "rule_mismatch") {
+      var would = payload && payload.would_run && payload.would_run.rule
+        ? payload.would_run.rule : "a different command";
+      return {
+        tone: "warn", title: "The commands changed on the Mac", steps: [
+          "The Mac would now run: " + would,
+          "Tap Refresh, then tap the command you want again."
+        ],
+        action: { label: "Refresh", kind: "refresh" }
+      };
+    }
+    if (err === "unknown_command" || status === 404) {
+      return {
+        tone: "warn", title: "That command is gone from the Mac", steps: [
+          "The active command set changed since this page loaded.",
+          "Tap Refresh and search again."
+        ],
+        action: { label: "Refresh", kind: "refresh" }
+      };
+    }
+    if (status === 504 || err === "execute_timeout") {
+      return {
+        tone: "warn", title: "Talon did not start it within 5s", steps: [
+          "Talon may be busy or showing a dialog: bring Talon forward on the Mac and",
+          "tap the command again.",
+          "If it keeps timing out, reload the feed (touch",
+          "trillium/palette_feed/palette_feed.py) or restart Talon."
+        ]
+      };
+    }
+    if (status === 0) {
+      return {
+        tone: "error", title: "Cannot reach the Mac at " + host, steps: [
+          "Check this phone is on the tailnet: Tailscale on, same account as the Mac.",
+          "Open http://" + host + "/state in this browser. If that fails too, the feed",
+          "is not running on the Mac.",
+          "On the Mac, is Talon running? The feed starts with Talon. Look for a log",
+          "line starting with \u201cpalette_feed: listening on\u201d.",
+          "Check the feed's bind address is one the phone can reach: see " + DOCS + "."
+        ],
+        action: { label: "Try again", kind: "retry" }
+      };
+    }
+    if (status >= 500) {
+      return {
+        tone: "error", title: "The feed errored on the Mac (" + status + ")", steps: [
+          "On the Mac, check the Talon log for a line starting with palette_feed:.",
+          "Reload the feed (touch trillium/palette_feed/palette_feed.py) or restart",
+          "Talon.",
+          "Tap Try again."
+        ],
+        action: { label: "Try again", kind: "retry" }
+      };
+    }
+    var extra = status ? "The Mac answered " + status + "." : "The request failed.";
+    return {
+      tone: "error", title: "That did not work", steps: [
+        extra,
+        "Tap Try again.",
+        "If it keeps happening, check the Talon log on the Mac."
+      ],
+      action: { label: "Try again", kind: "retry" }
+    };
+  }
+
+  /* The one place a request is shaped: a plain JSON body, no credentials anywhere. */
+  function executeRequest(phrase, id, force) {
+    var body = { phrase: phrase };
+    if (id) body.id = id;
+    return {
+      url: "/execute" + (force ? "?force=1" : ""),
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        cache: "no-store"
+      }
+    };
+  }
+
+  function stateLine(state) {
+    if (!state) return { host: "\u2026", chips: [], context: "connecting\u2026", ok: false };
+    var app = state.app || {}, win = state.window || {};
+    var modes = state.modes || [];
+    var chips = modes.map(function (m) {
+      return { text: m, on: m === "command" };
+    });
+    if (state.language) chips.push({ text: state.language, on: false });
+    var context = app.name || "no app";
+    if (win.title) context += " \u2014 " + win.title;
+    else if (win.filename) context += " \u2014 " + win.filename;
+    return { host: state.host || "Mac", chips: chips, context: context, ok: true };
+  }
+
+  var Palette = {
+    MAX_ROWS: MAX_ROWS, DOCS: DOCS,
+    norm: norm, fuzzy: fuzzy, rank: rank, partsOf: partsOf, needsInput: needsInput,
+    buildPhrase: buildPhrase, parseError: parseError, fixGuide: fixGuide,
+    executeRequest: executeRequest, stateLine: stateLine
+  };
+  var root = typeof globalThis !== "undefined" ? globalThis
+    : (typeof window !== "undefined" ? window : this);
+  if (root) root.Palette = Palette;
+
+  if (typeof document === "undefined") return; // pure-logic check: no DOM to wire
+
+  /* ---------------- DOM wiring */
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = function (tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  };
+
+  var state = { commands: [], rev: null, openValues: {}, openPhrase: null,
+    lastState: null, online: null };
+
+  function toast(tone, title, steps) {
+    var box = $("toast");
+    box.className = tone || "";
+    box.textContent = "";
+    var h = el("div", null, title);
+    h.style.fontWeight = "700";
+    box.appendChild(h);
+    if (steps && steps.length) {
+      var ol = el("ol");
+      for (var i = 0; i < steps.length; i++) ol.appendChild(el("li", null, steps[i]));
+      box.appendChild(ol);
+    }
+    box.hidden = false;
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { box.hidden = true; }, tone === "ok" ? 4000 : 9000);
+  }
+
+  function hideToast() { $("toast").hidden = true; }
+
+  function showGuide(guide) {
+    var box = $("guide");
+    box.textContent = "";
+    if (!guide) return;
+    var card = el("div", "card " + (guide.tone === "warn" ? "warn" : ""));
+    card.appendChild(el("h2", null, guide.title));
+    var ol = el("ol");
+    for (var i = 0; i < guide.steps.length; i++) ol.appendChild(el("li", null, guide.steps[i]));
+    card.appendChild(ol);
+    if (guide.action) {
+      var row = el("div", "buttons");
+      var btn = el("button", "primary", guide.action.label);
+      btn.type = "button";
+      btn.addEventListener("click", function () { runAction(guide.action.kind); });
+      row.appendChild(btn);
+      var dismiss = el("button", null, "Dismiss");
+      dismiss.type = "button";
+      dismiss.addEventListener("click", function () { showGuide(null); });
+      row.appendChild(dismiss);
+      card.appendChild(row);
+    }
+    box.appendChild(card);
+    if (box.scrollIntoView) box.scrollIntoView({ block: "nearest" });
+  }
+
+  function runAction(kind) {
+    if (kind === "refresh") { hideToast(); showGuide(null); loadCommands(true); return; }
+    if (kind === "retry" || kind === "force") {
+      if (state.openPhrase != null) {
+        sendPhrase(state.openPhrase.phrase, state.openPhrase.id, kind === "force");
+      } else {
+        loadCommands(true);
+      }
+    }
+  }
+
+  function noteFailure(status, text, extra) {
+    var guide = fixGuide(status, parseError(text), {
+      host: location.host,
+      retryAfter: extra && extra.retryAfter,
+      phrase: extra && extra.phrase
+    });
+    showGuide(guide);
+    return guide;
+  }
+
+  /* ---------------- reads */
+
+  function renderState() {
+    var line = stateLine(state.lastState);
+    $("host").textContent = line.host;
+    var chips = $("chips");
+    chips.textContent = "";
+    for (var i = 0; i < line.chips.length; i++) {
+      chips.appendChild(el("span", "chip " + (line.chips[i].on ? "on" : ""), line.chips[i].text));
+    }
+    $("context").textContent = state.online === false
+      ? "cannot reach the feed \u2014 tap for the fix" : line.context;
+  }
+
+  function pollState() {
+    if (document.hidden) return;
+    fetch("/state", { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw { status: r.status };
+      return r.json();
+    }).then(function (data) {
+      state.lastState = data;
+      state.online = true;
+      renderState();
+    }).catch(function (err) {
+      state.online = false;
+      renderState();
+      if (state.lastState === null) {
+        showGuide(fixGuide(err && err.status ? err.status : 0, null, { host: location.host }));
+      }
+    });
+  }
+
+  function loadCommands(force) {
+    var url = "/commands" + (!force && state.rev ? "?rev=" + encodeURIComponent(state.rev) : "");
+    $("count").textContent = state.commands.length ? "refreshing\u2026" : "loading commands\u2026";
+    fetch(url, { cache: "no-store" }).then(function (r) {
+      if (r.status === 304) { render(); return null; }
+      if (!r.ok) { return r.text().then(function (t) { throw { status: r.status, text: t }; }); }
+      return r.json().then(function (data) {
+        state.commands = data.commands || [];
+        state.rev = data.commands_rev || null;
+        render();
+        return null;
+      });
+    }).catch(function (err) {
+      if (err && typeof err.status === "number") noteFailure(err.status, err.text);
+      else showGuide(fixGuide(0, null, { host: location.host }));
+      $("count").textContent = state.commands.length ? state.commands.length + " commands (stale)" : "";
+    });
+  }
+
+  /* ---------------- rendering */
+
+  function render() {
+    var query = $("q").value;
+    var hits = query.trim() ? rank(state.commands, query, MAX_ROWS) : [];
+    var total = query.trim() ? rank(state.commands, query).length : 0;
+    $("count").textContent = !state.commands.length ? ""
+      : !query.trim() ? state.commands.length + " commands \u2014 type to search"
+      : total > hits.length ? "showing " + hits.length + " of " + total
+      : hits.length + " of " + state.commands.length + " commands";
+    var list = $("results");
+    list.textContent = "";
+    for (var i = 0; i < hits.length; i++) list.appendChild(row(hits[i].command));
+  }
+
+  function row(command) {
+    var li = el("li", "cmd");
+    var tap = el("button", "tap");
+    tap.type = "button";
+    tap.appendChild(el("span", "rule", command.rule));
+    var sub = el("span", "sub");
+    sub.appendChild(document.createTextNode(command.kind));
+    if (command.context) sub.appendChild(document.createTextNode(" \u00b7 " + command.context));
+    if (command.shadowed) sub.appendChild(document.createTextNode(" \u00b7 " + command.shadowed + " shadowed"));
+    if (needsInput(command)) sub.appendChild(el("span", "needs", " \u00b7 needs a value"));
+    tap.appendChild(sub);
+    tap.addEventListener("click", function () {
+      if (needsInput(command)) toggleForm(li, command);
+      else sendPhrase(buildPhrase(command, null), command.id, false);
+    });
+    li.appendChild(tap);
+    return li;
+  }
+
+  function toggleForm(li, command) {
+    var existing = li.querySelector(".form");
+    if (existing) { existing.remove(); return; }
+    var form = buildForm(li, command);
+    li.appendChild(form);
+    var first = form.querySelector("input, select, textarea");
+    if (first) first.focus();
+  }
+
+  function buildForm(li, command) {
+    var form = el("div", "form");
+    var widgets = [];
+    var parts = partsOf(command);
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      var field = el("div", "field");
+      var id = "f" + i + "-" + Math.random().toString(36).slice(2, 7);
+      var label = el("label", null, part.kind === "choice" ? "phrase" : part.label
+        + (part.n != null ? " (" + part.n + " values)" : ""));
+      label.setAttribute("for", id);
+      field.appendChild(label);
+      var input;
+      if (part.kind === "choice") {
+        input = document.createElement("select");
+        for (var j = 0; j < part.options.length; j++) {
+          var opt = document.createElement("option");
+          opt.value = part.options[j];
+          opt.textContent = part.options[j];
+          input.appendChild(opt);
+        }
+        if (state.openValues[i] != null) input.value = state.openValues[i];
+      } else {
+        input = document.createElement("input");
+        input.type = "text";
+        input.autocomplete = "off";
+        input.autocapitalize = "off";
+        input.autocorrect = "off";
+        input.spellcheck = false;
+        input.placeholder = part.open || part.kind === "capture" ? "type a value" : "pick a value";
+        if (state.openValues[i] != null) input.value = state.openValues[i];
+        if (part.list) {
+          var dl = document.createElement("datalist");
+          dl.id = id + "-list";
+          input.setAttribute("list", dl.id);
+          fillDatalist(part.list, dl);
+          field.appendChild(dl);
+        }
+      }
+      input.id = id;
+      field.appendChild(input);
+      widgets.push(input);
+      form.appendChild(field);
+    }
+    var valuesOf = function () {
+      var values = {};
+      for (var k = 0; k < widgets.length; k++) values[k] = widgets[k].value;
+      state.openValues = values;
+      return values;
+    };
+    var preview = el("div", "sent", "sends: " + buildPhrase(command, valuesOf()));
+    for (var w = 0; w < widgets.length; w++) {
+      widgets[w].addEventListener("input", function () {
+        preview.textContent = "sends: " + buildPhrase(command, valuesOf());
+      });
+    }
+    var buttons = el("div", "buttons");
+    var run = el("button", "primary", "Run");
+    run.type = "button";
+    run.addEventListener("click", function () {
+      sendPhrase(buildPhrase(command, valuesOf()), command.id, false);
+    });
+    buttons.appendChild(run);
+    var edit = el("button", null, "Edit phrase");
+    edit.type = "button";
+    edit.addEventListener("click", function () { openEditor(li, command); });
+    buttons.appendChild(edit);
+    form.appendChild(buttons);
+    form.appendChild(preview);
+    return form;
+  }
+
+  function fillDatalist(name, dl) {
+    fetch("/lists/" + encodeURIComponent(name), { cache: "no-store" }).then(function (r) {
+      return r.ok ? r.json() : null;
+    }).then(function (data) {
+      if (!data || !data.entries) return;
+      var entries = data.entries.slice(0, 300);
+      for (var i = 0; i < entries.length; i++) {
+        var opt = document.createElement("option");
+        opt.value = entries[i];
+        dl.appendChild(opt);
+      }
+    }).catch(function () { /* a missing list only means no suggestions */ });
+  }
+
+  function readValues(li, command) {
+    var parts = partsOf(command);
+    var fields = li.querySelectorAll(".form input, .form select, .form textarea");
+    var values = {};
+    for (var i = 0; i < parts.length && i < fields.length; i++) values[i] = fields[i].value;
+    state.openValues = values;
+    return values;
+  }
+
+  function openEditor(li, command) {
+    var form = li.querySelector(".form") || buildForm(li, command);
+    if (!li.contains(form)) li.appendChild(form);
+    var phrase = buildPhrase(command, readValues(li, command));
+    var field = el("div", "field");
+    var label = el("label", null, "phrase to send (Talon must match it exactly)");
+    var id = "edit" + Math.random().toString(36).slice(2, 7);
+    label.setAttribute("for", id);
+    field.appendChild(label);
+    var area = document.createElement("textarea");
+    area.id = id;
+    area.value = phrase;
+    field.appendChild(area);
+    form.appendChild(field);
+    area.focus();
+    area.select();
+    var buttons = el("div", "buttons");
+    var send = el("button", "primary", "Send this phrase");
+    send.type = "button";
+    send.addEventListener("click", function () {
+      sendPhrase(area.value.trim(), command.id, false);
+    });
+    buttons.appendChild(send);
+    form.appendChild(buttons);
+  }
+
+  /* ---------------- the one write */
+
+  function sendPhrase(phrase, id, force) {
+    if (!phrase) { showGuide(fixGuide(422, { error: "no_match" }, { phrase: "" })); return; }
+    state.openPhrase = { phrase: phrase, id: id };
+    var req = executeRequest(phrase, id, force);
+    fetch(req.url, req.init).then(function (r) {
+      return r.text().then(function (text) {
+        if (r.ok) {
+          var data = parseError(text) || {};
+          state.openPhrase = null;
+          showGuide(null);
+          toast("ok", "Ran: " + (data.matched_rule || phrase));
+          return null;
+        }
+        var guide = noteFailure(r.status, text, {
+          phrase: phrase, retryAfter: r.headers.get("Retry-After")
+        });
+        if (r.status === 429) toast(guide.tone, guide.title, guide.steps);
+        return null;
+      });
+    }).catch(function () {
+      noteFailure(0, null, { phrase: phrase });
+    });
+  }
+
+  /* ---------------- boot */
+
+  function init() {
+    $("q").addEventListener("input", function () {
+      clearTimeout(init._t);
+      init._t = setTimeout(render, 60);
+    });
+    $("refresh").addEventListener("click", function () {
+      hideToast(); showGuide(null); loadCommands(true); pollState();
+    });
+    $("context").parentNode.addEventListener("click", function () {
+      if (state.online === false) showGuide(fixGuide(0, null, { host: location.host }));
+    });
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) pollState(); });
+    pollState();
+    loadCommands(false);
+    setInterval(pollState, STATE_MS);
+  }
+
+  var booted = false;
+  function boot() { if (booted) return; booted = true; init(); }
+  document.addEventListener("DOMContentLoaded", boot);
+  if (document.readyState !== "loading") boot();
+})();
+</script>
+</body>
+</html>
