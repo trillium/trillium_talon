@@ -4,13 +4,16 @@ A small HTTP server inside Talon that lets a phone (the palette app) read the
 active command set and run a command. Code: `trillium/palette_feed/`.
 Design and evidence: the scope report for task-jyg9w (project-7u7w).
 
-It listens on `127.0.0.1:7399` only. Reach it from the phone through
-`tailscale serve` (tailnet-only HTTPS) plus a bearer token.
+It listens on `127.0.0.1:7399` by default, with reads requiring a bearer token. Two
+switches publish it on the tailnet — a wider bind address and open reads — with no
+`tailscale serve` and no proxy. `/execute` always requires the token, so a wider bind
+never means unauthenticated voice control.
 
 ## Set up the token
 
-The token lives outside every git repo, mode `0600`. Without it the server
-does not start (it prints why to the Talon log).
+The token lives outside every git repo, mode `0600`. While reads are authenticated a
+missing token stops the feed from starting (it prints why to the Talon log); with
+`open_reads` on it still starts, and only `/execute` is disabled.
 
 ```sh
 mkdir -p -m 700 ~/.config/talon-palette
@@ -19,35 +22,99 @@ chmod 600 ~/.config/talon-palette/token
 ```
 
 - Override the path with `TALON_PALETTE_TOKEN_FILE`.
-- The server refuses a token file that is group/world readable, shorter than
-  32 characters, or inside the repo it was loaded from.
+- The feed refuses a token file that is group/world readable, shorter than
+  32 characters, or inside the repo it was loaded from. The first two are fatal only
+  while reads are authenticated; a repo-local token is fatal either way (see the matrix
+  below).
 - Rotate by writing a new token, then reloading the module (touch
   `trillium/palette_feed/palette_feed.py`) or restarting Talon.
-- Put the same token in the phone's Keychain. One token per host.
+- Put the same token in the phone's Keychain while reads are authenticated, and always
+  if the phone is to run commands (`/execute`). One token per host.
 
-## Publish over the tailnet
+## Bind and auth
 
-Run on each host, once. Do not use `funnel`: this machine has Funnel enabled
-for other ports, and this port must never be public.
+Both axes are configured per host, as an environment variable or the matching Talon
+setting. The environment wins.
+
+| env var                    | Talon setting                  | default     |
+| -------------------------- | ------------------------------ | ----------- |
+| `TALON_PALETTE_BIND`       | `user.palette_feed_bind`       | `127.0.0.1` |
+| `TALON_PALETTE_OPEN_READS` | `user.palette_feed_open_reads` | `false`     |
+
+`TALON_PALETTE_OPEN_READS` takes `1/true/yes/on` or `0/false/no/off`, case-insensitive.
+A value it cannot read is ignored, with one line in the Talon log rather than a silent
+change of behavior. Both defaults are the old behavior: nothing is published until a
+host says so.
+
+### The matrix
+
+`open_reads` decides read auth. The bind only decides who can reach the socket.
+
+| `bind`                      | `open_reads`      | `GET /state`, `/commands`, `/lists/<name>` | `POST /execute` |
+| --------------------------- | ----------------- | ------------------------------------------ | --------------- |
+| `127.0.0.1` (default)       | `false` (default) | bearer token                               | bearer token    |
+| `127.0.0.1`                 | `true`            | no token                                   | bearer token    |
+| `0.0.0.0` or the tailnet IP | `false`           | bearer token                               | bearer token    |
+| `0.0.0.0` or the tailnet IP | `true`            | no token                                   | bearer token    |
+
+A missing token is fatal only while reads are authenticated, so the token file itself
+is the third input:
+
+| Token file at `TALON_PALETTE_TOKEN_FILE`  | `open_reads=false`                   | `open_reads=true`                                |
+| ----------------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| `0600`, 32+ chars, outside every git repo | reads and `/execute` work            | reads open, `/execute` works                     |
+| missing, unreadable, too short, or `0644` | the feed does not start (prints why) | the feed starts, reads open, `/execute` is `401` |
+| inside the repo it was loaded from        | the feed does not start              | the feed does not start                          |
+
+`/execute` failing closed when no token is configured is deliberate: there is no
+credential to check a caller against, so the endpoint is disabled rather than open.
+
+### Publish it for the phone
+
+On each host, for the phone:
 
 ```sh
-tailscale serve --bg --https=7399 http://127.0.0.1:7399
-tailscale serve status        # confirm 7399 is listed under the tailnet URL
-tailscale funnel status       # confirm 7399 is NOT listed
+export TALON_PALETTE_BIND=0.0.0.0
+export TALON_PALETTE_OPEN_READS=1
 ```
 
-The phone then uses `https://<host>.<tailnet>.ts.net:7399`.
-Remove it with `tailscale serve --https=7399 off`.
+or in a settings block in any `.talon` file:
+
+```
+settings():
+    user.palette_feed_bind = "0.0.0.0"
+    user.palette_feed_open_reads = true
+```
+
+Reload `trillium/palette_feed/palette_feed.py` (touch it) or restart Talon; the log
+prints the resulting shape:
+
+```
+palette_feed: listening on 0.0.0.0:7399 (tailnet/network, reads open, /execute token-gated)
+```
+
+The phone then uses `http://<host>:7399` — the MacBook or mini0 tailnet address, over
+plain HTTP on the tailnet. No `tailscale serve`, no Funnel, and nothing on the public
+internet.
+
+`0.0.0.0` listens on every interface, including non-tailnet ones the machine has. Use
+the machine's own tailnet address (`tailscale ip -4`) to keep the socket on the tailnet
+only. A hostname that is not an IP address counts as non-loopback too, so it needs the
+same explicit configuration; `server.start` refuses any other non-loopback bind.
 
 ## Endpoints
 
-All requests need `Authorization: Bearer <token>`. Anything else gets
-`401 {"ok":false,"error":"unauthorized"}` before routing, so unauthenticated
-callers cannot tell which routes exist.
+`GET /state`, `GET /commands` and `GET /lists/<name>` need `Authorization: Bearer <token>`
+only while `open_reads` is off. `POST /execute` always needs it, and answers
+`401 {"ok":false,"error":"unauthorized"}` when it is missing, wrong, or unconfigured.
+That same 401 comes back for every non-read path _before_ routing, so an unauthenticated
+caller still cannot tell which routes exist; the only routes it can see are the reads the
+operator published.
 
 ```sh
 TOKEN=$(cat ~/.config/talon-palette/token)
 curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:7399/state
+curl -s http://$(tailscale ip -4):7399/state     # with open_reads: reading needs no token
 ```
 
 | Method and path     | What it returns                                                                                                                                                  |
@@ -83,7 +150,7 @@ Each entry in `commands`:
 
 Order of checks (the first failure wins, and nothing runs unless all pass):
 
-1. `401` bad or missing token.
+1. `401` no token is configured, or the request's token is missing or wrong.
 2. `429` more than 5 calls per second (`Retry-After` header). Counted per server, not per caller.
 3. `411` no `Content-Length` (chunked is refused), `400` bad length, `413` body over 4096 bytes.
 4. `400` body is not a JSON object with a printable `phrase` of 1-200 characters.
@@ -112,10 +179,15 @@ A leaked token is voice-level control of the machine, so keep this list tight.
 
 ## Settings
 
-Constants at the top of `trillium/palette_feed/palette_feed.py`:
-`TOKEN_PATH`, `EXECUTE_RATE` (calls, seconds), `EXECUTE_TIMEOUT_S`.
-`Config(require_command_mode=..., max_body_bytes=...)` is passed to `PaletteApi` there.
-The server refuses any non-loopback bind in `server.start`.
+Constants at the top of `trillium/palette_feed/palette_feed.py`: `TOKEN_PATH`,
+`EXECUTE_RATE` (calls, seconds), `EXECUTE_TIMEOUT_S`. `Config(open_reads=...,
+require_command_mode=..., max_body_bytes=...)` is passed to `PaletteApi` there.
+
+`options.resolve` picks the bind and `open_reads` (env, then Talon setting, then the
+defaults above); `auth.plan_token` is the single place that decides whether the feed
+starts and whether `/execute` is armed. `server.start` refuses a non-loopback bind
+unless its caller passes `allow_non_loopback=True`, which only `options` does, and only
+for an address the operator configured.
 
 ## Behavior to know
 
@@ -137,15 +209,20 @@ The server refuses any non-loopback bind in `server.start`.
 - **Logs.** The server never logs request lines or window titles.
 - **One server per host.** MacBook and mini0 have different command sets; each
   runs its own server from this repo.
-- **Windows titles** in `/state` can contain private text. The only protection
-  is the token and the tailnet.
+- **Windows titles** in `/state` can contain private text. While reads are
+  authenticated the token and the tailnet protect them; with `open_reads` on the tailnet
+  is the only protection, which is why the bind is worth pinning to the tailnet address.
+- **Heads-up at start.** The log line names the bind, whether reads are open, and
+  whether `/execute` is armed, so a misconfigured host is visible without a probe.
 
 ## Tests
 
 ```sh
-python -m pytest test/test_palette_feed_helpers.py test/test_palette_feed_api.py -v
+python -m pytest test/test_palette_feed_helpers.py test/test_palette_feed_api.py test/test_palette_feed_impl_shapes.py -v
 ```
 
-The pure modules (`auth`, `limits`, `denylist`, `dispatch`, `simparse`,
-`serialize`, `api`, `server`) import no Talon code. Only `palette_feed.py` does,
-so it is the one file not covered by unit tests.
+The pure modules (`auth`, `limits`, `denylist`, `dispatch`, `simparse`, `serialize`,
+`api`, `server`, `options`) import no Talon code. Only `palette_feed.py` does, so it is
+the one file with no direct unit tests: `test_palette_feed_impl_shapes.py` covers its
+`TalonBackend` over a stub registry, and the pure helpers cover everything `start_server`
+feeds it.

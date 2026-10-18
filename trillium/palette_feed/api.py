@@ -36,6 +36,17 @@ class Backend(Protocol):
 class Config:
     max_body_bytes: int = 4096
     require_command_mode: bool = True
+    # Read endpoints answer without a token. `/execute` always needs one; with no token
+    # configured at all it answers 401 (fail closed) rather than running anything.
+    open_reads: bool = False
+
+
+# GETs that `open_reads` publishes to any tailnet caller.
+_READ_PATHS = ("/state", "/commands")
+
+
+def _is_read(method: str, path: str) -> bool:
+    return method == "GET" and (path in _READ_PATHS or path.startswith("/lists/"))
 
 
 @dataclass
@@ -52,7 +63,7 @@ def _error(status: int, code: str, **extra: Any) -> Response:
 class PaletteApi:
     def __init__(
         self,
-        token: str,
+        token: str | None,
         backend: Backend,
         limiter: RateLimiter,
         config: Config = Config(),
@@ -62,6 +73,14 @@ class PaletteApi:
         self._limiter = limiter
         self._config = config
 
+    def _permitted(self, method: str, path: str, headers: Mapping[str, str]) -> bool:
+        """Open reads first, then the token; an absent token can never authorize."""
+        if self._config.open_reads and _is_read(method, path):
+            return True
+        if self._token is None:
+            return False
+        return is_authorized(headers.get("authorization"), self._token)
+
     def handle(
         self,
         method: str,
@@ -70,13 +89,13 @@ class PaletteApi:
         rfile: BinaryIO | None = None,
     ) -> Response:
         headers = {k.lower(): v for k, v in headers.items()}
-        if not is_authorized(headers.get("authorization"), self._token):
+        url = urlsplit(target)
+        if not self._permitted(method, url.path, headers):
             return Response(
                 401,
                 {"ok": False, "error": "unauthorized"},
                 {"WWW-Authenticate": "Bearer"},
             )
-        url = urlsplit(target)
         query = {k: v[-1] for k, v in parse_qs(url.query).items()}
         path = url.path
         if method == "GET":
