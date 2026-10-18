@@ -24,6 +24,30 @@ class RawImpl:
     score: tuple
 
 
+def impl_to_raw(impl: Any) -> RawImpl:
+    """Reduce one live Talon CommandImpl to plain data, tolerating both shapes Talon ships.
+
+    Talon 0.4.0 (115.0) has CommandImpl(ctx, rule, script, experiments) with no `trigger` and no
+    `lineno`: the rule text is `impl.rule.rule` and the line is `impl.script.start_line`. Builds with
+    the CommandImpl(ScriptImpl) refactor (0.4.0-1561-9c3d and later) answer both directly. The newer,
+    Talon-computed values win where present, so the newer build's output cannot change; the fallbacks
+    reproduce them — the 18 rules active on both builds in the same file yielded byte-identical ids
+    (task-ykd7c). Every read is a `getattr` chain, so a future build that renames rather than deletes
+    degrades instead of failing the request.
+    """
+    rule = getattr(impl, "rule", None)
+    ctx = getattr(impl, "ctx", None)
+    lineno = getattr(impl, "lineno", None)
+    if lineno is None:
+        lineno = getattr(getattr(impl, "script", None), "start_line", 0) or 0
+    return RawImpl(
+        trigger=str(getattr(impl, "trigger", None) or getattr(rule, "rule", "") or ""),
+        context=str(getattr(ctx, "path", str(ctx))),
+        lineno=int(lineno),
+        score=tuple(getattr(ctx, "_active_scores", ()) or ()),
+    )
+
+
 def command_id(context: str, lineno: int, trigger: str) -> str:
     """Stable id for a command definition."""
     digest = hashlib.sha1(f"{context}:{lineno}:{trigger}".encode("utf-8")).hexdigest()

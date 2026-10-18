@@ -17,7 +17,7 @@ from .api import Config, PaletteApi
 from .auth import TokenError, find_repo_root, is_within, load_token
 from .dispatch import DispatchTimeout, run_scheduled
 from .limits import RateLimiter
-from .serialize import RawImpl, serialize_commands, serialize_state
+from .serialize import RawImpl, impl_to_raw, serialize_commands, serialize_state
 from .simparse import NoMatch
 
 HOST = server.DEFAULT_HOST
@@ -37,17 +37,7 @@ _holder = sys.modules.setdefault(_HOLDER_KEY, types.SimpleNamespace(server=None)
 def _group_active_commands() -> list[list[RawImpl]]:
     grouped = []
     for impls in registry.commands.values():
-        grouped.append(
-            [
-                RawImpl(
-                    trigger=impl.trigger,
-                    context=getattr(impl.ctx, "path", str(impl.ctx)),
-                    lineno=impl.lineno,
-                    score=tuple(getattr(impl.ctx, "_active_scores", ())),
-                )
-                for impl in impls
-            ]
-        )
+        grouped.append([impl_to_raw(impl) for impl in impls])
     return [g for g in grouped if g]
 
 
