@@ -262,7 +262,12 @@ class TestExecute:
 
     @pytest.mark.parametrize(
         "content_type",
-        [None, "text/plain", "application/x-www-form-urlencoded", "multipart/form-data"],
+        [
+            None,
+            "text/plain",
+            "application/x-www-form-urlencoded",
+            "multipart/form-data",
+        ],
     )
     def test_non_json_content_type_is_415_and_never_runs(
         self, api, backend, content_type
@@ -280,12 +285,17 @@ class TestExecute:
 
     def test_oversized_body_is_413_and_unread(self, api):
         rfile = io.BytesIO(b"x" * 2000)
-        resp = api.handle("POST", "/execute", {**AUTH, **JSON, "Content-Length": "2000"}, rfile)
+        resp = api.handle(
+            "POST", "/execute", {**AUTH, **JSON, "Content-Length": "2000"}, rfile
+        )
         assert resp.status == 413
         assert rfile.tell() == 0
 
     def test_missing_content_length_is_411(self, api):
-        assert api.handle("POST", "/execute", {**AUTH, **JSON}, io.BytesIO(b"{}")).status == 411
+        assert (
+            api.handle("POST", "/execute", {**AUTH, **JSON}, io.BytesIO(b"{}")).status
+            == 411
+        )
 
     def test_chunked_is_rejected(self, api):
         hdrs = {**AUTH, **JSON, "Transfer-Encoding": "chunked", "Content-Length": "2"}
@@ -563,7 +573,9 @@ class TestHttpServer:
     def test_server_start_launches_a_fixed_number_of_threads(self, live):
         def feed_threads():
             return sorted(
-                t.name for t in threading.enumerate() if t.name.startswith("palette-feed")
+                t.name
+                for t in threading.enumerate()
+                if t.name.startswith("palette-feed")
             )
 
         before = feed_threads()
