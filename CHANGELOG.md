@@ -4,6 +4,50 @@ Notable changes to this repo. Newest first.
 
 ## Unreleased
 
+### Added — a phone page at `GET /`
+
+- `trillium/palette_feed`: the feed now serves a phone-first fuzzy-search page at
+  `GET /` — one static HTML file (`page.html`, served by `page.py`), no build step, no
+  CDN. It needs no token to load, and follows `open_reads` like the other reads.
+- The page searches `/commands` client-side (contiguous hits beat subsequences), shows
+  app/mode/window from `/state` polled every 5s, and runs a tapped command with
+  `POST /execute`. Literal rules fire immediately; rules with `(a | b)`, `{list}` or
+  `<capture>` slots open a small form (list slots get `/lists/<name>` suggestions) plus
+  an **Edit phrase** escape hatch.
+- The page holds no credential at all: no token field, no `localStorage`, no
+  `Authorization` header. Publishing the feed is the whole authorization story.
+- Every failure (401 when the host has not opened `/execute`, 423 not-in-command-mode with
+  a **Run anyway** `?force=1` retry, 429, 403 denylist, 404/409 stale rule, 422, 504, 5xx,
+  unreachable host) renders a fix-guide with the exact next step instead of a bare status
+  or raw JSON.
+- Tests: `test/test_palette_feed_page.py` (routing and bytes over a real socket) and
+  `test/palette_page_check.mjs` / `test/palette_page_dom_check.mjs` (the page's own script
+  under node, and its DOM wiring under jsdom). Docs: `docs/palette-feed.md` → "Phone page".
+
+### Added — `open_execute`, so a tailnet host can run commands without a token
+
+- `TALON_PALETTE_OPEN_EXECUTE` / `user.palette_feed_open_execute`, default `false`. While it
+  is on, `POST /execute` accepts requests with no `Authorization` header and still accepts a
+  valid token; every other gate is unchanged (denylist, command mode, rate limit, body
+  limits). Reads are unaffected — it is its own axis.
+- **While it is on, any device that can reach the bind can run Talon commands.** The
+  security model is then the bind address and the tailnet, which `docs/palette-feed.md`
+  now states plainly, along with the new full bind × open_reads × open_execute matrix. The
+  startup log adds a `WARNING /execute is open` line naming the exposed address.
+- A missing token is no longer fatal when nothing is left gated, and `/execute` is no
+  longer "disabled" merely because no token file exists.
+
+### Fixed — the feed's Talon settings were inert (task-ncz8l)
+
+- `palette_feed.py` now declares `palette_feed_bind`, `palette_feed_open_reads` and
+  `palette_feed_open_execute` with `Module.setting`. Talon only accepts a `.talon`
+  `settings():` assignment for a declared setting; without the declaration it logged
+  "settings skipped because they have no matching declaration" and dropped the value, so
+  `trillium/settings.talon`'s `user.palette_feed_bind` / `user.palette_feed_open_reads`
+  changed nothing and the feed stayed on loopback. Regression test:
+  `test/test_palette_feed_settings.py`, which imports the module with `Module.setting`
+  recorded and fails if a declaration and the name `options.resolve` reads drift apart.
+
 ### Changed — the palette feed can serve the tailnet
 
 - `trillium/palette_feed`: the bind address and the read-auth requirement are now

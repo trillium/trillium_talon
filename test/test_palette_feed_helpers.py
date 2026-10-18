@@ -505,6 +505,21 @@ class TestTokenPlan:
         assert not plan.fatal and plan.token is None
         assert "/execute disabled" in plan.message
 
+    def test_missing_token_is_not_fatal_when_execute_is_open(self, tmp_path):
+        plan = auth.plan_token(str(tmp_path / "absent"), None, False, True)
+        assert not plan.fatal and plan.token is None
+        assert "reads token-gated, /execute open" in plan.message
+
+    def test_both_routes_open_needs_no_token_at_all(self, tmp_path):
+        plan = auth.plan_token(str(tmp_path / "absent"), None, True, True)
+        assert not plan.fatal
+        assert "reads open, /execute open" in plan.message
+
+    def test_an_open_execute_still_refuses_a_repo_local_token(self, tmp_path):
+        assert auth.plan_token(
+            self.private_token(tmp_path), str(tmp_path), True, True
+        ).fatal
+
     def test_unusable_token_is_fatal_only_when_reads_are_authenticated(self, tmp_path):
         path = tmp_path / "token"
         path.write_text(TOKEN)
@@ -590,9 +605,40 @@ class TestOptions:
         )
         assert opts.bind == "100.64.0.1" and opts.open_reads
 
-    def test_describe_names_both_axes(self):
-        assert options.Options().describe() == "loopback only, reads token-gated"
-        assert (
-            options.Options(bind="0.0.0.0", open_reads=True).describe()
-            == "tailnet/network, reads open"
+    def test_describe_names_every_axis(self):
+        assert options.Options().describe() == (
+            "loopback only, reads token-gated, /execute token-gated"
         )
+        assert options.Options(bind="0.0.0.0", open_reads=True).describe() == (
+            "tailnet/network, reads open, /execute token-gated"
+        )
+        assert options.Options(open_execute=True).describe() == (
+            "loopback only, reads token-gated, /execute open to any caller"
+        )
+
+    def test_open_execute_is_off_by_default(self):
+        opts = options.resolve({}, lambda name, default=None: default)
+        assert not opts.open_execute
+        assert options.Options().open_execute is False
+
+    def test_open_execute_comes_from_the_env_and_the_talon_setting(self):
+        env = options.resolve({"TALON_PALETTE_OPEN_EXECUTE": "1"}, lambda n, d=None: d)
+        assert env.open_execute
+        setting = options.resolve(
+            {}, lambda name, default=None: name == options.SETTING_OPEN_EXECUTE
+        )
+        assert setting.open_execute
+
+    def test_the_env_beats_the_talon_setting_for_execute(self):
+        opts = options.resolve(
+            {"TALON_PALETTE_OPEN_EXECUTE": "off"},
+            lambda name, default=None: name == options.SETTING_OPEN_EXECUTE,
+        )
+        assert not opts.open_execute
+
+    def test_an_unrecognized_execute_switch_warns_and_stays_closed(self):
+        opts = options.resolve(
+            {"TALON_PALETTE_OPEN_EXECUTE": "maybe"}, lambda n, d=None: d
+        )
+        assert not opts.open_execute
+        assert opts.warnings and "TALON_PALETTE_OPEN_EXECUTE" in opts.warnings[0]
