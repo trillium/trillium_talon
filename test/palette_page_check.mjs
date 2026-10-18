@@ -317,8 +317,62 @@ eq(P.stateLine(null).ok, false, "a missing state reads as not connected");
 ok(
     html.split("localStorage").length - 1 === 2 &&
         html.includes('INTRO_KEY = "palette_intro_dismissed"'),
-    "the only thing the page stores on the phone is the intro flag",
+    "all storage goes through one read and one write (storeGet/storeSet)",
 );
+ok(
+    /RECENTS_KEY = "palette_recents"/.test(html) &&
+        /FAVORITES_KEY = "palette_favorites"/.test(html),
+    "recents and favorites use namespaced keys",
+);
+
+// ---- recents: cap, order, dedup, corrupt shapes ---------------------------------
+const rec = (n) => ({ phrase: "cmd " + n, id: "i" + n, rule: "cmd " + n });
+let list = [];
+for (let n = 1; n <= 12; n++) list = P.pushRecent(list, rec(n));
+eq(list.length, 10, "recents are capped at 10");
+eq(P.MAX_RECENTS, 10, "the cap is 10");
+eq(list[0].phrase, "cmd 12", "recents are newest first");
+eq(list[9].phrase, "cmd 3", "the oldest two fell off");
+list = P.pushRecent(list, rec(5));
+eq(list.length, 10, "re-running a recent does not grow the list");
+eq(list[0].phrase, "cmd 5", "re-running moves it to the top");
+eq(
+    list.filter((r) => r.phrase === "cmd 5").length,
+    1,
+    "recents are de-duplicated",
+);
+eq(P.cleanRecents("not an array").length, 0, "non-array recents are dropped");
+eq(P.cleanRecents(null).length, 0, "null recents are dropped");
+eq(
+    P.cleanRecents([
+        null,
+        3,
+        {},
+        { phrase: 4 },
+        { phrase: "" },
+        { phrase: "ok" },
+    ]).length,
+    1,
+    "malformed recent entries are skipped",
+);
+eq(
+    P.cleanRecents(Array.from({ length: 30 }, (_, n) => rec(n))).length,
+    10,
+    "an oversized stored list is cut to the cap",
+);
+
+// ---- favorites: shape guard -----------------------------------------------------
+const favs = P.cleanFavorites([
+    { id: "a", rule: "play pause", kind: "literal", slots: [], context: "x" },
+    { id: "b", rule: "play pause", context: "x" },
+    { rule: "other", slots: "bad" },
+    { rule: 5 },
+    null,
+]);
+eq(favs.length, 2, "favorites drop duplicates and malformed entries");
+eq(favs[1].kind, "literal", "a favorite missing its kind gets one");
+ok(Array.isArray(favs[1].slots), "a favorite's slots are always an array");
+eq(P.cleanFavorites({}).length, 0, "non-array favorites are dropped");
 ok(!html.includes("Authorization"), "the page sends no Authorization header");
 ok(!html.includes("Bearer"), "the page has no bearer-token concept at all");
 ok(!/paste/i.test(html), "the page never asks anyone to paste a secret");

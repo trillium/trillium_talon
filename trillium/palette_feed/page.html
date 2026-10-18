@@ -191,6 +191,7 @@
                 padding: 0 12px;
             }
             li.cmd {
+                position: relative;
                 background: var(--card);
                 border: 1px solid var(--line);
                 border-radius: 14px;
@@ -206,6 +207,37 @@
                 padding: 14px;
                 min-height: 64px;
                 border-radius: 0;
+            }
+            li.cmd .tap {
+                padding-right: 56px;
+            }
+            .star {
+                position: absolute;
+                top: 10px;
+                right: 6px;
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                border: 0;
+                background: none;
+                font-size: 24px;
+                line-height: 1;
+                color: var(--muted);
+            }
+            .star[aria-pressed="true"] {
+                color: var(--warn);
+            }
+            #shortcuts h2 {
+                margin: 12px 14px 0;
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--muted);
+            }
+            #shortcuts ul {
+                list-style: none;
+                margin: 8px 0 0;
+                padding: 0 12px;
             }
             .tap .rule {
                 font-size: 17px;
@@ -416,6 +448,7 @@
                 <button type="button" id="intro-dismiss">Got it</button>
             </div>
             <div id="guide" aria-live="polite"></div>
+            <div id="shortcuts"></div>
             <ul id="results"></ul>
 
             <div id="foot">
@@ -430,11 +463,14 @@
             /* Palette page. One file, no build step, no network libraries, no credentials.
    Reads (/state, /commands, /lists/<name>) and POST /execute are called with no
    credentials at all: on a published host the bind address and the tailnet are the
-   boundary. Nothing here is stored on the phone. */
+   boundary. The only thing stored on the phone is local: the intro flag, recents
+   and favorites, in this browser's own storage. */
             (function () {
                 "use strict";
 
                 var MAX_ROWS = 60;
+                var MAX_RECENTS = 10;
+                var MAX_FAVORITES = 100;
                 var STATE_MS = 5000;
                 var DOCS = "docs/palette-feed.md";
 
@@ -865,6 +901,10 @@
                     fixGuide: fixGuide,
                     executeRequest: executeRequest,
                     stateLine: stateLine,
+                    cleanRecents: cleanRecents,
+                    pushRecent: pushRecent,
+                    cleanFavorites: cleanFavorites,
+                    MAX_RECENTS: MAX_RECENTS,
                 };
                 var root =
                     typeof globalThis !== "undefined"
@@ -958,22 +998,194 @@
                         box.scrollIntoView({ block: "nearest" });
                 }
 
-                /* First-run block: shown until dismissed or the first successful run.
-     Browser storage may be missing or throw (private windows), so it is only a hint. */
-                var INTRO_KEY = "palette_intro_dismissed";
-                function introSeen() {
+                /* Browser storage may be missing or throw (private windows, blocked site
+     data), so every read and write goes through these two and failure just means
+     nothing persists. Keys are namespaced "palette_". */
+                function storeGet(key) {
                     try {
-                        return window.localStorage.getItem(INTRO_KEY) === "1";
+                        return window.localStorage.getItem(key);
+                    } catch (err) {
+                        return null;
+                    }
+                }
+                function storeSet(key, value) {
+                    try {
+                        window.localStorage.setItem(key, value);
+                        return true;
                     } catch (err) {
                         return false;
                     }
                 }
+
+                /* First-run block: shown until dismissed or the first successful run. */
+                var INTRO_KEY = "palette_intro_dismissed";
+                function introSeen() {
+                    return storeGet(INTRO_KEY) === "1";
+                }
                 function dismissIntro() {
                     $("intro").hidden = true;
+                    storeSet(INTRO_KEY, "1"); // not persisted when storage fails: the block returns next load
+                }
+
+                /* ---------------- recents and favorites */
+
+                var RECENTS_KEY = "palette_recents";
+                var FAVORITES_KEY = "palette_favorites";
+                function parseJson(raw) {
+                    if (typeof raw !== "string") return null;
                     try {
-                        window.localStorage.setItem(INTRO_KEY, "1");
+                        return JSON.parse(raw);
                     } catch (err) {
-                        /* not persisted: the block returns next load */
+                        return null;
+                    }
+                }
+
+                /* Stored data is untrusted: drop anything that is not the expected shape. */
+                function cleanRecents(raw) {
+                    var out = [];
+                    if (!Array.isArray(raw)) return out;
+                    for (var i = 0; i < raw.length; i++) {
+                        var e = raw[i];
+                        if (!e || typeof e.phrase !== "string" || !e.phrase)
+                            continue;
+                        if (
+                            out.some(function (o) {
+                                return o.phrase === e.phrase;
+                            })
+                        )
+                            continue;
+                        out.push({
+                            phrase: e.phrase,
+                            id: typeof e.id === "string" ? e.id : "",
+                            rule: typeof e.rule === "string" ? e.rule : "",
+                        });
+                        if (out.length >= MAX_RECENTS) break;
+                    }
+                    return out;
+                }
+
+                /* Newest first; running the same phrase again moves it to the top. */
+                function pushRecent(list, entry) {
+                    var rest = cleanRecents(list).filter(function (o) {
+                        return o.phrase !== entry.phrase;
+                    });
+                    rest.unshift(entry);
+                    return cleanRecents(rest);
+                }
+
+                function favKey(command) {
+                    return command.rule + "\u0000" + (command.context || "");
+                }
+
+                function cleanFavorites(raw) {
+                    var out = [];
+                    var seen = {};
+                    if (!Array.isArray(raw)) return out;
+                    for (var i = 0; i < raw.length; i++) {
+                        var c = raw[i];
+                        if (!c || typeof c.rule !== "string" || !c.rule)
+                            continue;
+                        var snap = {
+                            id: typeof c.id === "string" ? c.id : "",
+                            rule: c.rule,
+                            kind:
+                                typeof c.kind === "string" ? c.kind : "literal",
+                            slots: Array.isArray(c.slots) ? c.slots : [],
+                            context:
+                                typeof c.context === "string" ? c.context : "",
+                        };
+                        if (seen[favKey(snap)]) continue;
+                        seen[favKey(snap)] = true;
+                        out.push(snap);
+                        if (out.length >= MAX_FAVORITES) break;
+                    }
+                    return out;
+                }
+
+                function loadRecents() {
+                    return cleanRecents(parseJson(storeGet(RECENTS_KEY)));
+                }
+                function loadFavorites() {
+                    return cleanFavorites(parseJson(storeGet(FAVORITES_KEY)));
+                }
+
+                /* In-memory copies are the truth for this page view; storage is best effort. */
+                state.recents = loadRecents();
+                state.favorites = loadFavorites();
+
+                function addRecent(phrase, id, rule) {
+                    state.recents = pushRecent(state.recents, {
+                        phrase: phrase,
+                        id: id || "",
+                        rule: rule || "",
+                    });
+                    storeSet(RECENTS_KEY, JSON.stringify(state.recents));
+                    renderShortcuts();
+                }
+
+                function isFavorite(command) {
+                    var k = favKey(command);
+                    return state.favorites.some(function (f) {
+                        return favKey(f) === k;
+                    });
+                }
+
+                function toggleFavorite(command) {
+                    var k = favKey(command);
+                    if (isFavorite(command)) {
+                        state.favorites = state.favorites.filter(function (f) {
+                            return favKey(f) !== k;
+                        });
+                    } else {
+                        state.favorites = cleanFavorites(
+                            state.favorites.concat([command]),
+                        );
+                    }
+                    storeSet(FAVORITES_KEY, JSON.stringify(state.favorites));
+                    renderShortcuts();
+                    var stars = document.querySelectorAll(".star");
+                    for (var i = 0; i < stars.length; i++) {
+                        if (stars[i].getAttribute("data-key") === k)
+                            setStar(stars[i], isFavorite(command));
+                    }
+                }
+
+                function setStar(btn, on) {
+                    btn.setAttribute("aria-pressed", on ? "true" : "false");
+                    btn.setAttribute(
+                        "aria-label",
+                        on ? "Remove from favorites" : "Add to favorites",
+                    );
+                    btn.textContent = on ? "\u2605" : "\u2606";
+                }
+
+                function renderShortcuts() {
+                    var box = $("shortcuts");
+                    box.textContent = "";
+                    if (state.favorites.length) {
+                        box.appendChild(el("h2", null, "Favorites"));
+                        var fl = el("ul");
+                        fl.id = "favorites";
+                        for (var i = 0; i < state.favorites.length; i++)
+                            fl.appendChild(row(state.favorites[i]));
+                        box.appendChild(fl);
+                    }
+                    if (state.recents.length) {
+                        box.appendChild(el("h2", null, "Recent"));
+                        var rl = el("ul");
+                        rl.id = "recents";
+                        state.recents.forEach(function (r) {
+                            var li = el("li", "cmd recent");
+                            var tap = el("button", "tap");
+                            tap.type = "button";
+                            tap.appendChild(el("span", "rule", r.phrase));
+                            tap.addEventListener("click", function () {
+                                sendPhrase(r.phrase, r.id, false);
+                            });
+                            li.appendChild(tap);
+                            rl.appendChild(li);
+                        });
+                        box.appendChild(rl);
                     }
                 }
 
@@ -1157,6 +1369,14 @@
                             );
                     });
                     li.appendChild(tap);
+                    var star = el("button", "star");
+                    star.type = "button";
+                    star.setAttribute("data-key", favKey(command));
+                    setStar(star, isFavorite(command));
+                    star.addEventListener("click", function () {
+                        toggleFavorite(command);
+                    });
+                    li.appendChild(star);
                     return li;
                 }
 
@@ -1360,6 +1580,7 @@
                                     state.openPhrase = null;
                                     showGuide(null);
                                     dismissIntro();
+                                    addRecent(phrase, id, data.matched_rule);
                                     toast(
                                         "ok",
                                         "Ran: " + (data.matched_rule || phrase),
@@ -1384,6 +1605,7 @@
 
                 function init() {
                     $("intro").hidden = introSeen();
+                    renderShortcuts();
                     $("intro-dismiss").addEventListener("click", dismissIntro);
                     $("q").addEventListener("input", function () {
                         clearTimeout(init._t);
