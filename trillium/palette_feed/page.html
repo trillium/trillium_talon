@@ -726,9 +726,13 @@
                     if (err === "engine_inactive") {
                         return {
                             tone: "error",
-                            title: "Nothing ran: Talon is not listening on " + host,
+                            title:
+                                "Nothing ran: Talon is not listening on " +
+                                host,
                             steps: [
-                                payload && typeof payload.hint === "string" && payload.hint
+                                payload &&
+                                typeof payload.hint === "string" &&
+                                payload.hint
                                     ? payload.hint
                                     : "The speech engine is not running on this machine. Start it in Talon, then tap again.",
                             ],

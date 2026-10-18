@@ -319,7 +319,9 @@ await tick(90);
 rows()[0].querySelector(".tap").click();
 await tick(30);
 ok(
-    guide.textContent.includes("The speech engine is not running on this machine."),
+    guide.textContent.includes(
+        "The speech engine is not running on this machine.",
+    ),
     "engine_inactive shows the hint text",
 );
 ok(!/\bRan:/.test(text("toast")), "engine_inactive is not shown as success");
