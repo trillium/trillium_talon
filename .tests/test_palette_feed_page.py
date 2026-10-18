@@ -1,7 +1,7 @@
 """The phone page served at `GET /`: routing, wire shape, and a JS-level logic check.
 
 No Talon and no browser: the page is verified as bytes over a real socket plus its own
-script run under node (`test/palette_page_check.mjs`). What a real phone renders is not
+script run under node (`.tests/palette_page_check.mjs`). What a real phone renders is not
 covered here.
 """
 
@@ -24,8 +24,8 @@ from trillium.palette_feed.limits import RateLimiter
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGE_FILE = os.path.join(REPO_ROOT, "trillium", "palette_feed", "page.html")
-CHECK_JS = os.path.join(REPO_ROOT, "test", "palette_page_check.mjs")
-DOM_CHECK_JS = os.path.join(REPO_ROOT, "test", "palette_page_dom_check.mjs")
+CHECK_JS = os.path.join(REPO_ROOT, ".tests", "palette_page_check.mjs")
+DOM_CHECK_JS = os.path.join(REPO_ROOT, ".tests", "palette_page_dom_check.mjs")
 
 # The hooks the page cannot work without: the search box, the result list, the state
 # header, the theme switch, the refresh control, and the endpoints it talks to.

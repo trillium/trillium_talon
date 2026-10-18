@@ -17,6 +17,7 @@ from trillium.palette_feed.simparse import NoMatch
 
 TOKEN = "t" * 43
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
+JSON = {"Content-Type": "application/json"}
 
 SIM_PLAYBACK = '[1] "playback now"\n   path: user/pb.talon\n   rule: "playback now"'
 SIM_BY_PHRASE = {
@@ -92,7 +93,11 @@ def api(backend):
 
 def post(api, payload, query="", headers=AUTH, raw=None, length=None):
     body = raw if raw is not None else json.dumps(payload).encode()
-    hdrs = {**headers, "Content-Length": str(len(body) if length is None else length)}
+    hdrs = {
+        "Content-Type": "application/json",
+        **headers,
+        "Content-Length": str(len(body) if length is None else length),
+    }
     return api.handle("POST", "/execute" + query, hdrs, io.BytesIO(body))
 
 
@@ -229,7 +234,8 @@ class TestExecute:
 
     def test_execute_timeout_is_504(self, api, backend):
         backend.execute_error = DispatchTimeout()
-        assert post(api, {"phrase": "playback now"}).status == 504
+        resp = post(api, {"phrase": "playback now"})
+        assert resp.status == 504 and resp.body["may_still_run"] is True
 
     @pytest.mark.parametrize(
         "payload",
@@ -254,17 +260,45 @@ class TestExecute:
         assert post(api, None, raw=b"{not json").status == 400
         assert post(api, None, raw=b"\xff\xfe").status == 400
 
+    @pytest.mark.parametrize(
+        "content_type",
+        [
+            None,
+            "text/plain",
+            "application/x-www-form-urlencoded",
+            "multipart/form-data",
+        ],
+    )
+    def test_non_json_content_type_is_415_and_never_runs(
+        self, api, backend, content_type
+    ):
+        hdrs = {**AUTH, "Content-Length": "2"}
+        if content_type:
+            hdrs["Content-Type"] = content_type
+        body = io.BytesIO(b'{"phrase":"playback now"}')
+        assert api.handle("POST", "/execute", hdrs, body).status == 415
+        assert backend.executed == []
+
+    def test_json_content_type_with_charset_is_fine(self, api, backend):
+        hdrs = {**AUTH, "Content-Type": "Application/JSON; charset=utf-8"}
+        assert post(api, {"phrase": "playback now"}, headers=hdrs).status == 200
+
     def test_oversized_body_is_413_and_unread(self, api):
         rfile = io.BytesIO(b"x" * 2000)
-        resp = api.handle("POST", "/execute", {**AUTH, "Content-Length": "2000"}, rfile)
+        resp = api.handle(
+            "POST", "/execute", {**AUTH, **JSON, "Content-Length": "2000"}, rfile
+        )
         assert resp.status == 413
         assert rfile.tell() == 0
 
     def test_missing_content_length_is_411(self, api):
-        assert api.handle("POST", "/execute", AUTH, io.BytesIO(b"{}")).status == 411
+        assert (
+            api.handle("POST", "/execute", {**AUTH, **JSON}, io.BytesIO(b"{}")).status
+            == 411
+        )
 
     def test_chunked_is_rejected(self, api):
-        hdrs = {**AUTH, "Transfer-Encoding": "chunked", "Content-Length": "2"}
+        hdrs = {**AUTH, **JSON, "Transfer-Encoding": "chunked", "Content-Length": "2"}
         assert api.handle("POST", "/execute", hdrs, io.BytesIO(b"{}")).status == 411
 
     def test_truncated_body_is_400(self, api):
@@ -514,7 +548,8 @@ class TestHttpServer:
 
     def test_execute_over_the_wire(self, live, backend):
         body = json.dumps({"phrase": "playback now"}).encode()
-        status, _, data = call(live, "POST", "/execute", AUTH, body)
+        hdrs = {**AUTH, "Content-Type": "application/json"}
+        status, _, data = call(live, "POST", "/execute", hdrs, body)
         assert status == 200 and backend.executed == ["playback now"]
 
     def test_304_has_no_body(self, live):
@@ -536,10 +571,17 @@ class TestHttpServer:
             idle.close()
 
     def test_server_start_launches_a_fixed_number_of_threads(self, live):
-        before = threading.active_count()
+        def feed_threads():
+            return sorted(
+                t.name
+                for t in threading.enumerate()
+                if t.name.startswith("palette-feed")
+            )
+
+        before = feed_threads()
         for _ in range(10):
             call(live, "GET", "/state", AUTH)
-        assert threading.active_count() == before
+        assert feed_threads() == before
 
     def test_refuses_non_loopback_bind(self, backend):
         api = PaletteApi(TOKEN, backend, RateLimiter(1, 1.0))
@@ -605,3 +647,55 @@ class TestEngineInactive:
         backend.mode_set = {"all"}
         assert post(api, {"phrase": "playback now"}).status == 423
         assert backend.executed == []
+
+
+class TestOriginCheck:
+    @pytest.fixture
+    def tailnet_api(self, backend):
+        return PaletteApi(
+            None,
+            backend,
+            RateLimiter(100, 1.0),
+            Config(open_execute=True, bind_host="100.64.0.7"),
+        )
+
+    def _run(self, api, origin, host="100.64.0.7:7399"):
+        hdrs = {**JSON, "Host": host}
+        if origin is not None:
+            hdrs["Origin"] = origin
+        return post(api, {"phrase": "playback now"}, headers=hdrs)
+
+    def test_no_origin_header_is_a_non_browser_caller(self, tailnet_api, backend):
+        assert self._run(tailnet_api, None).status == 200
+
+    def test_origin_on_the_bind_host_runs(self, tailnet_api, backend):
+        assert self._run(tailnet_api, "http://100.64.0.7:7399").status == 200
+
+    def test_same_origin_by_tailnet_name_runs(self, tailnet_api, backend):
+        resp = self._run(tailnet_api, "http://mini0:7399", host="mini0:7399")
+        assert resp.status == 200
+
+    @pytest.mark.parametrize(
+        "origin", ["https://evil.example", "null", "http://localhost:7399", "garbage"]
+    )
+    def test_foreign_origin_is_403_and_never_runs(self, tailnet_api, backend, origin):
+        resp = self._run(tailnet_api, origin)
+        assert resp.status == 403 and resp.body["error"] == "origin_not_allowed"
+        assert backend.executed == []
+
+    def test_loopback_bind_accepts_localhost_origin(self, backend):
+        api = PaletteApi(
+            TOKEN,
+            backend,
+            RateLimiter(100, 1.0),
+            Config(bind_host="127.0.0.1"),
+        )
+        hdrs = {**AUTH, **JSON, "Origin": "http://localhost:7399"}
+        assert post(api, {"phrase": "playback now"}, headers=hdrs).status == 200
+
+    def test_origin_is_checked_before_the_body_or_rate_limit(self, backend):
+        api = PaletteApi(None, backend, RateLimiter(1, 1.0), Config(open_execute=True))
+        hdrs = {**JSON, "Origin": "https://evil.example"}
+        for _ in range(3):
+            assert post(api, {"phrase": "playback now"}, headers=hdrs).status == 403
+        assert post(api, {"phrase": "playback now"}, headers=JSON).status == 200

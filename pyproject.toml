@@ -5,9 +5,10 @@ target-version = ['py310']
 profile = 'black'
 
 [tool.pytest.ini_options]
+testpaths = [".tests", "trillium"]
 pythonpath = [
     ".",
-    "test/stubs",
+    ".tests/stubs",
 ]
 
 [tool.pyright]

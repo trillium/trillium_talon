@@ -4,7 +4,7 @@
 // fix-guide a failed run shows.
 //
 //   npm install --prefix /tmp/palette-jsdom jsdom
-//   NODE_PATH=/tmp/palette-jsdom/node_modules node test/palette_page_dom_check.mjs//
+//   NODE_PATH=/tmp/palette-jsdom/node_modules node .tests/palette_page_dom_check.mjs//
 // Skips (exit 0) when jsdom is not installed: it is not a dependency of this repo.
 // This is jsdom, not a phone — layout, touch and iOS behaviour stay unverified.
 

@@ -474,7 +474,7 @@
                 var STATE_MS = 5000;
                 var DOCS = "docs/palette-feed.md";
 
-                /* ---------------- pure logic (no DOM, exercised by test/palette_page_check.mjs) */
+                /* ---------------- pure logic (no DOM, exercised by .tests/palette_page_check.mjs) */
 
                 function norm(s) {
                     return String(s == null ? "" : s)
@@ -789,10 +789,10 @@
                     if (status === 504 || err === "execute_timeout") {
                         return {
                             tone: "warn",
-                            title: "Talon did not start it within 5s",
+                            title: "Talon did not confirm it within 5s",
                             steps: [
-                                "Talon may be busy or showing a dialog: bring Talon forward on the Mac and",
-                                "tap the command again.",
+                                "It may still run. Check the Mac before tapping again, or it could run twice.",
+                                "Talon may be busy or showing a dialog: bring Talon forward on the Mac.",
                                 "If it keeps timing out, reload the feed (touch",
                                 "trillium/palette_feed/palette_feed.py) or restart Talon.",
                             ],

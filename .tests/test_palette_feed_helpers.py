@@ -225,6 +225,36 @@ class TestRunScheduled:
         with pytest.raises(dispatch.DispatchTimeout):
             dispatch.run_scheduled(lambda job: None, lambda: 1, 0.01)
 
+    def test_a_job_run_after_the_timeout_does_nothing(self):
+        pending = []
+        ran = []
+        with pytest.raises(dispatch.DispatchTimeout):
+            dispatch.run_scheduled(pending.append, lambda: ran.append(1), 0.01)
+        pending[0]()  # Talon's cron thread frees up and finally picks the job up
+        assert ran == []
+
+    def test_a_job_that_already_started_is_not_cancelled(self):
+        started, release, ran = threading.Event(), threading.Event(), []
+
+        def slow():
+            started.set()
+            release.wait(2)
+            ran.append(1)
+
+        t = None
+
+        def schedule(job):
+            nonlocal t
+            t = threading.Thread(target=job)
+            t.start()
+
+        with pytest.raises(dispatch.DispatchTimeout):
+            dispatch.run_scheduled(schedule, slow, 0.05)
+        assert started.is_set()
+        release.set()
+        t.join(2)
+        assert ran == [1]
+
 
 SIM_SIMPLE = (
     '[1] "playback now"\n'

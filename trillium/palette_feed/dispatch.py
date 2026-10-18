@@ -13,11 +13,24 @@ def run_scheduled(
     fn: Callable[[], Any],
     timeout: float,
 ) -> Any:
-    """Hand `fn` to `schedule` (e.g. Talon's cron.after), block for its result, re-raise errors."""
+    """Hand `fn` to `schedule` (e.g. Talon's cron.after), block for its result, re-raise errors.
+
+    On timeout the job is cancelled if it has not started, so a job that Talon's cron
+    thread picks up late does nothing instead of running a command the caller was told
+    never ran. A job already running cannot be stopped; the timeout then means only
+    "not finished", and the command may still complete.
+    """
     done = threading.Event()
     box: dict[str, Any] = {}
+    lock = threading.Lock()
+    state = {"started": False, "cancelled": False}
 
     def job():
+        with lock:
+            if state["cancelled"]:
+                done.set()
+                return
+            state["started"] = True
         try:
             box["value"] = fn()
         except BaseException as exc:  # carried back to the waiting thread
@@ -27,6 +40,9 @@ def run_scheduled(
 
     schedule(job)
     if not done.wait(timeout):
+        with lock:
+            if not state["started"]:
+                state["cancelled"] = True
         raise DispatchTimeout()
     if "error" in box:
         raise box["error"]
