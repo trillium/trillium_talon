@@ -43,7 +43,9 @@ def test_default_state_file_not_under_talon_dir(monkeypatch):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     assert Path.home() / ".talon" not in mod.STATE_FILE.parents
-    assert mod.STATE_FILE == Path.home() / ".cache" / "talon" / "mode_indicator_state.json"
+    assert (
+        mod.STATE_FILE == Path.home() / ".cache" / "talon" / "mode_indicator_state.json"
+    )
 
 
 def test_update_notifies_listener_and_writes_file(mis):
@@ -98,7 +100,9 @@ def test_fetch_obs_runs_given_python_and_parses(mis, monkeypatch):
         returncode = 0
         stdout = json.dumps({"streaming": True, "recording": False, "scene": "Main"})
 
-    monkeypatch.setattr(mis.subprocess, "run", lambda cmd, **kw: calls.append(cmd) or R())
+    monkeypatch.setattr(
+        mis.subprocess, "run", lambda cmd, **kw: calls.append(cmd) or R()
+    )
     out = mis._fetch_obs_status("/x/python")
     assert calls[0][0] == "/x/python"
     assert out == {"obs_streaming": True, "obs_recording": False, "obs_scene": "Main"}
@@ -118,9 +122,15 @@ def test_fetch_obs_failure_reports_off(mis, monkeypatch):
 
 def test_fetch_sysmon(mis):
     mis.SYSMON_STATS.write_text(
-        json.dumps({"cpu": {"per_core": [1, 2]}, "memory": {"percent": 50, "pressure": 1}})
+        json.dumps(
+            {"cpu": {"per_core": [1, 2]}, "memory": {"percent": 50, "pressure": 1}}
+        )
     )
-    assert mis._fetch_sysmon() == {"cpu_per_core": [1, 2], "mem_percent": 50, "mem_pressure": 1}
+    assert mis._fetch_sysmon() == {
+        "cpu_per_core": [1, 2],
+        "mem_percent": 50,
+        "mem_pressure": 1,
+    }
     mis.SYSMON_STATS.unlink()
     assert mis._fetch_sysmon() == {}
 
