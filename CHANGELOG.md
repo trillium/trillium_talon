@@ -4,6 +4,20 @@ Notable changes to this repo. Newest first.
 
 ## Unreleased
 
+### Fixed — `POST /execute` no longer answers 200 when nothing can run
+
+- `trillium/palette_feed`: when Talon has no speech engine attached
+  (`scope.get("speech.engine")` is `None`, as on mini0) `actions.mimic` is a silent
+  no-op, so a tap returned `200` and did nothing. `POST /execute` now answers
+  `503 {"ok": false, "error": "engine_inactive", "hint": "..."}` before dispatching.
+  Auth and validation (401/400/403/423/422/404/409) still win over it; `?dry_run=1` and
+  all read endpoints are unchanged and work with no engine.
+- The phone page shows the `hint` for `engine_inactive` instead of a success toast, and
+  gains a small dismissible first-run block (what the page is, one search tip); the
+  dismissal is the only thing it stores in `localStorage`.
+- Docs: `docs/palette-feed.md` → "`POST /execute`" and "Phone page". Tests:
+  `test/test_palette_feed_api.py` (`TestEngineInactive`), page checks under node and jsdom.
+
 ### Added — a phone page at `GET /`
 
 - `trillium/palette_feed`: the feed now serves a phone-first fuzzy-search page at

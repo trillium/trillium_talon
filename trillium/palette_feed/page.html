@@ -352,6 +352,19 @@
             #toast[hidden] {
                 display: none;
             }
+            #intro {
+                margin: 8px 12px 0;
+                padding: 10px 12px;
+                border: 1px solid var(--muted);
+                border-radius: 10px;
+                font-size: 14px;
+            }
+            #intro[hidden] {
+                display: none;
+            }
+            #intro p {
+                margin: 0 0 6px;
+            }
             #foot {
                 padding: 14px 12px 0;
                 font-size: 12px;
@@ -391,6 +404,17 @@
                 </div>
             </div>
 
+            <div id="intro" hidden>
+                <p>
+                    <strong>Palette</strong> lists the voice commands active on
+                    your Mac right now. Tap one to run it there.
+                </p>
+                <p>
+                    Tip: type a few letters of the command, in order
+                    (&ldquo;pbnow&rdquo; finds &ldquo;playback now&rdquo;).
+                </p>
+                <button type="button" id="intro-dismiss">Got it</button>
+            </div>
             <div id="guide" aria-live="polite"></div>
             <ul id="results"></ul>
 
@@ -699,6 +723,22 @@
                             action: { label: "Refresh", kind: "refresh" },
                         };
                     }
+                    if (err === "engine_inactive") {
+                        return {
+                            tone: "error",
+                            title:
+                                "Nothing ran: Talon is not listening on " +
+                                host,
+                            steps: [
+                                payload &&
+                                typeof payload.hint === "string" &&
+                                payload.hint
+                                    ? payload.hint
+                                    : "The speech engine is not running on this machine. Start it in Talon, then tap again.",
+                            ],
+                            action: { label: "Try again", kind: "retry" },
+                        };
+                    }
                     if (err === "unknown_command" || status === 404) {
                         return {
                             tone: "warn",
@@ -916,6 +956,25 @@
                     box.appendChild(card);
                     if (box.scrollIntoView)
                         box.scrollIntoView({ block: "nearest" });
+                }
+
+                /* First-run block: shown until dismissed or the first successful run.
+     Browser storage may be missing or throw (private windows), so it is only a hint. */
+                var INTRO_KEY = "palette_intro_dismissed";
+                function introSeen() {
+                    try {
+                        return window.localStorage.getItem(INTRO_KEY) === "1";
+                    } catch (err) {
+                        return false;
+                    }
+                }
+                function dismissIntro() {
+                    $("intro").hidden = true;
+                    try {
+                        window.localStorage.setItem(INTRO_KEY, "1");
+                    } catch (err) {
+                        /* not persisted: the block returns next load */
+                    }
                 }
 
                 function runAction(kind) {
@@ -1300,6 +1359,7 @@
                                     var data = parseError(text) || {};
                                     state.openPhrase = null;
                                     showGuide(null);
+                                    dismissIntro();
                                     toast(
                                         "ok",
                                         "Ran: " + (data.matched_rule || phrase),
@@ -1323,6 +1383,8 @@
                 /* ---------------- boot */
 
                 function init() {
+                    $("intro").hidden = introSeen();
+                    $("intro-dismiss").addEventListener("click", dismissIntro);
                     $("q").addEventListener("input", function () {
                         clearTimeout(init._t);
                         init._t = setTimeout(render, 60);

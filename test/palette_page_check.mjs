@@ -195,6 +195,11 @@ const guides = [
     P.fixGuide(500, null, { host: "m" }),
     P.fixGuide(0, null, { host: "mbp.tail:7399" }),
     P.fixGuide(418, null, { host: "m" }),
+    P.fixGuide(
+        503,
+        { ok: false, error: "engine_inactive", hint: "ENGINE HINT TEXT" },
+        { host: "m" },
+    ),
 ];
 const guideText = guides.map((g) => [g.title, ...g.steps].join(" ")).join(" ");
 for (const guide of guides) {
@@ -225,6 +230,14 @@ ok(
 ok(
     guides[0].steps.join(" ").includes("palette_feed.py"),
     "a 401 says how to reload the feed",
+);
+ok(
+    guides[guides.length - 1].steps.join(" ") === "ENGINE HINT TEXT",
+    "engine_inactive shows the feed's hint verbatim",
+);
+ok(
+    guides[guides.length - 1].title.includes("Nothing ran"),
+    "engine_inactive says nothing ran",
 );
 ok(guides[1].action.kind === "force", "not-in-command-mode offers Run anyway");
 ok(guides[2].action.kind === "retry", "rate limiting offers a retry");
@@ -301,7 +314,11 @@ eq(
 eq(P.stateLine(null).ok, false, "a missing state reads as not connected");
 
 // ---- the page carries no credential and no external asset ----------------------
-ok(!html.includes("localStorage"), "the page stores nothing on the phone");
+ok(
+    html.split("localStorage").length - 1 === 2 &&
+        html.includes('INTRO_KEY = "palette_intro_dismissed"'),
+    "the only thing the page stores on the phone is the intro flag",
+);
 ok(!html.includes("Authorization"), "the page sends no Authorization header");
 ok(!html.includes("Bearer"), "the page has no bearer-token concept at all");
 ok(!/paste/i.test(html), "the page never asks anyone to paste a secret");

@@ -188,7 +188,22 @@ eq(doc.getElementById("token"), null, "the page has no token field");
 eq(
     Object.keys(window.localStorage).length,
     0,
-    "the page writes nothing to local storage",
+    "the page writes nothing to local storage before the intro is dismissed",
+);
+// ---- first-run block ------------------------------------------------------------
+const intro = doc.getElementById("intro");
+ok(!intro.hidden, "the first-run block shows on a first visit");
+ok(
+    intro.textContent.includes("voice commands") &&
+        intro.textContent.includes("Tip:"),
+    "the first-run block says what the page is and gives one search tip",
+);
+doc.getElementById("intro-dismiss").click();
+ok(intro.hidden, "Got it hides the first-run block");
+eq(
+    window.localStorage.getItem("palette_intro_dismissed"),
+    "1",
+    "dismissal is remembered in local storage",
 );
 ok(stateReq.init.headers === undefined, "reads carry no headers");
 ok(
@@ -292,6 +307,24 @@ ok(
     doc.querySelector("#guide .card .buttons"),
     "the guide offers the next action",
 );
+
+executeStatus = 503;
+executeBody = {
+    ok: false,
+    error: "engine_inactive",
+    hint: "The speech engine is not running on this machine.",
+};
+search("play pause");
+await tick(90);
+rows()[0].querySelector(".tap").click();
+await tick(30);
+ok(
+    guide.textContent.includes(
+        "The speech engine is not running on this machine.",
+    ),
+    "engine_inactive shows the hint text",
+);
+ok(!/\bRan:/.test(text("toast")), "engine_inactive is not shown as success");
 
 executeStatus = 423;
 executeBody = { ok: false, error: "not_in_command_mode" };

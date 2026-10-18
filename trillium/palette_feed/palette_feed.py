@@ -117,6 +117,10 @@ class TalonBackend:
                 raise NoMatch() from exc
             raise
 
+    def engine_active(self) -> bool:
+        # With no engine attached `actions.mimic` neither raises nor dispatches.
+        return scope.get("speech.engine") is not None
+
     def execute(self, phrase: str) -> None:
         # mimic can drive UI and keys, so it runs on Talon's main thread.
         run_scheduled(
