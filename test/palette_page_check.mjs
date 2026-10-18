@@ -336,12 +336,22 @@ eq(list[9].phrase, "cmd 3", "the oldest two fell off");
 list = P.pushRecent(list, rec(5));
 eq(list.length, 10, "re-running a recent does not grow the list");
 eq(list[0].phrase, "cmd 5", "re-running moves it to the top");
-eq(list.filter((r) => r.phrase === "cmd 5").length, 1, "recents are de-duplicated");
+eq(
+    list.filter((r) => r.phrase === "cmd 5").length,
+    1,
+    "recents are de-duplicated",
+);
 eq(P.cleanRecents("not an array").length, 0, "non-array recents are dropped");
 eq(P.cleanRecents(null).length, 0, "null recents are dropped");
 eq(
-    P.cleanRecents([null, 3, {}, { phrase: 4 }, { phrase: "" }, { phrase: "ok" }])
-        .length,
+    P.cleanRecents([
+        null,
+        3,
+        {},
+        { phrase: 4 },
+        { phrase: "" },
+        { phrase: "ok" },
+    ]).length,
     1,
     "malformed recent entries are skipped",
 );

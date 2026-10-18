@@ -1088,7 +1088,8 @@
                         var snap = {
                             id: typeof c.id === "string" ? c.id : "",
                             rule: c.rule,
-                            kind: typeof c.kind === "string" ? c.kind : "literal",
+                            kind:
+                                typeof c.kind === "string" ? c.kind : "literal",
                             slots: Array.isArray(c.slots) ? c.slots : [],
                             context:
                                 typeof c.context === "string" ? c.context : "",

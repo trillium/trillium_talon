@@ -429,7 +429,9 @@ async function load({ seed = {}, broken = false } = {}) {
     const w = d.window;
     const t = (ms = 0) => new Promise((r) => w.setTimeout(r, ms));
     await t(20);
-    w.document.dispatchEvent(new w.Event("DOMContentLoaded", { bubbles: true }));
+    w.document.dispatchEvent(
+        new w.Event("DOMContentLoaded", { bubbles: true }),
+    );
     await t(20);
     const D = w.document;
     const api = {
@@ -444,8 +446,14 @@ async function load({ seed = {}, broken = false } = {}) {
             await t(90);
         },
         results: () => [...D.querySelectorAll("#results li.cmd")],
-        recents: () => [...D.querySelectorAll("#recents li .rule")].map((n) => n.textContent),
-        favorites: () => [...D.querySelectorAll("#favorites li .rule")].map((n) => n.textContent),
+        recents: () =>
+            [...D.querySelectorAll("#recents li .rule")].map(
+                (n) => n.textContent,
+            ),
+        favorites: () =>
+            [...D.querySelectorAll("#favorites li .rule")].map(
+                (n) => n.textContent,
+            ),
         stored: (k) => {
             try {
                 return w.localStorage.getItem(k);
@@ -474,21 +482,41 @@ async function load({ seed = {}, broken = false } = {}) {
     await a.run("playback now");
     await a.run("play pause");
     await a.run("window snip");
-    eq(a.recents().join("|"), "window snip|play pause|playback now", "recents are newest first");
+    eq(
+        a.recents().join("|"),
+        "window snip|play pause|playback now",
+        "recents are newest first",
+    );
     await a.run("playback now");
-    eq(a.recents().join("|"), "playback now|window snip|play pause", "re-running moves a recent to the top, once");
-    eq(JSON.parse(a.stored("palette_recents")).length, 3, "recents persist as JSON under a namespaced key");
+    eq(
+        a.recents().join("|"),
+        "playback now|window snip|play pause",
+        "re-running moves a recent to the top, once",
+    );
+    eq(
+        JSON.parse(a.stored("palette_recents")).length,
+        3,
+        "recents persist as JSON under a namespaced key",
+    );
 
     // tapping a recent runs it again
     const before = a.runs().length;
     a.D.querySelectorAll("#recents li .tap")[1].click();
     await a.t(30);
     eq(a.runs().length, before + 1, "tapping a recent POSTs /execute");
-    eq(JSON.parse(a.runs().at(-1).init.body).phrase, "window snip", "a recent re-runs its own phrase");
+    eq(
+        JSON.parse(a.runs().at(-1).init.body).phrase,
+        "window snip",
+        "a recent re-runs its own phrase",
+    );
     eq(a.recents()[0], "window snip", "the re-run recent moves to the top");
 
     // the cap: ten pushes through the real page via the stored list
-    const many = Array.from({ length: 10 }, (_, n) => ({ phrase: "old " + n, id: "", rule: "" }));
+    const many = Array.from({ length: 10 }, (_, n) => ({
+        phrase: "old " + n,
+        id: "",
+        rule: "",
+    }));
     const b = await load({ seed: { palette_recents: JSON.stringify(many) } });
     eq(b.recents().length, 10, "stored recents reload");
     await b.run("playback now");
@@ -500,12 +528,27 @@ async function load({ seed = {}, broken = false } = {}) {
     await a.search("play pause");
     const star = a.results()[0].querySelector(".star");
     ok(star, "every command row has a star toggle");
-    eq(star.getAttribute("aria-pressed"), "false", "a command starts unstarred");
+    eq(
+        star.getAttribute("aria-pressed"),
+        "false",
+        "a command starts unstarred",
+    );
     star.click();
-    eq(star.getAttribute("aria-pressed"), "true", "tapping the star favorites it");
-    eq(a.favorites().join("|"), "play pause", "a favorite appears in the Favorites section");
+    eq(
+        star.getAttribute("aria-pressed"),
+        "true",
+        "tapping the star favorites it",
+    );
+    eq(
+        a.favorites().join("|"),
+        "play pause",
+        "a favorite appears in the Favorites section",
+    );
     const favState = a.stored("palette_favorites");
-    ok(favState && JSON.parse(favState).length === 1, "favorites persist under a namespaced key");
+    ok(
+        favState && JSON.parse(favState).length === 1,
+        "favorites persist under a namespaced key",
+    );
 
     const c = await load({ seed: { palette_favorites: favState } });
     eq(c.favorites().join("|"), "play pause", "favorites survive a reload");
@@ -519,42 +562,87 @@ async function load({ seed = {}, broken = false } = {}) {
     await c.t(30);
     eq(c.runs().length, cRuns + 1, "tapping a favorite runs it");
     await c.search("play pause");
-    eq(c.results()[0].querySelector(".star").getAttribute("aria-pressed"), "true", "the result row is starred too");
+    eq(
+        c.results()[0].querySelector(".star").getAttribute("aria-pressed"),
+        "true",
+        "the result row is starred too",
+    );
     c.D.querySelector("#favorites li .star").click();
     eq(c.favorites().length, 0, "unstarring removes it from Favorites");
-    eq(JSON.parse(c.stored("palette_favorites")).length, 0, "unstarring is persisted");
-    eq(c.results()[0].querySelector(".star").getAttribute("aria-pressed"), "false", "the result row's star clears too");
+    eq(
+        JSON.parse(c.stored("palette_favorites")).length,
+        0,
+        "unstarring is persisted",
+    );
+    eq(
+        c.results()[0].querySelector(".star").getAttribute("aria-pressed"),
+        "false",
+        "the result row's star clears too",
+    );
 
     // a slotted favorite still opens its form
     await c.search("abbreviate");
     c.results()[0].querySelector(".star").click();
     c.D.querySelector("#favorites li .tap").click();
     await c.t(30);
-    ok(c.D.querySelector("#favorites li .form"), "a slotted favorite opens its form instead of a bare run");
+    ok(
+        c.D.querySelector("#favorites li .form"),
+        "a slotted favorite opens its form instead of a bare run",
+    );
 
     // corrupt storage: bad JSON and wrong shapes
-    for (const bad of ["{not json", "null", '{"a":1}', '"str"', "[1,null,{}]"]) {
-        const d = await load({ seed: { palette_recents: bad, palette_favorites: bad } });
+    for (const bad of [
+        "{not json",
+        "null",
+        '{"a":1}',
+        '"str"',
+        "[1,null,{}]",
+    ]) {
+        const d = await load({
+            seed: { palette_recents: bad, palette_favorites: bad },
+        });
         eq(d.recents().length, 0, "corrupt recents (" + bad + ") are ignored");
-        eq(d.favorites().length, 0, "corrupt favorites (" + bad + ") are ignored");
+        eq(
+            d.favorites().length,
+            0,
+            "corrupt favorites (" + bad + ") are ignored",
+        );
         await d.run("play pause");
-        eq(d.recents().join("|"), "play pause", "the page recovers from corrupt recents (" + bad + ")");
+        eq(
+            d.recents().join("|"),
+            "play pause",
+            "the page recovers from corrupt recents (" + bad + ")",
+        );
         d.w.close();
     }
 
     // storage throwing on every access: page still works, nothing persists
     const e = await load({ broken: true });
-    ok(!e.D.getElementById("intro").hidden, "with storage blocked the first-run block shows");
+    ok(
+        !e.D.getElementById("intro").hidden,
+        "with storage blocked the first-run block shows",
+    );
     await e.run("playback now");
-    eq(e.recents().join("|"), "playback now", "recents still work in memory with storage blocked");
+    eq(
+        e.recents().join("|"),
+        "playback now",
+        "recents still work in memory with storage blocked",
+    );
     await e.search("play pause");
     e.results()[0].querySelector(".star").click();
-    eq(e.favorites().join("|"), "play pause", "favorites still work in memory with storage blocked");
+    eq(
+        e.favorites().join("|"),
+        "play pause",
+        "favorites still work in memory with storage blocked",
+    );
     eq(e.runs().length, 1, "execute still works with storage blocked");
     await e.search("window");
     eq(e.results().length, 1, "search still works with storage blocked");
     e.D.getElementById("intro-dismiss").click();
-    ok(e.D.getElementById("intro").hidden, "dismissing the intro does not throw with storage blocked");
+    ok(
+        e.D.getElementById("intro").hidden,
+        "dismissing the intro does not throw with storage blocked",
+    );
     for (const x of [a, b, c, e]) x.w.close();
 }
 
