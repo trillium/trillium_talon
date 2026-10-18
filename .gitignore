@@ -34,3 +34,8 @@ usage_log.csv
 .runtime/
 .claude/commands/
 .logs/
+
+# Node tool caches. There is no node build here, but the repo's prettier pre-commit hook
+# writes its cache to node_modules/.cache/prettier/, which otherwise shows up as
+# untracked junk after `pre-commit run --all-files`.
+node_modules/
