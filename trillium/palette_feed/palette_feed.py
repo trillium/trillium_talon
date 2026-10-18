@@ -160,7 +160,11 @@ def start_server():
         plan.token,
         TalonBackend(),
         RateLimiter(*EXECUTE_RATE),
-        Config(open_reads=opts.open_reads, open_execute=opts.open_execute),
+        Config(
+            open_reads=opts.open_reads,
+            open_execute=opts.open_execute,
+            bind_host=opts.bind,
+        ),
     )
     try:
         _holder.server, _ = server.start(

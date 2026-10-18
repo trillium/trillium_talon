@@ -25,7 +25,7 @@ SETTING_OPEN_EXECUTE = "user.palette_feed_open_execute"
 
 # Every setting the feed reads. Talon only honors a `<name>.talon` assignment for a
 # setting declared through `Module.setting`, so each of these must be declared in
-# palette_feed.py; test/test_palette_feed_settings.py fails if one is missing.
+# palette_feed.py; .tests/test_palette_feed_settings.py fails if one is missing.
 SETTINGS = (SETTING_BIND, SETTING_OPEN_READS, SETTING_OPEN_EXECUTE)
 
 _TRUE = frozenset({"1", "true", "yes", "on"})

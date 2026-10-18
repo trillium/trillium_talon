@@ -147,7 +147,7 @@ routes exist; the only routes it can see are the ones the operator opened.
 TOKEN=$(cat ~/.config/talon-palette/token)
 curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:7399/state
 curl -s http://$(tailscale ip -4):7399/state     # with open_reads: reading needs no token
-curl -s -X POST -d '{"phrase":"playback now"}' http://$(tailscale ip -4):7399/execute   # with open_execute
+curl -s -X POST -H 'Content-Type: application/json' -d '{"phrase":"playback now"}' http://$(tailscale ip -4):7399/execute   # with open_execute
 ```
 
 | Method and path     | What it returns                                                                                                                                                  |
@@ -185,17 +185,18 @@ Each entry in `commands`:
 Order of checks (the first failure wins, and nothing runs unless all pass):
 
 1. `401` the route is gated and no token is configured, or the request's token is missing or wrong. Skipped entirely while `open_execute` is on.
-2. `429` more than 5 calls per second (`Retry-After` header). Counted per server, not per caller.
-3. `411` no `Content-Length` (chunked is refused), `400` bad length, `413` body over 4096 bytes.
-4. `400` body is not a JSON object with a printable `phrase` of 1-200 characters.
-5. `403 denied` the phrase matches the denylist.
-6. `423 not_in_command_mode` Talon is not in `command` mode. `?force=1` skips this check only.
-7. `422 no_match` Talon cannot parse the phrase; `422 not_single_command` it would run more than one command.
-8. `403 denied` the rule Talon matched is on the denylist (catches innocent-looking phrases).
-9. With `id`: `404 unknown_command`, or `409 rule_mismatch` (response has `would_run`) if a different rule would win now.
-10. `?dry_run=1` stops here with `200` and `dry_run: true`. It only parses (`speech_system._sim`), which needs no speech engine, so it keeps working on a catalogue-only device.
-11. `503 engine_inactive` Talon has no speech engine attached (`scope.get("speech.engine")` is `None`). Nothing is dispatched. Without this check `actions.mimic` is a silent no-op and the call would answer `200` while running nothing.
-12. `actions.mimic(phrase)` runs on Talon's main thread. `200` on success, `504` if it never started within 5 s.
+2. `403 origin_not_allowed` the request carries an `Origin` header whose host is not the bind host (loopback binds also accept `localhost`) or the host the request was sent to. Browsers add `Origin` to cross-site POSTs; `curl` and apps do not send it. `415 unsupported_media_type` the `Content-Type` is not `application/json`, which keeps `text/plain` and form posts (no CORS preflight) from other sites out.
+3. `429` more than 5 calls per second (`Retry-After` header). Counted per server, not per caller.
+4. `411` no `Content-Length` (chunked is refused), `400` bad length, `413` body over 4096 bytes.
+5. `400` body is not a JSON object with a printable `phrase` of 1-200 characters.
+6. `403 denied` the phrase matches the denylist.
+7. `423 not_in_command_mode` Talon is not in `command` mode. `?force=1` skips this check only.
+8. `422 no_match` Talon cannot parse the phrase; `422 not_single_command` it would run more than one command.
+9. `403 denied` the rule Talon matched is on the denylist (catches innocent-looking phrases).
+10. With `id`: `404 unknown_command`, or `409 rule_mismatch` (response has `would_run`) if a different rule would win now.
+11. `?dry_run=1` stops here with `200` and `dry_run: true`. It only parses (`speech_system._sim`), which needs no speech engine, so it keeps working on a catalogue-only device.
+12. `503 engine_inactive` Talon has no speech engine attached (`scope.get("speech.engine")` is `None`). Nothing is dispatched. Without this check `actions.mimic` is a silent no-op and the call would answer `200` while running nothing.
+13. `actions.mimic(phrase)` runs on Talon's main thread. `200` on success. `504 execute_timeout` (body has `may_still_run: true`) if it was not confirmed within 5 s: a job Talon had not started is cancelled, but one already running cannot be stopped, so do not blindly retry.
 
 The 503 body is `{"ok": false, "error": "engine_inactive", "hint": "<plain English>"}`; the
 hint says the speech engine is not running on that machine and to start or attach it in Talon.
@@ -301,7 +302,7 @@ configured.
   `palette_feed.py` declared with `Module.setting`; otherwise Talon logs "settings skipped
   because they have no matching declaration" and `settings.get` keeps returning the default,
   so the host looks configured and is not. That is task-ncz8l;
-  `test/test_palette_feed_settings.py` fails if a declared name and the name `options`
+  `.tests/test_palette_feed_settings.py` fails if a declared name and the name `options`
   reads ever drift apart.
 - **Heads-up at start.** The log line names the bind, whether reads are open, and
   whether `/execute` is armed; with `open_execute` on it adds a `WARNING /execute is open`
@@ -310,11 +311,11 @@ configured.
 ## Tests
 
 ```sh
-python -m pytest test/test_palette_feed_helpers.py test/test_palette_feed_api.py test/test_palette_feed_impl_shapes.py test/test_palette_feed_settings.py test/test_palette_feed_startup.py test/test_palette_feed_page.py -v
-node test/palette_page_check.mjs        # the page's script: search, templates, fix-guides
+python -m pytest .tests/test_palette_feed_helpers.py .tests/test_palette_feed_api.py .tests/test_palette_feed_impl_shapes.py .tests/test_palette_feed_settings.py .tests/test_palette_feed_startup.py .tests/test_palette_feed_page.py -v
+node .tests/palette_page_check.mjs        # the page's script: search, templates, fix-guides
 # the page's DOM wiring (needs jsdom, skipped without it):
 npm install --prefix /tmp/palette-jsdom jsdom
-NODE_PATH=/tmp/palette-jsdom/node_modules node test/palette_page_dom_check.mjs
+NODE_PATH=/tmp/palette-jsdom/node_modules node .tests/palette_page_dom_check.mjs
 ```
 
 The pure modules (`auth`, `limits`, `denylist`, `dispatch`, `simparse`, `serialize`,
@@ -323,11 +324,11 @@ the one file with no direct unit tests: `test_palette_feed_impl_shapes.py` cover
 `TalonBackend` over a stub registry, `test_palette_feed_settings.py` covers its setting
 declarations, and the pure helpers cover everything `start_server` feeds it.
 
-`test/test_palette_feed_page.py` checks `GET /` as bytes over a real socket, including the
+`.tests/test_palette_feed_page.py` checks `GET /` as bytes over a real socket, including the
 invariant that the page has no credential handling at all. The page's script is pure logic
 until it finds a `document`, so two node checks exercise the shipped script itself:
-`test/palette_page_check.mjs` (no dependencies; search ranking, template filling,
-fix-guide text, request shape) and `test/palette_page_dom_check.mjs` (jsdom; how the page
+`.tests/palette_page_check.mjs` (no dependencies; search ranking, template filling,
+fix-guide text, request shape) and `.tests/palette_page_dom_check.mjs` (jsdom; how the page
 renders and what it sends — header from `/state`, filtering, the slot form, the one POST,
 and the fix-guide per failure). Both skip when their dependencies are missing. Neither
 covers a real phone: layout, touch and iOS behaviour are unverified by this suite.

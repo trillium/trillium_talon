@@ -54,6 +54,10 @@ class Config:
     # is the boundary: while this is on, any device that can reach the bind can run
     # Talon commands. A valid token is still accepted; it is simply not required.
     open_execute: bool = False
+    # The host the server binds. A browser request carrying an `Origin` header is only
+    # served when that origin's host is this one (or the host the request was sent to),
+    # so a page on another site cannot drive `/execute` through the visitor's browser.
+    bind_host: str | None = None
 
 
 # GETs that `open_reads` publishes to any tailnet caller. `/` is the static phone page:
@@ -78,6 +82,18 @@ class Response:
     # the HTML page is served without going through the JSON encoder.
     content_type: str = "application/json"
     raw: bytes | None = None
+
+
+def _origin_host(origin: str) -> str | None:
+    try:
+        return (urlsplit(origin).hostname or None) if origin != "null" else None
+    except ValueError:
+        return None
+
+
+def _is_json(content_type: str | None) -> bool:
+    media = (content_type or "").split(";", 1)[0].strip().lower()
+    return media == "application/json"
 
 
 def _error(status: int, code: str, **extra: Any) -> Response:
@@ -141,6 +157,23 @@ class PaletteApi:
             return self._execute(query, headers, rfile)
         return _error(404, "not_found")
 
+    def _origin_allowed(self, origin: str, headers: Mapping[str, str]) -> bool:
+        host = _origin_host(origin)
+        if host is None:
+            return False
+        allowed = {self._config.bind_host} if self._config.bind_host else set()
+        if self._config.bind_host in (None, "127.0.0.1", "::1", "localhost"):
+            allowed |= {"127.0.0.1", "::1", "localhost"}
+        # Same-origin: the page was loaded from the address the phone typed (a tailnet
+        # name or a `tailscale serve` hostname), which is the Host it sends back here.
+        try:
+            sent_to = urlsplit("//" + headers.get("host", "")).hostname
+        except ValueError:
+            sent_to = None
+        if sent_to:
+            allowed.add(sent_to)
+        return host.lower() in {a.lower() for a in allowed if a}
+
     def _commands(self, query: dict[str, str], headers: dict[str, str]) -> Response:
         payload = self._backend.commands()
         rev = payload["commands_rev"]
@@ -164,6 +197,13 @@ class PaletteApi:
     def _execute(
         self, query: dict[str, str], headers: dict[str, str], rfile: BinaryIO | None
     ) -> Response:
+        origin = headers.get("origin")
+        if origin is not None and not self._origin_allowed(origin, headers):
+            return _error(403, "origin_not_allowed")
+        # text/plain and form types are CORS "simple requests" that a browser sends
+        # cross-site without a preflight; JSON is not, so requiring it closes that door.
+        if not _is_json(headers.get("content-type")):
+            return _error(415, "unsupported_media_type")
         allowed, retry_after = self._limiter.check()
         if not allowed:
             return Response(
@@ -232,7 +272,9 @@ class PaletteApi:
         try:
             self._backend.execute(phrase)
         except DispatchTimeout:
-            return _error(504, "execute_timeout")
+            # The job is cancelled if Talon had not started it, but one already running
+            # cannot be stopped, so the caller is told it may still run.
+            return _error(504, "execute_timeout", may_still_run=True)
         return Response(200, {"ok": True, **result})
 
 

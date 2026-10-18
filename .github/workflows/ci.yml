@@ -21,5 +21,12 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             requirements-dev.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - run: pip install -r requirements-dev.txt
+      # jsdom is not a repo dependency; without it the DOM check skips.
+      - run: npm install --prefix "$RUNNER_TEMP/palette-jsdom" jsdom@24
       - run: pytest
+        env:
+          NODE_PATH: ${{ runner.temp }}/palette-jsdom/node_modules

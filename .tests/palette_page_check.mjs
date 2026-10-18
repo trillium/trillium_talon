@@ -1,6 +1,6 @@
 // JS-level check for the palette page: runs the page's real <script> in a sandbox with
 // no DOM and exercises its pure logic (search ranking, rule templates, fix-guides,
-// request shaping). Run: node test/palette_page_check.mjs [path/to/page.html]
+// request shaping). Run: node .tests/palette_page_check.mjs [path/to/page.html]
 //
 // This is not a browser: it proves the logic the page depends on, not that a phone
 // renders it.
