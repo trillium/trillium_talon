@@ -1,5 +1,7 @@
 """Turn Talon registry data into the JSON the palette serves. No Talon imports."""
 
+from __future__ import annotations
+
 import hashlib
 import json
 import re
@@ -16,36 +18,115 @@ _CAPTURE_REF = re.compile(r"<([\w.]+)>")
 
 @dataclass(frozen=True)
 class RawImpl:
-    """One CommandImpl reduced to plain data. `score` is ctx._active_scores."""
+    """One CommandImpl reduced to plain data. `score` is ctx._active_scores, `match` is repr(ctx._match)."""
 
     trigger: str
     context: str
     lineno: int
     score: tuple
+    match: str = ""
 
 
-def impl_to_raw(impl: Any) -> RawImpl:
-    """Reduce one live Talon CommandImpl to plain data, tolerating both shapes Talon ships.
+# Matcher reprs look like `M(M(tag=='browser') AND M(NOT M(app=='zoom')))`: M(...) nodes holding a leaf
+# `key=='value'` / `key==/regex/`, a `NOT M(...)`, or `M(...) AND|OR M(...)`.
+_MATCH_TOKEN = re.compile(
+    r"""\s*(?:
+        (?P<open>M\()
+      | (?P<close>\))
+      | (?P<op>AND|OR|NOT)\b
+      | (?P<key>[\w.]+)==(?P<value>'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|/(?:[^/\\]|\\.)*/[a-z]*)
+    )""",
+    re.VERBOSE,
+)
+_APP_KEYS = frozenset({"app", "app.name", "app.bundle", "app.exe"})
 
-    Talon 0.4.0 (115.0) has CommandImpl(ctx, rule, script, experiments) with no `trigger` and no
-    `lineno`: the rule text is `impl.rule.rule` and the line is `impl.script.start_line`. Builds with
-    the CommandImpl(ScriptImpl) refactor (0.4.0-1561-9c3d and later) answer both directly. The newer,
-    Talon-computed values win where present, so the newer build's output cannot change; the fallbacks
-    reproduce them — the 18 rules active on both builds in the same file yielded byte-identical ids
-    (task-ykd7c). Every read is a `getattr` chain, so a future build that renames rather than deletes
-    degrades instead of failing the request.
+
+class _Unparsed(Exception):
+    pass
+
+
+def _tokenize(text: str) -> list[tuple[str, Any]]:
+    tokens: list[tuple[str, Any]] = []
+    pos = 0
+    text = text.strip()
+    while pos < len(text):
+        found = _MATCH_TOKEN.match(text, pos)
+        if not found:
+            raise _Unparsed(text[pos : pos + 20])
+        pos = found.end()
+        if found.group("open"):
+            tokens.append(("open", None))
+        elif found.group("close"):
+            tokens.append(("close", None))
+        elif found.group("op"):
+            tokens.append((found.group("op"), None))
+        else:
+            value = found.group("value")
+            tokens.append(("leaf", (found.group("key"), value[1:-1] if value[0] in "'\"" else None)))
+    return tokens
+
+
+def _parse_node(tokens: list[tuple[str, Any]], pos: int) -> tuple[tuple, int]:
+    """Parse one `M( ... )` starting at tokens[pos]; returns (node, next position)."""
+    if pos >= len(tokens) or tokens[pos][0] != "open":
+        raise _Unparsed("expected M(")
+    pos += 1
+    kind = tokens[pos][0] if pos < len(tokens) else ""
+    if kind == "leaf":
+        node: tuple = ("leaf", *tokens[pos][1])
+        pos += 1
+    elif kind == "NOT":
+        child, pos = _parse_node(tokens, pos + 1)
+        node = ("not", child)
+    else:
+        left, pos = _parse_node(tokens, pos)
+        if pos >= len(tokens) or tokens[pos][0] not in ("AND", "OR"):
+            raise _Unparsed("expected AND/OR")
+        op = tokens[pos][0]
+        right, pos = _parse_node(tokens, pos + 1)
+        node = (op, left, right)
+    if pos >= len(tokens) or tokens[pos][0] != "close":
+        raise _Unparsed("expected )")
+    return node, pos + 1
+
+
+def _required(node: tuple, keys: frozenset[str]) -> set[str] | None:
+    """Values of which at least one must hold for `node` to match, or None if the node does not need one.
+
+    Negated leaves and OR branches that skip the key do not require it, so "everything but Chrome"
+    and "tag a, or not tag b" stay global.
     """
-    rule = getattr(impl, "rule", None)
-    ctx = getattr(impl, "ctx", None)
-    lineno = getattr(impl, "lineno", None)
-    if lineno is None:
-        lineno = getattr(getattr(impl, "script", None), "start_line", 0) or 0
-    return RawImpl(
-        trigger=str(getattr(impl, "trigger", None) or getattr(rule, "rule", "") or ""),
-        context=str(getattr(ctx, "path", str(ctx))),
-        lineno=int(lineno),
-        score=tuple(getattr(ctx, "_active_scores", ()) or ()),
-    )
+    kind = node[0]
+    if kind == "leaf":
+        return {node[2]} if node[1] in keys and node[2] is not None else None
+    if kind == "not":
+        return None
+    parts = [_required(child, keys) for child in node[1:]]
+    if kind == "AND":
+        found = [p for p in parts if p is not None]
+        return set().union(*found) if found else None
+    if any(p is None for p in parts):
+        return None
+    return set().union(*parts)
+
+
+def context_scope(match: str) -> dict[str, Any]:
+    """What a context needs from the current Talon scope: {"scope": app|tag|global, "apps": [...], "tags": [...]}.
+
+    Only the commands Talon has active are served, so an "app" command is one whose context names the
+    frontmost app. Anything unparseable (`None`, MatchAny, a future repr) is global: never hide a command.
+    """
+    try:
+        tokens = _tokenize(match)
+        tree, end = _parse_node(tokens, 0)
+        if end != len(tokens):
+            raise _Unparsed("trailing tokens")
+    except (_Unparsed, IndexError):
+        return {"scope": "global", "apps": [], "tags": []}
+    apps = sorted(_required(tree, _APP_KEYS) or ())
+    tags = sorted(_required(tree, frozenset({"tag"})) or ())
+    scope = "app" if apps else "tag" if tags else "global"
+    return {"scope": scope, "apps": apps, "tags": tags}
 
 
 def command_id(context: str, lineno: int, trigger: str) -> str:
@@ -55,8 +136,13 @@ def command_id(context: str, lineno: int, trigger: str) -> str:
 
 
 def pick_winner(impls: list[RawImpl]) -> RawImpl:
-    """Highest `_active_scores` wins; ties go to the first registered."""
-    return max(impls, key=lambda impl: impl.score)
+    """Highest `_active_scores` wins; on a tie the last registered impl wins.
+
+    Talon runs the last-registered impl on equal scores (verified with speech_system._sim),
+    so the feed's context, lineno and id must name that copy. `max` keeps the first of equal
+    maxima, hence the reversal.
+    """
+    return max(reversed(impls), key=lambda impl: impl.score)
 
 
 def describe_slots(rule: str, list_size: Callable[[str], int]) -> list[dict[str, Any]]:
@@ -92,11 +178,13 @@ def serialize_commands(
                 "context": winner.context,
                 "lineno": winner.lineno,
                 "shadowed": len(impls) - 1,
+                **context_scope(winner.match),
             }
         )
     commands.sort(key=lambda c: (c["rule"], c["id"]))
     return {
-        "commands_rev": _digest([[c["id"], c["rule"]] for c in commands]),
+        # scope is in the digest so a client holding an older, scope-less list refetches once.
+        "commands_rev": _digest([[c["id"], c["rule"], c["scope"], c["apps"], c["tags"]] for c in commands]),
         "count": len(commands),
         "commands": commands,
     }
