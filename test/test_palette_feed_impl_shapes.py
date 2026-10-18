@@ -10,7 +10,7 @@ phone's cached ids churn on every host it talks to. Evidence for the equivalence
 import types
 
 import pytest
-from talon import registry, scope
+from talon import scope
 
 from trillium.palette_feed import palette_feed, serialize
 from trillium.palette_feed.api import Config, PaletteApi
