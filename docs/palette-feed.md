@@ -224,8 +224,9 @@ this list tight either way.
 
 Open `http://<host>:7399/` on the phone. One static HTML file
 (`trillium/palette_feed/page.html`, served by `page.py`), no build step, no CDN, no
-credential of any kind: no token field, no `localStorage`, no `Authorization` header. It
-needs `open_reads` to load and `open_execute` to run anything.
+credential of any kind: no token field, no `Authorization` header (its `localStorage`
+holds only UI state, below). It needs `open_reads` to load and `open_execute` to run
+anything. Adding a device: [`palette-setup.md`](palette-setup.md).
 
 - **Search.** The active command set is fetched once from `/commands` and ranked
   client-side: a contiguous hit beats a subsequence hit, and a shorter rule wins a tie.
@@ -237,8 +238,13 @@ needs `open_reads` to load and `open_execute` to run anything.
   with `/lists/<name>` suggestions for list slots — plus **Edit phrase** to hand-fix any
   template the builder reads wrongly. Every request carries `{phrase, id}`.
 - **First run.** A small block says what the page is and gives one search tip. **Got it**
-  hides it and remembers that in `localStorage` (the only thing the page stores; it
-  also hides after the first successful run, and works without storage).
+  hides it and remembers that in `localStorage` (it also hides after the first
+  successful run).
+- **Recent and favorites.** The last 10 successful runs (newest first, de-duplicated) show
+  as **Recent**; the ☆ on a row stars a command into **Favorites** above the results.
+  Keys `palette_intro_dismissed`, `palette_recents`, `palette_favorites`: per device and
+  browser, not synced. Every storage access is wrapped in try/catch and stored JSON is
+  shape-checked, so corrupt or blocked storage just means nothing persists.
 - **Engine off.** A `503 engine_inactive` shows the feed's `hint` text instead of success.
 - **Failures are guidance.** A 401 (the Mac has not opened `/execute`, and the guide
   names `user.palette_feed_open_execute`), 423 (not in command mode, with **Run anyway** =

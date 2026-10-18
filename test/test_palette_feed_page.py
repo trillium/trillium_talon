@@ -126,10 +126,12 @@ class TestPageFile:
         """The tailnet is the boundary: the phone holds nothing to paste or store."""
         assert absent not in read_page_file()
 
-    def test_local_storage_holds_only_the_intro_flag(self):
+    def test_local_storage_goes_through_one_read_and_one_write(self):
         html = read_page_file().decode("utf-8")
-        assert html.count("localStorage") == 2  # one read, one write
+        assert html.count("localStorage") == 2  # storeGet and storeSet, nothing else
         assert 'INTRO_KEY = "palette_intro_dismissed"' in html
+        assert 'RECENTS_KEY = "palette_recents"' in html
+        assert 'FAVORITES_KEY = "palette_favorites"' in html
 
     def test_a_gated_host_is_told_which_setting_opens_it(self):
         assert "palette_feed_open_execute" in read_page_file().decode("utf-8")

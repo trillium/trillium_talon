@@ -4,6 +4,18 @@ Notable changes to this repo. Newest first.
 
 ## Unreleased
 
+### Added — phone page: Recent, Favorites and a setup doc
+
+- `trillium/palette_feed/page.html`: the last 10 successful runs show as a tappable
+  **Recent** list (newest first, de-duplicated), and a star on each command row adds it
+  to **Favorites** above the results. Both persist in `localStorage`
+  (`palette_recents`, `palette_favorites`); every storage access is guarded and corrupt
+  JSON is discarded, so the page works fully with storage unavailable.
+- Docs: new `docs/palette-setup.md` (adding a device); `docs/palette-feed.md` links it.
+- Tests: page checks under node and jsdom cover recents cap/order/dedup, favorite toggle
+  and reload persistence, corrupt storage and throwing storage. Also fixed a jsdom check
+  that read a stale success toast as a failure.
+
 ### Fixed — `POST /execute` no longer answers 200 when nothing can run
 
 - `trillium/palette_feed`: when Talon has no speech engine attached
