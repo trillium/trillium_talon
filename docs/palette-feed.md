@@ -193,8 +193,16 @@ Order of checks (the first failure wins, and nothing runs unless all pass):
 7. `422 no_match` Talon cannot parse the phrase; `422 not_single_command` it would run more than one command.
 8. `403 denied` the rule Talon matched is on the denylist (catches innocent-looking phrases).
 9. With `id`: `404 unknown_command`, or `409 rule_mismatch` (response has `would_run`) if a different rule would win now.
-10. `?dry_run=1` stops here with `200` and `dry_run: true`.
-11. `actions.mimic(phrase)` runs on Talon's main thread. `200` on success, `504` if it never started within 5 s.
+10. `?dry_run=1` stops here with `200` and `dry_run: true`. It only parses (`speech_system._sim`), which needs no speech engine, so it keeps working on a catalogue-only device.
+11. `503 engine_inactive` Talon has no speech engine attached (`scope.get("speech.engine")` is `None`). Nothing is dispatched. Without this check `actions.mimic` is a silent no-op and the call would answer `200` while running nothing.
+12. `actions.mimic(phrase)` runs on Talon's main thread. `200` on success, `504` if it never started within 5 s.
+
+The 503 body is `{"ok": false, "error": "engine_inactive", "hint": "<plain English>"}`; the
+hint says the speech engine is not running on that machine and to start or attach it in Talon.
+`GET /`, `/state`, `/commands` and `/lists/<name>` are unaffected, so a device with no engine
+still serves its command catalogue. When verifying a real run, a `200` whose command did not
+happen is no longer expected: treat it as a bug, and a `503 engine_inactive` as the host
+being unable to execute.
 
 Success body: `{"ok": true, "matched_rule": "...", "path": "..."}`.
 
@@ -228,6 +236,10 @@ needs `open_reads` to load and `open_execute` to run anything.
   `(a | b)` alternation, `{list}` slots or `<capture>` slots opens a small form first —
   with `/lists/<name>` suggestions for list slots — plus **Edit phrase** to hand-fix any
   template the builder reads wrongly. Every request carries `{phrase, id}`.
+- **First run.** A small block says what the page is and gives one search tip. **Got it**
+  hides it and remembers that in `localStorage` (the only thing the page stores; it
+  also hides after the first successful run, and works without storage).
+- **Engine off.** A `503 engine_inactive` shows the feed's `hint` text instead of success.
 - **Failures are guidance.** A 401 (the Mac has not opened `/execute`, and the guide
   names `user.palette_feed_open_execute`), 423 (not in command mode, with **Run anyway** =
   `?force=1`), 429, 403 denylist, 404/409 stale rule, 422 no_match, 504 timeout, any 5xx,

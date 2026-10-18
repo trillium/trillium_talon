@@ -120,11 +120,16 @@ class TestPageFile:
 
     @pytest.mark.parametrize(
         "absent",
-        [b"localStorage", b"Authorization", b"Bearer", b"paste", b'id="token"'],
+        [b"Authorization", b"Bearer", b"paste", b'id="token"'],
     )
     def test_the_page_has_no_credential_handling(self, absent):
         """The tailnet is the boundary: the phone holds nothing to paste or store."""
         assert absent not in read_page_file()
+
+    def test_local_storage_holds_only_the_intro_flag(self):
+        html = read_page_file().decode("utf-8")
+        assert html.count("localStorage") == 2  # one read, one write
+        assert 'INTRO_KEY = "palette_intro_dismissed"' in html
 
     def test_a_gated_host_is_told_which_setting_opens_it(self):
         assert "palette_feed_open_execute" in read_page_file().decode("utf-8")

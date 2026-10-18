@@ -17,6 +17,11 @@ from .simparse import NoMatch, normalize_rule, parse_sim
 
 MAX_PHRASE_LEN = 200
 MAX_ID_LEN = 64
+ENGINE_INACTIVE_HINT = (
+    "Talon's speech engine is not running on this machine, so it cannot run commands "
+    "from here. Start or attach the speech engine in Talon (check the Talon menu, "
+    "Speech Recognition), then tap again. Searching the command list still works."
+)
 _LIST_NAME = re.compile(r"^[A-Za-z0-9_.]{1,100}$")
 
 
@@ -27,6 +32,10 @@ class Backend(Protocol):
     def modes(self) -> set[str]: ...
     def sim(self, phrase: str) -> str:
         """Raw `_sim` text; raises NoMatch when the phrase does not parse."""
+        ...
+
+    def engine_active(self) -> bool:
+        """True when a speech engine is attached, so `execute` can actually dispatch."""
         ...
 
     def execute(self, phrase: str) -> None:
@@ -215,6 +224,11 @@ class PaletteApi:
         result = {"matched_rule": match.rule, "path": match.path}
         if query.get("dry_run") == "1":
             return Response(200, {"ok": True, "dry_run": True, **result})
+        # `dry_run` above only parses (`_sim` needs no engine), so it stays available on a
+        # catalogue-only device. A real run with no engine would be a silent no-op, so
+        # refuse it loudly before anything is dispatched.
+        if not self._backend.engine_active():
+            return _error(503, "engine_inactive", hint=ENGINE_INACTIVE_HINT)
         try:
             self._backend.execute(phrase)
         except DispatchTimeout:

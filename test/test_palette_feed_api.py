@@ -39,6 +39,7 @@ class FakeBackend:
         self.executed = []
         self.mode_set = {"all", "command"}
         self.execute_error = None
+        self.engine = True
         self._commands = serialize_commands(
             [
                 [RawImpl("playback now", "user.pb.talon", 4, (0,))],
@@ -64,6 +65,9 @@ class FakeBackend:
         if phrase not in SIM_BY_PHRASE:
             raise NoMatch()
         return SIM_BY_PHRASE[phrase]
+
+    def engine_active(self):
+        return self.engine
 
     def execute(self, phrase):
         if self.execute_error:
@@ -560,3 +564,44 @@ class TestHttpServer:
     def test_default_host_is_loopback(self):
         assert server.DEFAULT_HOST == "127.0.0.1"
         assert server.DEFAULT_PORT == 7399
+
+
+class TestEngineInactive:
+    """No speech engine: a real run is refused with 503 and dispatches nothing."""
+
+    def test_503_body_and_nothing_dispatched(self, api, backend):
+        backend.engine = False
+        resp = post(api, {"phrase": "playback now"})
+        assert resp.status == 503
+        assert resp.body["ok"] is False and resp.body["error"] == "engine_inactive"
+        assert "speech engine" in resp.body["hint"]
+        assert backend.executed == []
+
+    def test_engine_present_is_unchanged(self, api, backend):
+        resp = post(api, {"phrase": "playback now"})
+        assert resp.status == 200 and resp.body["ok"] is True
+        assert backend.executed == ["playback now"]
+
+    def test_dry_run_still_parses_without_an_engine(self, api, backend):
+        backend.engine = False
+        resp = post(api, {"phrase": "playback now"}, "?dry_run=1")
+        assert resp.status == 200 and resp.body["dry_run"] is True
+        assert backend.executed == []
+
+    def test_reads_unchanged_without_an_engine(self, api, backend):
+        backend.engine = False
+        for path in ("/state", "/commands", "/"):
+            assert api.handle("GET", path, AUTH).status == 200
+
+    def test_auth_wins_over_503(self, api, backend):
+        backend.engine = False
+        assert post(api, {"phrase": "playback now"}, headers={}).status == 401
+
+    def test_validation_wins_over_503(self, api, backend):
+        backend.engine = False
+        assert post(api, None, raw=b"nope").status == 400
+        assert post(api, {"phrase": "no such phrase"}).status == 422
+        assert post(api, {"phrase": "innocent words"}).status == 403
+        backend.mode_set = {"all"}
+        assert post(api, {"phrase": "playback now"}).status == 423
+        assert backend.executed == []
