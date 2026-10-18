@@ -263,6 +263,118 @@ def impl(trigger, context="user.a.talon", lineno=1, score=(0,)):
     return serialize.RawImpl(trigger, context, lineno, score)
 
 
+# The two live CommandImpl shapes, 2026-10-18 (task-ykd7c). `_Impl040` has no `trigger` and no
+# `lineno` at all, exactly like Talon 0.4.0; `_ImplRefactored` is CommandImpl(ScriptImpl).
+PARROT_CONTEXT = "user.trillium_talon.trillium.plugin.parrot.parrot_always.talon"
+PARROT_RULE = "parrot on"
+PARROT_LINENO = 4
+# The id the newer build reports for that rule, live from the MacBook's feed.
+PARROT_ID = "00de4484b8"
+
+
+class _Rule:
+    def __init__(self, text):
+        self.rule = text
+
+
+class _Script:
+    def __init__(self, start_line):
+        self.start_line = start_line
+        self.filename = "user/parrot_always.talon"
+        self.code = "user.parrot_enable()"
+
+
+class _Ctx:
+    def __init__(self, path, scores=None):
+        self.path = path
+        if scores is not None:
+            self._active_scores = scores
+
+
+class _Impl040:
+    """Talon 0.4.0: ctx/rule/script/experiments, and no `trigger`, `lineno` or `_active_scores`."""
+
+    def __init__(self, ctx, rule, script=None):
+        self.ctx = ctx
+        self.rule = rule
+        self.script = script or _Script(PARROT_LINENO)
+        self.experiments = set()
+
+
+class _ImplRefactored:
+    """0.4.0-1561-9c3d: CommandImpl(ScriptImpl), answering `trigger` and `lineno` directly."""
+
+    def __init__(self, ctx, rule, lineno):
+        self.ctx = ctx
+        self.rule = rule
+        self.script = _Script(lineno)
+        self.trigger = rule.rule
+        self.lineno = lineno
+        self.experiments = set()
+
+
+def _parrot_040():
+    return _Impl040(_Ctx(PARROT_CONTEXT), _Rule(PARROT_RULE))
+
+
+def _parrot_refactored():
+    return _ImplRefactored(
+        _Ctx(PARROT_CONTEXT, (1, 0)), _Rule(PARROT_RULE), PARROT_LINENO
+    )
+
+
+class TestImplToRaw:
+    """impl_to_raw: the 0.4.0 shape must reduce to exactly what the newer build reports."""
+
+    def test_the_0_4_0_fixture_really_lacks_trigger_and_lineno(self):
+        # Without this the test below could pass by accident on a newer-shaped object.
+        impl040 = _parrot_040()
+        assert not hasattr(impl040, "trigger")
+        assert not hasattr(impl040, "lineno")
+        assert not hasattr(impl040.ctx, "_active_scores")
+
+    def test_both_shapes_reduce_to_the_same_values(self):
+        old = serialize.impl_to_raw(_parrot_040())
+        new = serialize.impl_to_raw(_parrot_refactored())
+        assert old.trigger == new.trigger == PARROT_RULE
+        assert old.context == new.context == PARROT_CONTEXT
+        assert old.lineno == new.lineno == PARROT_LINENO
+
+    def test_0_4_0_shape_reproduces_the_id_the_newer_build_reports(self):
+        for shape in (_parrot_040(), _parrot_refactored()):
+            out = serialize.serialize_commands(
+                [[serialize.impl_to_raw(shape)]], lambda name: 0
+            )
+            (entry,) = out["commands"]
+            assert entry["id"] == PARROT_ID
+            assert entry["rule"] == PARROT_RULE
+            assert entry["lineno"] == PARROT_LINENO
+            assert entry["context"] == PARROT_CONTEXT
+
+    def test_newer_build_scores_survive_and_0_4_0_degrades_to_empty(self):
+        assert serialize.impl_to_raw(_parrot_refactored()).score == (1, 0)
+        assert serialize.impl_to_raw(_parrot_040()).score == ()
+
+    def test_absent_scores_keep_the_first_registered_winner(self):
+        first = _Impl040(_Ctx("first.talon"), _Rule("west"))
+        last = _Impl040(_Ctx("last.talon"), _Rule("west"))
+        out = serialize.serialize_commands(
+            [[serialize.impl_to_raw(first), serialize.impl_to_raw(last)]], lambda n: 0
+        )
+        (entry,) = out["commands"]
+        assert entry["context"] == "first.talon"
+        assert entry["shadowed"] == 1
+
+    def test_a_bare_object_never_raises(self):
+        raw = serialize.impl_to_raw(object())
+        assert (raw.trigger, raw.lineno, raw.score) == ("", 0, ())
+
+    def test_a_falsy_trigger_falls_back_to_the_rule_text(self):
+        bare = _ImplRefactored(_Ctx(PARROT_CONTEXT), _Rule(PARROT_RULE), PARROT_LINENO)
+        bare.trigger = ""
+        assert serialize.impl_to_raw(bare).trigger == PARROT_RULE
+
+
 class TestSerialize:
     def test_classify(self):
         assert serialize.classify("playback now") == "literal"

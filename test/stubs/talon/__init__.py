@@ -459,6 +459,52 @@ class Fs:
             cls._callbacks[path](path, flags or set())
 
 
+class SpeechSystem:
+    """Mock speech system: the hook and simulation surface user scripts touch.
+
+    `_sim` is Talon's parse-only simulation (it needs no attached engine); the real one raises
+    `RuntimeError("Failed to parse: ...")` when nothing matches, which the palette feed maps to 422.
+
+    Usage:
+        talon.speech_system.simulate('"playback now" -> path: user/pb.talon')
+        talon.speech_system.simulate_failure("Failed to parse: zzqx")   # or reset() to clear
+    """
+
+    _sim_result = ""
+    _sim_error = None
+    _hooks = {}
+
+    @classmethod
+    def register(cls, event, callback):
+        cls._hooks.setdefault(event, []).append(callback)
+
+    @classmethod
+    def unregister(cls, event, callback):
+        if event in cls._hooks:
+            cls._hooks[event] = [cb for cb in cls._hooks[event] if cb != callback]
+
+    @classmethod
+    def _sim(cls, phrase):
+        """Test helper: what Talon's parse-only simulation returns for `phrase`."""
+        if cls._sim_error:
+            raise RuntimeError(cls._sim_error)
+        return cls._sim_result
+
+    @classmethod
+    def simulate(cls, result):
+        """Test helper: make `_sim` return `result`."""
+        cls._sim_result, cls._sim_error = result, None
+
+    @classmethod
+    def simulate_failure(cls, message):
+        """Test helper: make `_sim` raise RuntimeError(message)."""
+        cls._sim_error = message
+
+    @classmethod
+    def reset(cls):
+        cls._sim_result, cls._sim_error, cls._hooks = "", None, {}
+
+
 # Module-level singletons
 actions = Actions()
 app = App
@@ -472,6 +518,7 @@ settings = Settings()
 resource = Resource()
 registry = Registry()
 fs = Fs
+speech_system = SpeechSystem
 
 # Indicate to test files that they should load since we're running in test mode
 test_mode = True

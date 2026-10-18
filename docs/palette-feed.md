@@ -119,6 +119,14 @@ The server refuses any non-loopback bind in `server.start`.
 
 ## Behavior to know
 
+- **Two `CommandImpl` shapes.** Talon 0.4.0 (115.0) ships
+  `CommandImpl(ctx, rule, script, experiments)`: no `trigger` and no `lineno`, so the trigger text
+  is `impl.rule.rule` and the line is `impl.script.start_line`. Builds from the
+  `CommandImpl(ScriptImpl)` refactor (0.4.0-1561-9c3d and later) answer both directly.
+  `serialize.impl_to_raw` reads the newer values where present and falls back otherwise, so one
+  feed serves either build without a 500. The fallbacks are id-equivalent to the newer build's
+  values, which is why the phone's cached ids survive talking to either host. Full evidence: the
+  scope report for task-ykd7c.
 - **Start and reload.** The server starts on Talon's `ready` event and stops the
   previous instance on hot reload. Deleting the module does _not_ stop it
   (Talon has no unload hook); restart Talon, or from the REPL call
