@@ -1,18 +1,21 @@
 """HTTP front for the phone receiver: `POST /emission`, one utterance per request.
 
 Pure stdlib, no `talon` import. `ListenerApi.handle` is the whole policy and takes plain
-values, so tests drive it without a socket; `start` binds it to loopback only.
+values, so tests drive it without a socket; `start` binds it to loopback or to this Mac's own
+tailnet address (see `netbind`) and nothing else.
 
 Order of checks, cheapest and least informative first, so a caller learns nothing it is not
-cleared for and no body is read before it is: path (404), method (405), identity (403),
+cleared for and no body is read before it is: path (404), method (405), auth (403),
 content type for the configured mode (415), rate (429), length headers (411/400/413), then
 the body itself (400), and only then the service, which validates in Python before any
 native call.
 
-Identity is the `Tailscale-User-Login` header that `tailscale serve` adds, matched against an
-allow-list; an empty list denies everyone. The socket is loopback only, so the header is
-trustworthy only because `tailscale serve` is the single way in from the network; any local
-process can forge it, which is the same boundary the palette feed has.
+Auth has two forms, chosen by how the listener is served. With no `key` provider (the
+loopback case, fronted by `tailscale serve` if at all) it is the `Tailscale-User-Login`
+header matched against an allow-list; an empty list denies everyone, and any local process
+can forge the header, which is the same boundary the palette feed has. With a `key` provider
+(the tailnet bind, where nothing adds that header) it is the shared secret in
+`X-Talon-Phone-Key`, compared in constant time, and the identity header is ignored.
 """
 
 import json
@@ -21,7 +24,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, BinaryIO, Callable, Mapping, Protocol
+from typing import Any, BinaryIO, Callable, Iterable, Mapping, Protocol
 
 from ..palette_feed.dispatch import DispatchTimeout
 from ..palette_feed.limits import (
@@ -30,8 +33,7 @@ from ..palette_feed.limits import (
     parse_content_length,
     read_body,
 )
-from ..palette_feed.options import is_loopback
-from . import wire
+from . import keyfile, netbind, wire
 from .service import Reply
 
 DEFAULT_PORT = 7403
@@ -121,18 +123,37 @@ class ListenerApi:
         runner: Callable[[Callable[[], Reply]], Reply] | None = None,
         limiter: RateLimiter | None = None,
         clock: Callable[[], float] | None = None,
+        key: Callable[[], str | None] | None = None,
     ):
         self._backend = backend
         self._get_mode = get_mode
         self._get_allowed = get_allowed
+        self._get_key = key
         # Talon runs commands from its main thread; the glue passes a runner that hops there.
         self._run = runner or (lambda fn: fn())
         self._limiter = limiter or RateLimiter(*RATE)
         self._clock = clock or time.time
 
+    @property
+    def uses_key(self) -> bool:
+        """True when auth is the shared-secret header rather than the Tailscale identity."""
+        return self._get_key is not None
+
     def _mode(self) -> str:
         mode = self._get_mode()
         return mode.strip().lower() if isinstance(mode, str) else ""
+
+    def _authorized(self, h: Mapping[str, str]) -> bool:
+        if self._get_key is not None:
+            key = self._get_key()  # no key loaded denies everyone
+            return isinstance(key, str) and keyfile.matches(h.get(keyfile.HEADER), key)
+        login = h.get(IDENTITY_HEADER)
+        return (
+            isinstance(login, str)
+            and bool(login.strip())
+            and len(login) <= MAX_IDENTITY_LEN
+            and login.strip().lower() in parse_allowlist(self._get_allowed())
+        )
 
     def handle(
         self,
@@ -156,13 +177,7 @@ class ListenerApi:
             return Response(
                 405, {"ok": False, "error": "method_not_allowed"}, {"Allow": "POST"}
             )
-        login = h.get(IDENTITY_HEADER)
-        if (
-            not isinstance(login, str)
-            or not login.strip()
-            or len(login) > MAX_IDENTITY_LEN
-            or login.strip().lower() not in parse_allowlist(self._get_allowed())
-        ):
+        if not self._authorized(h):
             return _error(403, "forbidden")
         mode = self._mode()
         if (
@@ -263,6 +278,8 @@ class ListenerServer(HTTPServer):
     BACKLOG = 8
 
     def __init__(self, address, handler):
+        # A failed bind calls server_close from inside super().__init__, before any worker exists.
+        self._workers: list[threading.Thread] = []
         super().__init__(address, handler)
         self._pending: queue.Queue = queue.Queue(maxsize=self.BACKLOG)
         self._workers = [
@@ -297,11 +314,22 @@ class ListenerServer(HTTPServer):
             self._pending.put(None)
 
 
-def start(api: ListenerApi, port: int = DEFAULT_PORT, host: str = "127.0.0.1"):
-    """Serve on loopback. Any other host is refused: the only way in is `tailscale serve`."""
-    if not is_loopback(host):
-        raise ValueError(f"phone listener binds loopback only, got {host!r}")
-    server = ListenerServer((host, port), make_handler(api))
+def start(
+    api: ListenerApi,
+    port: int = DEFAULT_PORT,
+    host: str = "127.0.0.1",
+    assigned: Callable[[], Iterable[Any]] = netbind.tailnet_addresses,
+):
+    """Serve on `host`, which must be 127.0.0.1 or a tailnet address assigned to this Mac.
+
+    Anything else raises `netbind.BindError` (a `ValueError`) before a socket exists. A tailnet
+    bind also demands a key-authenticated `api`: the identity header is not set on that path,
+    so an allow-list `api` there would be forgeable by every device on the tailnet.
+    """
+    plan = netbind.resolve_bind(host, assigned)
+    if plan.tailnet and not api.uses_key:
+        raise netbind.BindError("a tailnet bind requires shared-secret auth")
+    server = ListenerServer((plan.host, port), make_handler(api))
     thread = threading.Thread(
         target=lambda: server.serve_forever(poll_interval=0.05),
         name="phone-listener",
