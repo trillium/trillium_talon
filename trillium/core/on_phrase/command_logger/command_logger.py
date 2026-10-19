@@ -13,13 +13,26 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from talon import actions, scope, ui
+from talon import Module, actions, scope, settings, ui
 
 from ..analyze_phrase.types import AnalyzedPhrase
 from .schema import SCHEMA_VERSION
 
 # Only log in these modes
 _LOGGABLE_MODES = {"command", "dictation"}
+
+mod = Module()
+mod.setting(
+    "command_logger_enabled",
+    type=bool,
+    default=True,
+    desc="Write dispatched phrases to ~/.talon/recordings. Turn off to log nothing.",
+)
+
+
+def _logging_enabled() -> bool:
+    return bool(settings.get("user.command_logger_enabled", True))
+
 
 COMMANDS_RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "commands"
 COMMANDS_JSONL = Path.home() / ".talon" / "recordings" / "command_history.jsonl"
@@ -131,6 +144,9 @@ def log_analyzed_phrase(analyzed: AnalyzedPhrase):
     """Log an analyzed phrase to JSONL and per-file JSON."""
     global _last_voice_phrase, _last_voice_commands
     try:
+        if not _logging_enabled():
+            return
+
         modes = scope.get("mode", set())
         if not (_LOGGABLE_MODES & set(modes)):
             return
@@ -197,6 +213,9 @@ def log_parrot_command(
         confidence: Detection confidence score
     """
     try:
+        if not _logging_enabled():
+            return
+
         modes = scope.get("mode", set())
         if not (_LOGGABLE_MODES & set(modes)):
             return
