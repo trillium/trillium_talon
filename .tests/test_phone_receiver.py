@@ -56,7 +56,12 @@ class TestWire:
         assert len(wire.pack(emission(), N_PCM, 0.0, True)) == 2518
 
     def test_frames_formula(self):
-        for n_pcm, t in [(33161 - 8000, 69), (41161 - 8000, 85), (20981 - 8000, 43), (12981 - 8000, 27)]:
+        for n_pcm, t in [
+            (33161 - 8000, 69),
+            (41161 - 8000, 85),
+            (20981 - 8000, 43),
+            (12981 - 8000, 27),
+        ]:
             assert wire.frames_for(n_pcm) == t
 
     def rejects(self, buf, code):
@@ -124,7 +129,12 @@ class TestWire:
         self.rejects(None, "not_bytes")
 
     def test_validate_array_rejects(self):
-        for a in (emission().astype(np.int32), emission()[None], emission()[:, :28], [[0.0] * 29]):
+        for a in (
+            emission().astype(np.int32),
+            emission()[None],
+            emission()[:, :28],
+            [[0.0] * 29],
+        ):
             with pytest.raises(wire.WireError):
                 wire.validate_array(a)
         with pytest.raises(wire.WireError):
@@ -179,7 +189,9 @@ class TestReceiver:
 
     def test_encoder_restored_when_engine_raises(self):
         eng = FakeEngine()
-        eng._on_audio_frame = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom"))
+        eng._on_audio_frame = lambda *a, **k: (_ for _ in ()).throw(
+            RuntimeError("boom")
+        )
         r = PhoneReceiver(eng)
         res = r.handle(good())
         assert res.ok is False and res.error == "engine_error"
@@ -220,7 +232,10 @@ class TestReceiver:
         eng = FakeEngine()
         r = PhoneReceiver(eng)
         results = []
-        ts = [threading.Thread(target=lambda: results.append(r.handle(good()))) for _ in range(16)]
+        ts = [
+            threading.Thread(target=lambda: results.append(r.handle(good())))
+            for _ in range(16)
+        ]
         [t.start() for t in ts]
         [t.join() for t in ts]
         assert all(x.ok for x in results) and len(eng.native_calls) == 16

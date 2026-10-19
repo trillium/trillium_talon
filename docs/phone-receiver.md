@@ -5,10 +5,10 @@ padding, decode, rejection and `phrase` dispatch, replacing only the encoder cal
 `trillium/phone_receiver/`. Nothing here opens a socket, registers with `speech_system`,
 or changes a setting; wiring it to the live engine is a later, separate step (default off).
 
-| File | Role |
-| --- | --- |
-| `wire.py` | `parse_validate` / `validate_array` / `pack` / `frames_for`; every check runs before native code, failures are `WireError(code)` |
-| `encoder.py` | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)` |
+| File          | Role                                                                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `wire.py`     | `parse_validate` / `validate_array` / `pack` / `frames_for`; every check runs before native code, failures are `WireError(code)`                                                     |
+| `encoder.py`  | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)`                                                                                                                   |
 | `receiver.py` | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises |
 
 ## Wire format

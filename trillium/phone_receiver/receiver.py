@@ -14,7 +14,9 @@ from .encoder import PhoneEncoder
 
 class Result(NamedTuple):
     ok: bool
-    error: str | None = None  # stable code on failure (WireError.code, or "engine_error")
+    error: str | None = (
+        None  # stable code on failure (WireError.code, or "engine_error")
+    )
     frames: int = 0
     n_pcm: int = 0
 
@@ -33,7 +35,9 @@ class PhoneReceiver:
             em = wire.parse_validate(buf)
         except wire.WireError as e:
             return self._count(Result(False, e.code))
-        except Exception:  # noqa: BLE001 - nothing malformed may reach the engine or escape
+        except (
+            Exception
+        ):  # noqa: BLE001 - nothing malformed may reach the engine or escape
             return self._count(Result(False, "invalid"))
         try:
             self._feed(em)

@@ -20,7 +20,9 @@ import wave
 
 import numpy as np
 
-REPO = os.environ.get("PHONE_LAB_REPO") or os.path.abspath(os.path.join(os.path.dirname(globals().get("__file__", ".")), "..", ".."))
+REPO = os.environ.get("PHONE_LAB_REPO") or os.path.abspath(
+    os.path.join(os.path.dirname(globals().get("__file__", ".")), "..", "..")
+)
 if REPO not in sys.path:
     sys.path.insert(0, REPO)
 
@@ -89,15 +91,29 @@ try:
         ref = wait()
         want = summarize(ref)
         em = np.ascontiguousarray(ref["_emission"])
-        assert em.shape[0] == wire.frames_for(len(pcm)), ("T formula", len(pcm), em.shape[0], wire.frames_for(len(pcm)))
-        row = {"wav": os.path.basename(path), "words": [w[0] for w in want["words"]], "reject": want["reject"], "n_pcm": len(pcm), "T": em.shape[0]}
+        assert em.shape[0] == wire.frames_for(len(pcm)), (
+            "T formula",
+            len(pcm),
+            em.shape[0],
+            wire.frames_for(len(pcm)),
+        )
+        row = {
+            "wav": os.path.basename(path),
+            "words": [w[0] for w in want["words"]],
+            "reject": want["reject"],
+            "n_pcm": len(pcm),
+            "T": em.shape[0],
+        }
         for fp16 in (False, True):
             got.clear()
             t0 = time.perf_counter()
             res = rx.handle(wire.pack(em, len(pcm), 1.25, fp16))
             assert res.ok, res
             have = summarize(wait())
-            row["fp16" if fp16 else "fp32"] = {"equal": have == want, "ms": round((time.perf_counter() - t0) * 1000, 2)}
+            row["fp16" if fp16 else "fp32"] = {
+                "equal": have == want,
+                "ms": round((time.perf_counter() - t0) * 1000, 2),
+            }
             if have != want:
                 mismatches += 1
                 row["diff"] = {"want": want, "have": have}
@@ -110,7 +126,13 @@ try:
     for n in list(range(600, 40000, 1021)) + [1, 2, 479, 480, 481, 1000]:
         got.clear()
         try:
-            lab._on_audio_frame(((np.random.default_rng(n).normal(0, 0.05, n)).astype(np.float32)).tolist(), 1.0, pad=True)
+            lab._on_audio_frame(
+                (
+                    (np.random.default_rng(n).normal(0, 0.05, n)).astype(np.float32)
+                ).tolist(),
+                1.0,
+                pad=True,
+            )
             t = wait()["_emission"].shape[0]
         except Exception as e:  # noqa: BLE001
             geom_bad.append((n, type(e).__name__, wire.frames_for(n)))
@@ -122,13 +144,17 @@ try:
     # malformed battery: every one rejected, decoder never called, engine encoder untouched
     em = np.ascontiguousarray(ref["_emission"])
     n_pcm, T = len(pcm), em.shape[0]
-    nan = em.copy(); nan[0, 0] = np.nan
-    inf = em.copy(); inf[1, 1] = np.inf
-    big = em.copy(); big[2, 2] = 1e6
+    nan = em.copy()
+    nan[0, 0] = np.nan
+    inf = em.copy()
+    inf[1, 1] = np.inf
+    big = em.copy()
+    big[2, 2] = 1e6
     good = wire.pack(em, n_pcm, 1.25)
     battery = {
         "wrong_magic": b"XXXX" + good[4:],
-        "transposed_29xT_header": wire.HEADER.pack(wire.MAGIC, 0, 0, 0, 29, n_pcm, 0.0) + em.T.copy().tobytes(),
+        "transposed_29xT_header": wire.HEADER.pack(wire.MAGIC, 0, 0, 0, 29, n_pcm, 0.0)
+        + em.T.copy().tobytes(),
         "transposed_trimmed": wire.pack(em.T[:, :5].copy(), n_pcm, 0.0),
         "nan": wire.pack(nan, n_pcm, 0.0),
         "inf": wire.pack(inf, n_pcm, 0.0),
@@ -158,6 +184,17 @@ try:
         "median_fp32_ms": float(np.median([r["fp32"]["ms"] for r in rows])),
     }
     P("SUMMARY", json.dumps(summary))
-    P("PASS" if (len(rows) >= 20 and not mismatches and not geom_bad and not leaks and after_bad == before and alive) else "FAIL")
+    P(
+        "PASS"
+        if (
+            len(rows) >= 20
+            and not mismatches
+            and not geom_bad
+            and not leaks
+            and after_bad == before
+            and alive
+        )
+        else "FAIL"
+    )
 except Exception:
     P("EXC", traceback.format_exc().replace("\n", " | ")[-1500:])

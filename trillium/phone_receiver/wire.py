@@ -86,7 +86,9 @@ def parse_validate(buf: bytes) -> Emission:
     if not math.isfinite(ts) or ts < 0:
         raise WireError("bad_ts", repr(ts))
     if T != frames_for(n_pcm):
-        raise WireError("frame_mismatch", f"T={T} n_pcm={n_pcm} want {frames_for(n_pcm)}")
+        raise WireError(
+            "frame_mismatch", f"T={T} n_pcm={n_pcm} want {frames_for(n_pcm)}"
+        )
     dtype = _DTYPES[dt]
     want = HEADER.size + T * TOKENS * dtype.itemsize
     if n != want:
@@ -110,7 +112,9 @@ def validate_array(a, n_pcm: int | None = None) -> np.ndarray:
     if not 1 <= T <= MAX_FRAMES:
         raise WireError("bad_frame_count", str(T))
     if n_pcm is not None and T != frames_for(n_pcm):
-        raise WireError("frame_mismatch", f"T={T} n_pcm={n_pcm} want {frames_for(n_pcm)}")
+        raise WireError(
+            "frame_mismatch", f"T={T} n_pcm={n_pcm} want {frames_for(n_pcm)}"
+        )
     if not np.isfinite(a).all():
         raise WireError("non_finite")
     if np.abs(a).max() >= MAX_ABS:
