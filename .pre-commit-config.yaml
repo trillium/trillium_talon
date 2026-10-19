@@ -50,6 +50,10 @@ repos:
     hooks:
       - id: talonfmt
         args: ["--in-place"]
+        # Manual-only: pre-commit.ci skips it (see `ci:` below), so a plain local
+        # `pre-commit run --all-files` must skip it too. Run on demand with
+        # `pre-commit run talonfmt --all-files`.
+        stages: [manual]
 
 ci:
   skip: [talonfmt]
