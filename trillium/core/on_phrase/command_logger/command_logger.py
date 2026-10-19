@@ -33,6 +33,7 @@ mod.setting(
 def _logging_enabled() -> bool:
     return bool(settings.get("user.command_logger_enabled", True))
 
+
 COMMANDS_RECORDINGS_DIR = Path.home() / ".talon" / "recordings" / "commands"
 COMMANDS_JSONL = Path.home() / ".talon" / "recordings" / "command_history.jsonl"
 

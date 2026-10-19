@@ -12,7 +12,10 @@ from talon import Module, scope, settings
 # Load command_logger.py alone: its sibling import (analyze_phrase) drags in native engine types.
 _DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "trillium", "core", "on_phrase", "command_logger",
+    "trillium",
+    "core",
+    "on_phrase",
+    "command_logger",
 )
 
 
@@ -48,14 +51,21 @@ def sink(monkeypatch, tmp_path):
     writes = []
     monkeypatch.setattr(cl, "_write_jsonl", lambda payload: writes.append(payload))
     monkeypatch.setattr(cl, "COMMANDS_RECORDINGS_DIR", tmp_path / "commands")
-    monkeypatch.setattr(scope, "get", lambda key, default=None: {"command"} if key == "mode" else default, raising=False)
+    monkeypatch.setattr(
+        scope,
+        "get",
+        lambda key, default=None: {"command"} if key == "mode" else default,
+        raising=False,
+    )
     monkeypatch.setitem(type(settings)._values, SETTING, True)
     return writes, tmp_path
 
 
 def phrase():
     word = SimpleNamespace(text="page", start=0.0, end=0.1)
-    cmd = SimpleNamespace(phrase="page down", rule="page down", code="", path="", line=1, captures=[])
+    cmd = SimpleNamespace(
+        phrase="page down", rule="page down", code="", path="", line=1, captures=[]
+    )
     return SimpleNamespace(phrase="page down", words=[word], commands=[cmd], audio=None)
 
 
