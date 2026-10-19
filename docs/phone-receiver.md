@@ -5,13 +5,13 @@ padding, decode, rejection and `phrase` dispatch, replacing only the encoder cal
 `trillium/phone_receiver/`. Nothing here opens a socket or registers with `speech_system`. Work item 2 wires it to the
 live engine behind `user.phone_receiver_enabled` (default off); see "Live install" below.
 
-| File          | Role                                                                                                                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `wire.py`     | `parse_validate` / `validate_array` / `pack` / `frames_for`; every check runs before native code, failures are `WireError(code)`                                                     |
-| `encoder.py`  | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)`                                                                                                                   |
-| `live.py`     | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python. Refuses `disabled`, `record_all_on`, `no_engine`; otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
-| `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket |
-| `receiver.py` | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises |
+| File                     | Role                                                                                                                                                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wire.py`                | `parse_validate` / `validate_array` / `pack` / `frames_for`; every check runs before native code, failures are `WireError(code)`                                                                                                         |
+| `encoder.py`             | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)`                                                                                                                                                                       |
+| `live.py`                | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python. Refuses `disabled`, `record_all_on`, `no_engine`; otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
+| `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket                                      |
+| `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                     |
 
 ## Wire format
 

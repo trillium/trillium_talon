@@ -129,7 +129,9 @@ def test_engine_change_rebuilds_receiver():
 
 def test_glue_declares_setting_default_off(monkeypatch):
     calls = []
-    monkeypatch.setattr(Module, "setting", lambda self, name, **kw: calls.append((name, kw)))
+    monkeypatch.setattr(
+        Module, "setting", lambda self, name, **kw: calls.append((name, kw))
+    )
     spec = importlib.util.spec_from_file_location(
         "trillium.phone_receiver._glue_probe", GLUE_PATH
     )
