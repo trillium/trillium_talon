@@ -100,12 +100,12 @@ no-op (the live checkout predates `user.command_logger_enabled`; 2 calls swallow
 a private `W2lEngine` decoded two `say` wavs to emissions, `wire.parse_validate` passed in Python
 before any live call, then `user.phone_receiver_handle(payload)` on the live engine:
 
-| Step | Start state | Injected | Result |
-| ---- | ----------- | -------- | ------ |
-| A | sleep (`speech.enabled()` False) | `command mode` | `ok`, modes unchanged, `user.history_get(0)` unchanged |
-| B | woken from the REPL (`speech.enable()`, `user.command_mode()`), not injected | | `command` in modes |
-| C | command mode | `dictation mode` | `ok` in about 127 ms; `dictation` in modes, `command` out; `history_get(0)` = `dictation mode` |
-| D | dictation mode | `command mode` | `ok` in about 101 ms; `command` in modes, `dictation` out; `history_get(0)` = `command mode` |
+| Step | Start state                                                                  | Injected         | Result                                                                                         |
+| ---- | ---------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| A    | sleep (`speech.enabled()` False)                                             | `command mode`   | `ok`, modes unchanged, `user.history_get(0)` unchanged                                         |
+| B    | woken from the REPL (`speech.enable()`, `user.command_mode()`), not injected |                  | `command` in modes                                                                             |
+| C    | command mode                                                                 | `dictation mode` | `ok` in about 127 ms; `dictation` in modes, `command` out; `history_get(0)` = `dictation mode` |
+| D    | dictation mode                                                               | `command mode`   | `ok` in about 101 ms; `command` in modes, `dictation` out; `history_get(0)` = `command mode`   |
 
 Only the injection changed the mode in C and D, so Talon's own grammar matched the phrase and ran the
 command. The mode had already flipped when `phone_receiver_handle` returned: dispatch is synchronous.
