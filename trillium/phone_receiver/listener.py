@@ -7,8 +7,9 @@ tailnet address (see `netbind`) and nothing else.
 Order of checks, cheapest and least informative first, so a caller learns nothing it is not
 cleared for and no body is read before it is: path (404), method (405), auth (403),
 content type for the configured mode (415), rate (429), length headers (411/400/413), then
-the body itself (400), and only then the service, which validates in Python before any
-native call.
+the body itself (400), the body's wire format (422, validated here so a malformed body is
+refused before the runner, the main thread or the engine is involved), and only then the
+service, which validates again in Python before any native call.
 
 Auth has two forms, chosen by how the listener is served. With no `key` provider (the
 loopback case, fronted by `tailscale serve` if at all) it is the `Tailscale-User-Login`
@@ -209,6 +210,10 @@ class ListenerApi:
             ts = parse_ts(h.get(TS_HEADER), self._clock())
             if ts is None:
                 return _error(400, "bad_ts")
+        invalid = _wire_error(mode, body)
+        if invalid is not None:
+            return _error(422, invalid)
+        if mode == MODE_PCM:
             call = lambda: self._backend.pcm(body, ts)  # noqa: E731
         else:
             call = lambda: self._backend.emission(body)  # noqa: E731
@@ -219,6 +224,20 @@ class ListenerApi:
         except Exception:  # noqa: BLE001
             return _error(500, "internal")
         return _reply(reply, mode)
+
+
+def _wire_error(mode: str, body: bytes) -> str | None:
+    """The stable error code if `body` is not a valid payload for `mode`, else None. Never raises."""
+    try:
+        if mode == MODE_PCM:
+            wire.parse_pcm(body)
+        else:
+            wire.parse_validate(body)
+    except wire.WireError as exc:
+        return exc.code
+    except Exception:  # noqa: BLE001 - anything unparsable is the caller's fault, not a 500
+        return "invalid"
+    return None
 
 
 def _reply(r: Reply, mode: str) -> Response:
