@@ -900,7 +900,8 @@ def exploding_runner(fn):
 
 class TestMalformedBodiesAreNever500:
     """robots-foyk6: a malformed body is a 4xx decided in the listener, before the runner,
-    the main thread or the engine, so a failure there cannot turn it into a 500 `internal`."""
+    the main thread or the engine, so a failure there cannot turn it into a 500 `internal`.
+    """
 
     @staticmethod
     def api(mode="emission", key=KEY):
