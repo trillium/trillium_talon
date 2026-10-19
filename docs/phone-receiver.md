@@ -1,9 +1,10 @@
-# Phone receiver (work items 1 and 2)
+# Phone receiver (work items 1, 2, 4 Mac side and 5)
 
 Accepts a phone-computed acoustic emission (`TPE1`) and runs it through a `W2lEngine`'s own
 padding, decode, rejection and `phrase` dispatch, replacing only the encoder call. Code:
-`trillium/phone_receiver/`. Nothing here opens a socket or registers with `speech_system`. Work item 2 wires it to the
-live engine behind `user.phone_receiver_enabled` (default off); see "Live install" below.
+`trillium/phone_receiver/`. The decoder path opens no socket and registers nothing with `speech_system`. Work item 2 wires it to the
+live engine behind `user.phone_receiver_enabled` (default off); see "Live install" below. Work items 4 (Mac side) and 5
+add a loopback HTTP listener and a PCM fallback on the same switch; see "Listener" below.
 
 | File                     | Role                                                                                                                                                                                                                                     |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -11,6 +12,9 @@ live engine behind `user.phone_receiver_enabled` (default off); see "Live instal
 | `encoder.py`             | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)`                                                                                                                                                                       |
 | `live.py`                | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python. Refuses `disabled`, `record_all_on`, `no_engine`; otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
 | `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket                                      |
+| `service.py`             | `PhoneService`: one call per utterance, returns `Reply(ok, error, text, reject, ms)`. `PhraseTap` is the `phrase` listener it captures the call's own phrase with                                                                        |
+| `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a loopback-only worker-pool server for `POST /emission`                                                                                                                                  |
+| `parity.py`              | Parity harness: both paths on the same audio through `ListenerApi`, phrase output diffed                                                                                                                                                 |
 | `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                     |
 
 ## Wire format
@@ -120,3 +124,105 @@ a speech-disabled drop from a grammar miss; a phrase from the sleep grammar (`we
 means "decoded and dispatched", not "a command ran". Restored and diffed afterwards: Talon PID,
 `~/.talon/recordings` mtime, both `settings.talon` hashes, live checkout HEAD and `git status`
 all identical; the live host went back to sleep mode as found.
+
+## Listener (work items 4 Mac side and 5)
+
+`POST /emission`, one utterance per request, on **`127.0.0.1:7403`** (checked free with `lsof`;
+the palette feed holds 7399/7401). `listener.start` refuses any non-loopback host. The only way in
+from the network is a `tailscale serve` mapping, which does not exist yet (see below).
+
+The server starts only when `user.phone_receiver_enabled` is on at Talon's `ready` (or at a module
+reload: touch `phone_receiver_live.py`); with it off no socket is opened. The gate is also checked
+per request, so turning it off later answers `503 disabled` until the next reload stops the socket.
+
+| Setting                              | Default    | Meaning                                                                                                         |
+| ------------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------- |
+| `user.phone_receiver_enabled`        | `false`    | Existing gate; also decides whether the listener starts                                                         |
+| `user.phone_receiver_allowed_logins` | `""`       | Comma or space separated `Tailscale-User-Login` values. Empty denies everyone; `*` is a literal, not a wildcard |
+| `user.phone_receiver_mode`           | `emission` | `emission` (TPE1 body) or `pcm` (PCM16 body). Read per request, so flipping it needs no reload                  |
+
+Declare them in a `.talon` `settings():` block, e.g. `user.phone_receiver_allowed_logins = "trillium@example.com"`
+(the repo's `settings.talon` does not set any; the default is closed).
+
+Request: `Content-Type` per mode, `Content-Length` required, body at most 65536 bytes. Checks run
+in this order and stop at the first failure, before the body is read until step 5:
+
+| Step | Check                                            | Failure                                                                                 |
+| ---- | ------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| 1    | path is `/emission`, method is `POST`            | `404 not_found`, `405 method_not_allowed`                                               |
+| 2    | `Tailscale-User-Login` is in the allow-list      | `403 forbidden` (missing, wrong and empty-list are indistinguishable)                   |
+| 3    | mode is `emission` or `pcm`; content type        | `503 bad_mode`; `415 unsupported_media_type` (names the type wanted)                    |
+| 4    | rate: 10 per second per server                   | `429 rate_limited` + `Retry-After`                                                      |
+| 5    | `Content-Length` present, not chunked, <= 64 KiB | `411 length_required`, `400 bad_content_length`, `413 body_too_large` (nothing read)    |
+| 6    | body read in full                                | `400 truncated_body`                                                                    |
+| 7    | `wire.parse_validate` / `wire.parse_pcm`         | `422 <wire code>` (`bad_magic`, `frame_mismatch`, `non_finite`, `pcm_odd_length`, ...)  |
+| 8    | live gate                                        | `503 disabled`, `503 record_all_on`, `503 no_engine`; `500 engine_error`; `504 timeout` |
+
+Success: `200 {"ok":true,"mode":"emission","text":"page down","reject":false,"ms":6.9,"frames":43}`.
+`text` is the dispatched phrase's words; it is `null` if no phrase event arrived within 0.5 s of the
+call (the call still ran). `ms` is the time inside the engine call, not network time. Every error is
+`{"ok":false,"error":<code>,"ms"?}`. The handler never raises into Talon: a bug is `500 internal`.
+
+The phone runs on Talon's main thread (`cron.after("0ms")`, the palette feed's `run_scheduled`),
+because a command can drive UI and keys; a call that does not finish in 5 s answers `504`.
+
+**Identity is a convention, not a credential.** The socket is loopback only, and `tailscale serve`
+sets `Tailscale-User-Login` itself on requests that arrive over the tailnet. Any process on this
+Mac can POST its own value, which is the same boundary the palette feed has. The `record_all` and
+body-validation gates still apply.
+
+## PCM fallback (seam c)
+
+With `user.phone_receiver_mode = "pcm"` the same endpoint wants
+`Content-Type: audio/L16; rate=16000; channels=1` (raw little-endian int16, 16 kHz mono) and optional
+`X-Utterance-Ts: <seconds>` (default: now). The Mac hands the samples to `engine._on_audio_frame(pcm,
+ts, pad=True)` with the engine's own encoder, so frontend and acoustic model run locally and nothing
+is swapped. Anything the engine does after that (decode, reject, `phrase`) is the same code as the
+emission path. `emission` mode refuses PCM and `pcm` mode refuses TPE1 with `415`.
+
+Limits: 1600 samples minimum (100 ms), and the 64 KiB cap means **at most 32768 samples, about 2.05
+s of audio**, so a longer utterance answers `413`. The cap is the brief's hard limit; raise
+`wire.MAX_PAYLOAD_BYTES` for PCM only if longer fallback utterances are needed. `record_all` refuses
+PCM too, since it would write the phone's real audio to `~/.talon/recordings`.
+
+## Parity harness
+
+`parity.run_parity(post, set_mode, utterances, emit)` posts each utterance twice through the same
+`ListenerApi`, flipping only the mode, and compares `(ok, text, reject)`. `emit(samples)` is the
+phone's acoustic model; the PCM path receives the same int16-quantized samples. `Report.identical`
+is false for an empty set or any difference, and `Report.format()` prints one line per utterance.
+
+- `python -m pytest .tests/test_phone_listener.py`: policy, malformed bodies, oversize, identity, content
+  type, real loopback socket, and the harness against a fake engine (including that it flags a phone
+  model that disagrees).
+- `.tests/lab/phone_listener_lab.py`: same harness on a private `W2lEngine` in the Talon REPL, using the
+  engine's own emission as the phone's. It loads this checkout's modules under a private `phlab` name,
+  because a bare `trillium.*` import in Talon's REPL resolves to the live checkout. Run it as the receiver lab, with `PHONE_LAB_REPO` set as a REPL variable
+  (it wins over any `PHONE_LAB_REPO` env var already in Talon's environment):
+
+  ```
+  printf '%s\n' "exec(\"PHONE_LAB_REPO='$PWD'\nPHONE_LAB_DIR='/path/to/wavs'\nexec(open('$PWD/.tests/lab/phone_listener_lab.py').read())\")" | ~/.talon/bin/repl
+  ```
+
+  Last run (2026-10-19): 22 `say` utterances, `22/22 identical` for fp32 and for fp16 emissions;
+  one request of each kind over a real loopback socket returned `page down` (emission 6.9 ms, PCM 39 ms);
+  9 malformed bodies (6 emission, 3 PCM) accepted 0 times with 0 decoder calls; the engine kept serving and
+  its encoder was restored.
+
+Not run live: the listener was not installed in the live Talon (`~/.talon/user/trillium_talon`), so the
+live `phrase` event's shape through `speech_system.register` and the main-thread hop are covered by
+the lab (private engine) and the stub tests only. See the live test notes above for how to do it with
+`speech.record_all = 0` and `user.command_logger_enabled = 0`.
+
+## Tailscale serve (captain approval pending: NOT created)
+
+No `tailscale serve` mapping was created or changed. When approved, the captain runs:
+
+```
+tailscale serve --bg --https=7403 http://127.0.0.1:7403
+```
+
+That publishes `https://macbook.hippo-tilapia.ts.net:7403/emission` to the tailnet only (not Funnel),
+terminates TLS (so iOS needs no ATS exception), and adds `Tailscale-User-Login` for the calling
+user. To remove it: `tailscale serve --https=7403 off`. Check `tailscale serve status` first: other
+mappings already use ports 4173, 4175, 4242 and 11434, and `7403` is unused.

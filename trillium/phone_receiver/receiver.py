@@ -5,6 +5,7 @@ rejection and `phrase` dispatch are the engine's own code. The engine is passed 
 caller (a private lab engine for now); this module never reaches for `speech_system`.
 """
 
+import math
 import threading
 from typing import Any, NamedTuple
 
@@ -46,6 +47,28 @@ class PhoneReceiver:
         except Exception:  # noqa: BLE001
             return self._count(Result(False, "engine_error"))
         return self._count(Result(True, None, em.array.shape[0], em.n_pcm))
+
+    def handle_pcm(self, buf: bytes, ts: float = 0.0) -> Result:
+        """Seam (c): feed 16 kHz mono PCM16 to the engine's own encoder. Never raises.
+
+        The engine runs its frontend and acoustic model on the samples exactly as it does for
+        a microphone frame; nothing is swapped. Only the length and type can be wrong, and
+        `wire.parse_pcm` checks both before the engine is touched.
+        """
+        try:
+            pcm = wire.parse_pcm(buf)
+            if not (isinstance(ts, float) and math.isfinite(ts) and ts >= 0):
+                raise wire.WireError("bad_ts", repr(ts))
+        except wire.WireError as e:
+            return self._count(Result(False, e.code))
+        except Exception:  # noqa: BLE001
+            return self._count(Result(False, "invalid"))
+        try:
+            with self.engine.lock:
+                self.engine._on_audio_frame(pcm.tolist(), ts, pad=True)
+        except Exception:  # noqa: BLE001
+            return self._count(Result(False, "engine_error"))
+        return self._count(Result(True, None, wire.frames_for(len(pcm)), len(pcm)))
 
     def _feed(self, em: wire.Emission) -> None:
         eng = self.engine
