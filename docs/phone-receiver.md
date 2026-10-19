@@ -1,14 +1,16 @@
-# Phone receiver (work item 1, private lab engine only)
+# Phone receiver (work items 1 and 2)
 
 Accepts a phone-computed acoustic emission (`TPE1`) and runs it through a `W2lEngine`'s own
 padding, decode, rejection and `phrase` dispatch, replacing only the encoder call. Code:
-`trillium/phone_receiver/`. Nothing here opens a socket, registers with `speech_system`,
-or changes a setting; wiring it to the live engine is a later, separate step (default off).
+`trillium/phone_receiver/`. Nothing here opens a socket or registers with `speech_system`. Work item 2 wires it to the
+live engine behind `user.phone_receiver_enabled` (default off); see "Live install" below.
 
 | File          | Role                                                                                                                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `wire.py`     | `parse_validate` / `validate_array` / `pack` / `frames_for`; every check runs before native code, failures are `WireError(code)`                                                     |
 | `encoder.py`  | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)`                                                                                                                   |
+| `live.py`     | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python. Refuses `disabled`, `record_all_on`, `no_engine`; otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
+| `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket |
 | `receiver.py` | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises |
 
 ## Wire format
@@ -43,3 +45,27 @@ frames). The lab script checks the formula against the real encoder over a lengt
   or `LAB FAIL` plus a summary. Last run: 20 utterances (13 with words, 7 rejected by the
   engine) equal to the Mac-model reference for fp32 and fp16, 13 malformed payloads rejected
   with zero decoder calls, median 6.9 ms per utterance.
+
+## Live install (work item 2)
+
+`actions.user.phone_receiver_handle(payload)` is the only entry point; a transport (work item 4)
+will call it. The engine is looked up per call (`speech_system.engine.engine`), so an engine
+switch needs no reload.
+
+- **Off (default):** returns `disabled`, never touches the engine.
+- **On:** validates in Python, then swaps the phone encoder in under `engine.lock` for the one
+  injected utterance and restores the mic encoder in a `finally`. Microphone frames use the
+  engine's own encoder before and after; there is no persistent swap to undo when the setting
+  flips.
+- **`speech.record_all` on:** returns `record_all_on` and does nothing. The injected audio is
+  all zeros, and the engine would write a silent recording per utterance.
+
+The repo's `settings.talon` sets `speech.record_all = 1`, and Talon has no public runtime
+setter for it, so a live injection needs it set to 0 first (edit the live `settings.talon`
+or an override `.talon` file, then restore).
+
+Live evidence (Talon REPL, real engine, no injection): off gives `disabled`; on with the live
+`record_all = 1` gives `record_all_on`; a valid payload through a proxy that exposes the live
+engine's `lock` and `encoder` but a spy `_on_audio_frame` swaps in `PhoneEncoder`, calls once,
+and restores the original `W2lOrtEncoder`; 8 malformed payloads are all refused with zero
+engine calls; Talon's PID unchanged.
