@@ -122,6 +122,7 @@ Talon is a voice-coding framework with a custom Python runtime. Key concepts:
 - `actions.mimic` did nothing while the macOS session was locked (`CGSSessionScreenIsLocked`), even from the REPL. Verify mimic-driven code with the screen unlocked.
 - `~/.talon` is itself a git repo; keep secrets in `~/.config/...`, not under `~/.talon`.
 - A private `W2lEngine` (`W2lEngine(info=live._model_info)`, never registered) is the safe target for decoder experiments; a wrongly shaped array handed to the native decoder aborts Talon. The phone-emission receiver and its lab script are in `docs/phone-receiver.md`; the encoder frame count is `ceil(((n_pcm+8000-400)//160+1)/3)`.
+- The live Talon loads `~/.talon/user/trillium_talon`, a separate checkout from any task worktree, and `settings.talon` there sets `speech.record_all = 1` (Talon has no public runtime setter). Anything that injects audio-less utterances (`trillium/phone_receiver/`) refuses while it is on; never touch `~/.talon/recordings`.
 
 ## Maintaining this file
 
