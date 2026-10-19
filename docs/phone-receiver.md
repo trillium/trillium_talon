@@ -69,3 +69,20 @@ Live evidence (Talon REPL, real engine, no injection): off gives `disabled`; on 
 engine's `lock` and `encoder` but a spy `_on_audio_frame` swaps in `PhoneEncoder`, calls once,
 and restores the original `W2lOrtEncoder`; 8 malformed payloads are all refused with zero
 engine calls; Talon's PID unchanged.
+
+### End-to-end live injection (verified 2026-10-19)
+
+With `user.phone_receiver_enabled = 1` and `speech.record_all = 0` (temporary override file,
+removed after), one synthetic TTS emission through `user.phone_receiver_handle` returned `ok`,
+and `page down` reached `speech_system`'s `pre:phrase`/`phrase`/`post:phrase` listeners and
+`user.history_get(0)`. The mic encoder was restored, and the malformed payloads were still refused
+before any native call.
+
+**Gate that hid it for a while: a locked macOS session.** While `CGSSessionScreenIsLocked` is true,
+`SpeechSystem.engine_event` drops every phrase silently: the inner engine decodes and dispatches,
+`EngineProxy._redispatch` calls `engine_event('phrase', proxy, j)`, and it returns `None` with no
+listener called. The same happens for mic frames and for `actions.mimic`. Run any live injection
+with the screen unlocked, and check `Quartz.CGSessionCopyCurrentDictionary()` first.
+
+Injected phrases are logged like spoken ones by `command_logger`; set
+`user.command_logger_enabled = 0` for a test run so nothing is appended to `~/.talon/recordings`.
