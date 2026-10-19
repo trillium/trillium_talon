@@ -1,10 +1,13 @@
 """Talon glue: the `user.phone_receiver_enabled` gate, one action to hand a TPE1 payload to the
-live engine, and the loopback HTTP listener (`POST /emission`) that calls the same path.
+live engine, and the HTTP listener (`POST /emission`) that calls the same path.
 Settings and Python only: no voice commands, no recordings.
 
-The listener binds `127.0.0.1:7403` only, and only when the gate is on at Talon's `ready`
-(or at module reload); with the gate off no socket is opened. It answers 403 unless
-`Tailscale-User-Login` is in `user.phone_receiver_allowed_logins` (empty denies all).
+The listener starts only when the gate is on at Talon's `ready` (or at module reload); with
+the gate off no socket is opened. `user.phone_receiver_bind` picks where: `127.0.0.1` (the
+default) or this Mac's tailnet address from `tailscale ip -4`; any other value is refused and
+no socket is opened. On loopback it answers 403 unless `Tailscale-User-Login` is in
+`user.phone_receiver_allowed_logins` (empty denies all). On the tailnet it answers 403 unless
+`X-Talon-Phone-Key` matches the secret in `~/.config/talon-phone/key`, created 0600 if missing.
 `user.phone_receiver_mode` picks the body it accepts: `emission` (TPE1) or `pcm` (seam c).
 
 The setting defaults to off. With it off `user.phone_receiver_handle` returns `disabled`
@@ -19,11 +22,12 @@ import types
 from talon import Module, app, cron, settings, speech_system
 
 from ..palette_feed.dispatch import run_scheduled
-from . import listener
+from . import keyfile, listener, netbind
 from .live import LiveInstall
 from .service import PhoneService, PhraseTap
 
 SETTING = "user.phone_receiver_enabled"
+DEFAULT_BIND = "127.0.0.1"
 
 mod = Module()
 
@@ -50,9 +54,18 @@ mod.setting(
     desc="Comma or space separated Tailscale logins (the Tailscale-User-Login header) "
     "allowed to POST to the phone listener. Empty denies everyone; there is no wildcard.",
 )
+mod.setting(
+    "phone_receiver_bind",
+    type=str,
+    default=DEFAULT_BIND,
+    desc="Address the phone listener binds: 127.0.0.1 (default, identity-header auth) or this "
+    "Mac's tailnet address from `tailscale ip -4` (shared-secret auth, plain HTTP over the "
+    "tailnet). Anything else is refused and the listener stays off. Read at start or reload.",
+)
 
 MODE_SETTING = "user.phone_receiver_mode"
 ALLOWED_SETTING = "user.phone_receiver_allowed_logins"
+BIND_SETTING = "user.phone_receiver_bind"
 DISPATCH_TIMEOUT_S = 5.0
 
 
@@ -100,6 +113,15 @@ def start_listener():
         _holder.tap = None
     if not _enabled():
         return
+    try:
+        plan = netbind.resolve_bind(settings.get(BIND_SETTING) or DEFAULT_BIND)
+        key = keyfile.ensure_key() if plan.tailnet else None
+    except (netbind.BindError, keyfile.KeyFileError) as exc:
+        print(f"phone_listener: not started: {exc}")  # never carries the key itself
+        return
+    except Exception as exc:  # noqa: BLE001 - nothing may escape into Talon's ready callback
+        print(f"phone_listener: not started: {type(exc).__name__}")
+        return
     speech_system.register("phrase", _tap.on_phrase)
     _holder.tap = _tap.on_phrase
     api = listener.ListenerApi(
@@ -107,17 +129,20 @@ def start_listener():
         lambda: settings.get(MODE_SETTING),
         lambda: settings.get(ALLOWED_SETTING),
         runner=_on_main_thread,
+        key=(lambda: key) if key is not None else None,
     )
     try:
-        _holder.server, _ = listener.start(api, listener.DEFAULT_PORT)
-    except OSError as exc:
+        _holder.server, _ = listener.start(api, listener.DEFAULT_PORT, plan.host)
+    except (OSError, netbind.BindError) as exc:
         print(
-            f"phone_listener: cannot bind 127.0.0.1:{listener.DEFAULT_PORT}: {exc.strerror}"
+            f"phone_listener: cannot bind {plan.host}:{listener.DEFAULT_PORT}: "
+            f"{getattr(exc, 'strerror', None) or exc}"
         )
         return
     print(
-        f"phone_listener: listening on 127.0.0.1:{listener.DEFAULT_PORT} "
-        f"(mode {settings.get(MODE_SETTING)})"
+        f"phone_listener: listening on {plan.host}:{listener.DEFAULT_PORT} "
+        f"({'tailnet, key auth' if plan.tailnet else 'loopback, identity auth'}; "
+        f"mode {settings.get(MODE_SETTING)})"
     )
 
 

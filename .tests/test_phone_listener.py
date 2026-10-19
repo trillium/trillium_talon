@@ -18,7 +18,7 @@ from talon import Module
 
 from trillium.palette_feed.dispatch import DispatchTimeout
 from trillium.palette_feed.limits import RateLimiter
-from trillium.phone_receiver import listener, parity, wire
+from trillium.phone_receiver import keyfile, listener, netbind, parity, wire
 from trillium.phone_receiver.encoder import PhoneEncoder
 from trillium.phone_receiver.live import LiveInstall
 from trillium.phone_receiver.service import PhoneService, PhraseTap, Reply
@@ -89,7 +89,9 @@ class FakeEngine:
 class Rig:
     """FakeEngine + LiveInstall + PhoneService + ListenerApi, with a mutable mode and allow-list."""
 
-    def __init__(self, enabled=True, record_all=False, mode="emission", allowed=LOGIN):
+    def __init__(
+        self, enabled=True, record_all=False, mode="emission", allowed=LOGIN, key=None
+    ):
         self.engine = FakeEngine()
         self.state = {"enabled": enabled, "record_all": record_all}
         self.mode = mode
@@ -107,6 +109,7 @@ class Rig:
             lambda: self.mode,
             lambda: self.allowed,
             limiter=RateLimiter(1000, 1.0),
+            key=(lambda: key) if key is not None else None,
         )
 
     def post(self, body, ctype=None, login=LOGIN, extra=None, length=None):
@@ -339,11 +342,14 @@ MALFORMED = {
     "truncated": lambda: emission_body()[:-3],
     "trailing_byte": lambda: emission_body() + b"\0",
     "t_zero": lambda: wire.HEADER.pack(wire.MAGIC, 0, 0, 0, 0, 0, 0.0),
-    "t_huge": lambda: wire.HEADER.pack(wire.MAGIC, 0, 0, 0, 2**32 - 1, 0, 0.0)
-    + b"\0" * 8,
+    "t_huge": lambda: (
+        wire.HEADER.pack(wire.MAGIC, 0, 0, 0, 2**32 - 1, 0, 0.0) + b"\0" * 8
+    ),
     "t_mismatch": lambda: wire.pack(fake_acoustic(np.zeros(N_PCM + 5000)), N_PCM, 1.0),
-    "transposed": lambda: wire.HEADER.pack(wire.MAGIC, 0, 0, 0, 29, N_PCM, 0.0)
-    + fake_acoustic(np.zeros(N_PCM)).T.copy().tobytes(),
+    "transposed": lambda: (
+        wire.HEADER.pack(wire.MAGIC, 0, 0, 0, 29, N_PCM, 0.0)
+        + fake_acoustic(np.zeros(N_PCM)).T.copy().tobytes()
+    ),
     "nan": lambda: _with(lambda a: a.__setitem__((0, 0), np.nan)),
     "inf": lambda: _with(lambda a: a.__setitem__((1, 1), np.inf)),
     "huge_value": lambda: _with(lambda a: a.__setitem__((2, 2), 1e6)),
@@ -529,7 +535,7 @@ class TestRealSocket:
     @pytest.mark.parametrize("host", ["0.0.0.0", "100.74.138.74", "::", "macbook"])
     def test_refuses_non_loopback_bind(self, rig, host):
         with pytest.raises(ValueError):
-            listener.start(rig.api, 0, host)
+            listener.start(rig.api, 0, host, assigned=lambda: [])
 
     def test_post_emission_round_trip(self, server):
         srv, rig = server
@@ -597,6 +603,289 @@ class TestRealSocket:
         [t.start() for t in threads]
         [t.join(10) for t in threads]
         assert sorted(out) == [200] * 6 and rig.engine.encoder is rig.engine.mic_encoder
+
+
+KEY = "k" * 43
+OTHER_KEY = "z" * 43
+KEYHDR = {keyfile.HEADER: KEY}
+
+
+class TestKeyAuth:
+    """Tailnet form of auth: the shared secret replaces the Tailscale identity header."""
+
+    @pytest.fixture
+    def krig(self):
+        return Rig(key=KEY)
+
+    def test_right_key_is_served_and_identity_header_is_not_needed(self, krig):
+        r = krig.post(emission_body(), login=None, extra=KEYHDR)
+        assert r.status == 200 and krig.engine.calls == 1
+
+    def test_header_name_is_case_insensitive(self, krig):
+        r = krig.post(emission_body(), login=None, extra={"X-TALON-PHONE-KEY": KEY})
+        assert r.status == 200
+
+    @pytest.mark.parametrize(
+        "presented",
+        [None, "", " ", OTHER_KEY, KEY[:-1], KEY + "x", KEY.upper(), "a" * 5000],
+    )
+    def test_wrong_or_missing_key_is_403_and_the_body_is_unread(self, krig, presented):
+        h = {"Content-Type": TPE1, "Content-Length": "10"}
+        if presented is not None:
+            h[keyfile.HEADER] = presented
+        r = krig.api.handle("POST", "/emission", h, ExplodingBody())
+        assert (r.status, r.body["error"]) == (403, "forbidden")
+        assert krig.engine.calls == 0
+
+    def test_identity_header_does_not_substitute_for_the_key(self, krig):
+        r = krig.post(emission_body(), login=LOGIN)  # allowed login, no key
+        assert r.status == 403 and krig.engine.calls == 0
+
+    def test_identity_is_ignored_even_when_the_key_is_right(self):
+        rig = Rig(key=KEY, allowed="")  # empty allow-list would deny in identity mode
+        assert rig.post(emission_body(), login=None, extra=KEYHDR).status == 200
+
+    def test_key_header_is_ignored_in_identity_mode(self, rig):
+        r = rig.post(emission_body(), login=None, extra=KEYHDR)
+        assert r.status == 403
+
+    @pytest.mark.parametrize("key", ["", "short", None])
+    def test_an_unusable_server_key_denies_everyone(self, key):
+        api = listener.ListenerApi(
+            object(), lambda: "emission", lambda: LOGIN, key=lambda: key
+        )
+        h = {"Content-Type": TPE1, keyfile.HEADER: key or ""}
+        assert api.handle("POST", "/emission", h, None).status == 403
+
+    def test_non_ascii_header_value_is_a_403_not_a_crash(self, krig):
+        r = krig.post(
+            emission_body(), login=None, extra={keyfile.HEADER: "k\u00e9\ud800"}
+        )
+        assert r.status == 403
+
+    def test_oversize_and_malformed_still_apply_after_a_good_key(self, krig):
+        h = {
+            "Content-Type": TPE1,
+            "Content-Length": str(wire.MAX_PAYLOAD_BYTES + 1),
+            **KEYHDR,
+        }
+        assert krig.api.handle("POST", "/emission", h, ExplodingBody()).status == 413
+        assert krig.post(b"junk", login=None, extra=KEYHDR).status == 422
+        assert krig.engine.calls == 0
+
+    def test_the_key_never_appears_in_any_response(self, krig):
+        for presented in (KEY, OTHER_KEY):
+            r = krig.post(b"junk", login=None, extra={keyfile.HEADER: presented})
+            assert KEY not in json.dumps(r.body) and KEY not in str(r.headers)
+
+
+def _ip(text):
+    import ipaddress
+
+    return ipaddress.IPv4Address(text)
+
+
+class TestTailnetBind:
+    ASSIGNED = staticmethod(lambda: [_ip("100.74.138.74")])
+
+    @pytest.mark.parametrize(
+        "host",
+        [
+            "0.0.0.0",
+            "::",
+            "::1",
+            "192.168.1.20",
+            "10.0.0.5",
+            "172.16.0.1",
+            "100.63.255.255",  # just below 100.64.0.0/10
+            "100.128.0.0",  # just above it
+            "100.74.138.75",  # tailnet range, but not assigned to this Mac
+            "127.0.0.2",
+            "127.1",
+            "localhost",
+            "macbook.hippo-tilapia.ts.net",
+            "",
+            "   ",
+            "100.74.138.74/32",
+            "100.74.138.74:7403",
+            None,
+            7,
+        ],
+    )
+    def test_refused(self, host):
+        with pytest.raises(netbind.BindError):
+            netbind.resolve_bind(host, self.ASSIGNED)
+
+    def test_loopback_is_accepted_without_asking_tailscale(self):
+        def boom():
+            raise AssertionError("loopback must not shell out")
+
+        assert netbind.resolve_bind("127.0.0.1", boom) == netbind.BindPlan(
+            "127.0.0.1", False
+        )
+        assert netbind.resolve_bind(" 127.0.0.1 ", boom).host == "127.0.0.1"
+
+    def test_assigned_tailnet_address_is_accepted_and_flags_key_auth(self):
+        plan = netbind.resolve_bind("100.74.138.74", self.ASSIGNED)
+        assert plan == netbind.BindPlan("100.74.138.74", True)
+
+    @pytest.mark.parametrize("edge", ["100.64.0.0", "100.127.255.255"])
+    def test_range_edges_are_inside_when_assigned(self, edge):
+        assert netbind.resolve_bind(edge, lambda: [_ip(edge)]).tailnet
+
+    def test_start_refuses_before_any_socket_exists(self, rig):
+        for host in ("0.0.0.0", "192.168.1.20", "100.74.138.75"):
+            with pytest.raises(netbind.BindError):
+                listener.start(Rig(key=KEY).api, 0, host, assigned=self.ASSIGNED)
+
+    def test_start_refuses_a_tailnet_bind_with_identity_auth(self, rig):
+        with pytest.raises(netbind.BindError):
+            listener.start(rig.api, 0, "100.74.138.74", assigned=self.ASSIGNED)
+
+    def test_binding_an_address_that_vanished_is_an_oserror_not_a_crash(self):
+        # Claimed assigned, but the OS has no such interface: the bind itself fails cleanly.
+        with pytest.raises(OSError):
+            listener.start(
+                Rig(key=KEY).api,
+                0,
+                "100.100.100.100",
+                assigned=lambda: [_ip("100.100.100.100")],
+            )
+
+    def test_tailscale_failures_mean_no_assigned_address(self, monkeypatch):
+        import subprocess
+
+        monkeypatch.setattr(
+            netbind, "_tailscale_binary", lambda: "/nonexistent/tailscale"
+        )
+
+        def boom(*a, **k):
+            raise subprocess.TimeoutExpired("tailscale", 3)
+
+        monkeypatch.setattr(netbind.subprocess, "run", boom)
+        assert netbind.tailnet_addresses() == frozenset()
+        monkeypatch.setattr(netbind, "_tailscale_binary", lambda: None)
+        assert netbind.tailnet_addresses() == frozenset()
+
+    def test_tailscale_output_is_filtered_to_the_tailnet_range(self, monkeypatch):
+        class Out:
+            returncode = 0
+            stdout = "100.74.138.74\n192.168.1.5\nnot-an-ip\n8.8.8.8\n"
+
+        monkeypatch.setattr(netbind, "_tailscale_binary", lambda: "/x/tailscale")
+        monkeypatch.setattr(netbind.subprocess, "run", lambda *a, **k: Out())
+        assert netbind.tailnet_addresses() == frozenset({_ip("100.74.138.74")})
+
+
+class TestKeyFile:
+    def test_ensure_creates_a_private_file_and_load_reads_it_back(self, tmp_path):
+        path = tmp_path / "talon-phone" / "key"
+        key = keyfile.ensure_key(str(path))
+        assert len(key) >= keyfile.MIN_KEY_LEN
+        assert (path.stat().st_mode & 0o777) == 0o600
+        assert (path.parent.stat().st_mode & 0o777) == 0o700
+        assert keyfile.load_key(str(path)) == key
+
+    def test_ensure_never_overwrites_an_existing_key(self, tmp_path):
+        path = tmp_path / "key"
+        first = keyfile.ensure_key(str(path))
+        assert keyfile.ensure_key(str(path)) == first
+
+    def test_group_readable_key_is_refused(self, tmp_path):
+        path = tmp_path / "key"
+        path.write_text(KEY)
+        os.chmod(path, 0o640)
+        with pytest.raises(keyfile.KeyFileError, match="chmod 600"):
+            keyfile.load_key(str(path))
+
+    def test_symlinked_and_short_and_missing_keys_are_refused(self, tmp_path):
+        real = tmp_path / "real"
+        real.write_text(KEY)
+        os.chmod(real, 0o600)
+        link = tmp_path / "link"
+        link.symlink_to(real)
+        with pytest.raises(keyfile.KeyFileError):
+            keyfile.load_key(str(link))
+        short = tmp_path / "short"
+        short.write_text("abc")
+        os.chmod(short, 0o600)
+        with pytest.raises(keyfile.KeyFileError):
+            keyfile.load_key(str(short))
+        with pytest.raises(keyfile.KeyFileError):
+            keyfile.load_key(str(tmp_path / "missing"))
+
+    def test_a_key_inside_a_git_repo_is_refused(self, tmp_path):
+        (tmp_path / ".git").mkdir()
+        with pytest.raises(keyfile.KeyFileError, match="git repository"):
+            keyfile.ensure_key(str(tmp_path / "key"))
+        assert not (tmp_path / "key").exists()
+
+    def test_default_path_is_outside_any_repo(self):
+        path = os.path.expanduser(keyfile.KEY_PATH)
+        assert path.endswith(os.path.join(".config", "talon-phone", "key"))
+        assert keyfile.find_repo_root(path) is None or not keyfile.is_within(
+            path, keyfile.find_repo_root(path)
+        )
+
+    def test_errors_and_cli_never_contain_the_key(self, tmp_path, capsys):
+        path = tmp_path / "key"
+        key = keyfile.ensure_key(str(path))
+        os.chmod(path, 0o644)
+        with pytest.raises(keyfile.KeyFileError) as err:
+            keyfile.load_key(str(path))
+        assert key not in str(err.value)
+        os.chmod(path, 0o600)
+        assert keyfile.main([str(path)]) == 0
+        out = capsys.readouterr()
+        assert key not in out.out + out.err and str(path) in out.out
+
+    def test_matches_is_exact_and_bounded(self):
+        assert keyfile.matches(KEY, KEY)
+        assert not keyfile.matches(KEY + " ", KEY)
+        assert not keyfile.matches("", KEY) and not keyfile.matches(None, KEY)
+        assert not keyfile.matches(
+            KEY, "short"
+        )  # an unusable server key matches nothing
+
+
+class TestRealSocketKeyAuth:
+    @pytest.fixture
+    def server(self):
+        rig = Rig(key=KEY)
+        srv, _ = listener.start(rig.api, 0)  # loopback socket, key-authenticated api
+        try:
+            yield srv, rig
+        finally:
+            listener.stop(srv)
+
+    def call(self, srv, headers, body=b""):
+        conn = http.client.HTTPConnection("127.0.0.1", srv.server_address[1], timeout=5)
+        conn.request("POST", "/emission", body=body, headers=headers)
+        resp = conn.getresponse()
+        data = resp.read()
+        conn.close()
+        return resp.status, json.loads(data)
+
+    def test_key_round_trip_wrong_key_oversize_and_malformed(self, server):
+        srv, rig = server
+        base = {"Content-Type": TPE1}
+        good = self.call(srv, {**base, **KEYHDR}, emission_body())
+        assert good[0] == 200 and good[1]["ok"]
+        for headers in (
+            base,
+            {**base, keyfile.HEADER: OTHER_KEY},
+            {**base, "Tailscale-User-Login": LOGIN},
+        ):
+            assert self.call(srv, headers, emission_body())[0] == 403
+        assert (
+            self.call(srv, {**base, **KEYHDR}, b"\0" * 70000)[1]["error"]
+            == "body_too_large"
+        )
+        assert self.call(srv, {**base, **KEYHDR}, b"junk")[1]["error"] == "short_header"
+        assert rig.engine.calls == 1
+        assert (
+            self.call(srv, {**base, **KEYHDR}, emission_body())[0] == 200
+        )  # still serving
 
 
 def make_utterances(n=20):
