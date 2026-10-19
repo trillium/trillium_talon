@@ -86,3 +86,37 @@ with the screen unlocked, and check `Quartz.CGSessionCopyCurrentDictionary()` fi
 
 Injected phrases are logged like spoken ones by `command_logger`; set
 `user.command_logger_enabled = 0` for a test run so nothing is appended to `~/.talon/recordings`.
+
+### Injected emission executes a command (verified 2026-10-19)
+
+The earlier test showed `page down` reaching `speech_system` listeners and history, but no
+observable effect. This one uses existing commands that change Talon's mode, read back with
+`scope.get("mode")`: `dictation mode` / `command mode` (`core/modes/command_and_dictation_mode.talon`,
+which call `user.dictation_mode()` / `user.command_mode()`). No voice command or grammar was added.
+
+Procedure: screen unlocked, temp override `.talon` (`user.phone_receiver_enabled = 1`,
+`speech.record_all = 0`) removed afterwards, `command_logger._write_jsonl` swapped for an in-memory
+no-op (the live checkout predates `user.command_logger_enabled`; 2 calls swallowed, original restored),
+a private `W2lEngine` decoded two `say` wavs to emissions, `wire.parse_validate` passed in Python
+before any live call, then `user.phone_receiver_handle(payload)` on the live engine:
+
+| Step | Start state                                                                  | Injected         | Result                                                                                         |
+| ---- | ---------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| A    | sleep (`speech.enabled()` False)                                             | `command mode`   | `ok`, modes unchanged, `user.history_get(0)` unchanged                                         |
+| B    | woken from the REPL (`speech.enable()`, `user.command_mode()`), not injected |                  | `command` in modes                                                                             |
+| C    | command mode                                                                 | `dictation mode` | `ok` in about 127 ms; `dictation` in modes, `command` out; `history_get(0)` = `dictation mode` |
+| D    | dictation mode                                                               | `command mode`   | `ok` in about 101 ms; `command` in modes, `dictation` out; `history_get(0)` = `command mode`   |
+
+Only the injection changed the mode in C and D, so Talon's own grammar matched the phrase and ran the
+command. The mode had already flipped when `phone_receiver_handle` returned: dispatch is synchronous.
+Seam: `phone_receiver_handle` -> `PhoneReceiver.handle` -> `engine._on_audio_frame` (phone encoder) ->
+inner `W2lEngine` decode -> `EngineProxy._redispatch` -> `SpeechSystem.engine_event` -> `Executor.run_phrase`
+(native, so a Python class spy cannot see it; the mode change and history entry are the evidence).
+
+Limits: the command mode and dictation mode paths are shown. In sleep mode (A) the phrase had no
+effect and no history entry, but `command mode` is not in the sleep grammar, so this does not tell
+a speech-disabled drop from a grammar miss; a phrase from the sleep grammar (`welcome back` calls
+`user.mouse_wake()`) was not injected. `phone_receiver_handle` returns `ok` in sleep mode, so `ok`
+means "decoded and dispatched", not "a command ran". Restored and diffed afterwards: Talon PID,
+`~/.talon/recordings` mtime, both `settings.talon` hashes, live checkout HEAD and `git status`
+all identical; the live host went back to sleep mode as found.
