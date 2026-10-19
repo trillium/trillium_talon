@@ -19,6 +19,7 @@ TOKENS = 29
 MAX_FRAMES = 1200
 MAX_PAYLOAD_BYTES = 65536
 MAX_ABS = 1e4
+MIN_PCM_SAMPLES = 1600  # 100 ms; nothing shorter is an utterance, and it keeps the encoder away from degenerate lengths
 PAD_SAMPLES = 4000
 WINDOW_SAMPLES = 400  # 25 ms analysis window
 HOP_SAMPLES = 160  # 10 ms hop
@@ -95,6 +96,24 @@ def parse_validate(buf: bytes) -> Emission:
         raise WireError("body_length", f"{n} != {want}")
     a = np.frombuffer(buf, dtype, T * TOKENS, HEADER.size).astype(np.float32)
     return Emission(validate_array(a.reshape(T, TOKENS)), n_pcm, ts)
+
+
+def parse_pcm(buf) -> np.ndarray:
+    """Validate a PCM16 body (16 kHz mono, little-endian) and return float32 samples in [-1, 1).
+
+    The seam (c) fallback hands these to the engine's own encoder, so the only things that
+    can be wrong are the length and the type; every int16 value is a valid sample.
+    """
+    if not isinstance(buf, (bytes, bytearray, memoryview)):
+        raise WireError("not_bytes", type(buf).__name__)
+    n = len(buf)
+    if n > MAX_PAYLOAD_BYTES:
+        raise WireError("payload_too_large", f"{n} > {MAX_PAYLOAD_BYTES}")
+    if n % 2:
+        raise WireError("pcm_odd_length", str(n))
+    if n // 2 < MIN_PCM_SAMPLES:
+        raise WireError("pcm_too_short", f"{n // 2} < {MIN_PCM_SAMPLES} samples")
+    return np.frombuffer(buf, "<i2").astype(np.float32) / 32768.0
 
 
 def validate_array(a, n_pcm: int | None = None) -> np.ndarray:

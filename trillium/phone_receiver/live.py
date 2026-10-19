@@ -68,20 +68,29 @@ class LiveInstall:
                 return True
         return False
 
-    def handle(self, buf: bytes) -> Result:
-        """Never raises. Refuses unless the setting is on and `speech.record_all` is off."""
+    def _gated(self, run: Callable[[PhoneReceiver], Result]) -> Result:
+        """Run `run(receiver)` only if the setting is on and `speech.record_all` is off."""
         try:
             if not self._is_enabled():
                 self.heal()
                 return Result(False, "disabled")
-            # Injected audio is all zeros; with record_all on the engine would write a
-            # silent recording per utterance, so refuse rather than touch the recordings.
+            # Injected audio is all zeros (and PCM is the phone's real audio); with record_all
+            # on the engine would write a recording per utterance, so refuse rather than
+            # touch the recordings.
             if self._record_all():
                 return Result(False, "record_all_on")
             engine = self._engine()
             if engine is None:
                 return Result(False, "no_engine")
             self.heal()
-            return self._receiver_for(engine).handle(buf)
+            return run(self._receiver_for(engine))
         except Exception:  # noqa: BLE001
             return Result(False, "engine_error")
+
+    def handle(self, buf: bytes) -> Result:
+        """Never raises. Refuses unless the setting is on and `speech.record_all` is off."""
+        return self._gated(lambda rx: rx.handle(buf))
+
+    def handle_pcm(self, buf: bytes, ts: float = 0.0) -> Result:
+        """Seam (c) twin of `handle`: same gate, PCM16 body, the engine's own encoder."""
+        return self._gated(lambda rx: rx.handle_pcm(buf, ts))
