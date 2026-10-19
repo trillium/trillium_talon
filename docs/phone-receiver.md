@@ -13,9 +13,9 @@ add an HTTP listener (loopback, or this Mac's tailnet address with a shared-secr
 | `live.py`                | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python. Refuses `disabled`, `record_all_on`, `no_engine`; otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
 | `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket                                      |
 | `service.py`             | `PhoneService`: one call per utterance, returns `Reply(ok, error, text, reject, ms)`. `PhraseTap` is the `phrase` listener it captures the call's own phrase with                                                                        |
-| `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a worker-pool server for `POST /emission` that binds loopback or an assigned tailnet address only                                                                                                                                  |
-| `netbind.py`             | `resolve_bind(host)`: accepts only `127.0.0.1` or a `100.64.0.0/10` address that `tailscale ip -4` lists as assigned to this Mac; `BindError` otherwise                                                                                    |
-| `keyfile.py`             | The shared secret: `ensure_key` / `load_key` (0600 file outside any repo), `matches` (constant-time). `python -m trillium.phone_receiver.keyfile` creates it and prints only the path                                                       |
+| `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a worker-pool server for `POST /emission` that binds loopback or an assigned tailnet address only                                                                                        |
+| `netbind.py`             | `resolve_bind(host)`: accepts only `127.0.0.1` or a `100.64.0.0/10` address that `tailscale ip -4` lists as assigned to this Mac; `BindError` otherwise                                                                                  |
+| `keyfile.py`             | The shared secret: `ensure_key` / `load_key` (0600 file outside any repo), `matches` (constant-time). `python -m trillium.phone_receiver.keyfile` creates it and prints only the path                                                    |
 | `parity.py`              | Parity harness: both paths on the same audio through `ListenerApi`, phrase output diffed                                                                                                                                                 |
 | `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                     |
 
@@ -138,12 +138,12 @@ The server starts only when `user.phone_receiver_enabled` is on at Talon's `read
 reload: touch `phone_receiver_live.py`); with it off no socket is opened. The gate is also checked
 per request, so turning it off later answers `503 disabled` until the next reload stops the socket.
 
-| Setting                              | Default    | Meaning                                                                                                         |
-| ------------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------- |
-| `user.phone_receiver_enabled`        | `false`    | Existing gate; also decides whether the listener starts                                                         |
+| Setting                              | Default     | Meaning                                                                                                                                                                           |
+| ------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user.phone_receiver_enabled`        | `false`     | Existing gate; also decides whether the listener starts                                                                                                                           |
 | `user.phone_receiver_bind`           | `127.0.0.1` | `127.0.0.1` or an address from `tailscale ip -4`. Anything else (`0.0.0.0`, LAN, hostname, an unassigned tailnet address) is refused and no socket opens. Read at start or reload |
-| `user.phone_receiver_allowed_logins` | `""`       | Loopback bind only: comma or space separated `Tailscale-User-Login` values. Empty denies everyone; `*` is a literal, not a wildcard |
-| `user.phone_receiver_mode`           | `emission` | `emission` (TPE1 body) or `pcm` (PCM16 body). Read per request, so flipping it needs no reload                  |
+| `user.phone_receiver_allowed_logins` | `""`        | Loopback bind only: comma or space separated `Tailscale-User-Login` values. Empty denies everyone; `*` is a literal, not a wildcard                                               |
+| `user.phone_receiver_mode`           | `emission`  | `emission` (TPE1 body) or `pcm` (PCM16 body). Read per request, so flipping it needs no reload                                                                                    |
 
 Declare them in a `.talon` `settings():` block, e.g. `user.phone_receiver_allowed_logins = "trillium@example.com"`
 (the repo's `settings.talon` does not set any; the default is closed).
@@ -151,16 +151,16 @@ Declare them in a `.talon` `settings():` block, e.g. `user.phone_receiver_allowe
 Request: `Content-Type` per mode, `Content-Length` required, body at most 65536 bytes. Checks run
 in this order and stop at the first failure, before the body is read until step 5:
 
-| Step | Check                                            | Failure                                                                                 |
-| ---- | ------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| 1    | path is `/emission`, method is `POST`            | `404 not_found`, `405 method_not_allowed`                                               |
-| 2    | auth: tailnet bind `X-Talon-Phone-Key` matches the key file; loopback bind `Tailscale-User-Login` is in the allow-list | `403 forbidden` (missing, wrong and empty-list are indistinguishable) |
-| 3    | mode is `emission` or `pcm`; content type        | `503 bad_mode`; `415 unsupported_media_type` (names the type wanted)                    |
-| 4    | rate: 10 per second per server                   | `429 rate_limited` + `Retry-After`                                                      |
-| 5    | `Content-Length` present, not chunked, <= 64 KiB | `411 length_required`, `400 bad_content_length`, `413 body_too_large` (nothing read)    |
-| 6    | body read in full                                | `400 truncated_body`                                                                    |
-| 7    | `wire.parse_validate` / `wire.parse_pcm`         | `422 <wire code>` (`bad_magic`, `frame_mismatch`, `non_finite`, `pcm_odd_length`, ...)  |
-| 8    | live gate                                        | `503 disabled`, `503 record_all_on`, `503 no_engine`; `500 engine_error`; `504 timeout` |
+| Step | Check                                                                                                                  | Failure                                                                                 |
+| ---- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 1    | path is `/emission`, method is `POST`                                                                                  | `404 not_found`, `405 method_not_allowed`                                               |
+| 2    | auth: tailnet bind `X-Talon-Phone-Key` matches the key file; loopback bind `Tailscale-User-Login` is in the allow-list | `403 forbidden` (missing, wrong and empty-list are indistinguishable)                   |
+| 3    | mode is `emission` or `pcm`; content type                                                                              | `503 bad_mode`; `415 unsupported_media_type` (names the type wanted)                    |
+| 4    | rate: 10 per second per server                                                                                         | `429 rate_limited` + `Retry-After`                                                      |
+| 5    | `Content-Length` present, not chunked, <= 64 KiB                                                                       | `411 length_required`, `400 bad_content_length`, `413 body_too_large` (nothing read)    |
+| 6    | body read in full                                                                                                      | `400 truncated_body`                                                                    |
+| 7    | `wire.parse_validate` / `wire.parse_pcm`                                                                               | `422 <wire code>` (`bad_magic`, `frame_mismatch`, `non_finite`, `pcm_odd_length`, ...)  |
+| 8    | live gate                                                                                                              | `503 disabled`, `503 record_all_on`, `503 no_engine`; `500 engine_error`; `504 timeout` |
 
 Success: `200 {"ok":true,"mode":"emission","text":"page down","reject":false,"ms":6.9,"frames":43}`.
 `text` is the dispatched phrase's words; it is `null` if no phrase event arrived within 0.5 s of the

@@ -119,7 +119,9 @@ def start_listener():
     except (netbind.BindError, keyfile.KeyFileError) as exc:
         print(f"phone_listener: not started: {exc}")  # never carries the key itself
         return
-    except Exception as exc:  # noqa: BLE001 - nothing may escape into Talon's ready callback
+    except (
+        Exception
+    ) as exc:  # noqa: BLE001 - nothing may escape into Talon's ready callback
         print(f"phone_listener: not started: {type(exc).__name__}")
         return
     speech_system.register("phrase", _tap.on_phrase)
