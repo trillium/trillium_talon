@@ -110,7 +110,9 @@ def _owner():
     # may already be freed, which makes every `cron.after` from it raise `ResourceClosed`.
     try:
         return rctx.active() if rctx is not None else None
-    except Exception:  # noqa: BLE001 - an older Talon: fall back to the calling thread's context
+    except (
+        Exception
+    ):  # noqa: BLE001 - an older Talon: fall back to the calling thread's context
         return None
 
 

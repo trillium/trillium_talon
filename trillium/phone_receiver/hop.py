@@ -37,7 +37,9 @@ def main_thread(
             else:
                 with owner.enter():
                     after(job)
-        except Exception as exc:  # noqa: BLE001 - whatever the scheduler raised, the job did not run
+        except (
+            Exception
+        ) as exc:  # noqa: BLE001 - whatever the scheduler raised, the job did not run
             raise SchedulerUnavailable(type(exc).__name__) from exc
 
     return schedule
