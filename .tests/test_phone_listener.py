@@ -1386,6 +1386,23 @@ class TestFailureLog:
         assert len(lines) == 1 + faillog.MAX_FRAMES
         assert lines[-1].endswith(" in deep")
 
+    def test_frames_that_cannot_be_read_still_log_the_class(self, monkeypatch):
+        # Talon's interpreter hides `frame.f_code`; a frame walk must never lose the header.
+        def no_frames(*a, **k):
+            raise AttributeError("f_code")
+
+        monkeypatch.setattr(faillog.traceback, "extract_tb", no_frames)
+
+        def runner(fn):
+            raise KeyError(self.SECRET)
+
+        lines = []
+        _, api = self.api(runner, lines)
+        assert self.post(api).status == 500
+        assert lines[0].startswith("phone_listener: runner failed: KeyError")
+        assert "phone_listener:   (frames unavailable)" in lines
+        assert self.SECRET not in "\n".join(lines)
+
     def test_failure_before_the_runner_names_its_stage(self):
         class Dies:
             def read(self, n=-1):

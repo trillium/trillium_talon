@@ -28,6 +28,17 @@ def qualname(exc: BaseException) -> str:
     )
 
 
+def _frames(exc: BaseException) -> list[str]:
+    # `extract_tb`, not `walk_tb`: under Talon's interpreter a frame has no `f_code`.
+    try:
+        summary = traceback.extract_tb(exc.__traceback__)
+        return [
+            f"  {os.path.basename(f.filename)}:{f.lineno} in {f.name}" for f in summary
+        ]
+    except Exception:  # noqa: BLE001 - the class alone is still worth logging
+        return ["  (frames unavailable)"]
+
+
 def trace_lines(exc: BaseException) -> list[str]:
     """Class and frames of `exc`, then the same for the exception it was raised from."""
     lines: list[str] = []
@@ -36,12 +47,9 @@ def trace_lines(exc: BaseException) -> list[str]:
     while cur is not None and id(cur) not in seen and len(seen) < MAX_CHAIN:
         seen.add(id(cur))
         lines.append(f"{'raised' if len(seen) == 1 else 'from'} {qualname(cur)}")
-        frames = [
-            f"  {os.path.basename(frame.f_code.co_filename)}:{lineno} in {frame.f_code.co_name}"
-            for frame, lineno in traceback.walk_tb(cur.__traceback__)
-        ]
-        lines.extend(frames[-MAX_FRAMES:])
-        cur = cur.__cause__ or cur.__context__
+        lines.extend(_frames(cur)[-MAX_FRAMES:])
+        nxt = cur.__cause__
+        cur = nxt if nxt is not None else cur.__context__
     return lines
 
 
