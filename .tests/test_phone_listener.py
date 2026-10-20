@@ -21,7 +21,12 @@ from trillium.palette_feed.limits import RateLimiter
 from trillium.phone_receiver import keyfile, listener, netbind, parity, wire
 from trillium.phone_receiver.encoder import PhoneEncoder
 from trillium.phone_receiver.live import LiveInstall
-from trillium.phone_receiver.service import PhoneService, PhraseTap, Reply
+from trillium.phone_receiver.service import (
+    UNREADABLE,
+    PhoneService,
+    PhraseTap,
+    Reply,
+)
 
 LOGIN = "trillium@example.com"
 TPE1 = listener.CONTENT_TYPES[listener.MODE_EMISSION]
@@ -61,6 +66,13 @@ class FakeMicEncoder:
         return e.reshape(1, 1, *e.shape)
 
 
+class FakeCapture:
+    """The bit of a Talon `Capture` the outcome reads: its rule name."""
+
+    def __init__(self, name):
+        self._name = name
+
+
 class FakeEngine:
     """The W2lEngine seam: `_on_audio_frame` -> `encoder.forward` -> decode -> `phrase`."""
 
@@ -71,6 +83,11 @@ class FakeEngine:
         self.calls = 0
         self.listeners = []
         self.boom = False
+        self.forced = None  # (text, reject) to decode instead of the fake model's
+        self.parsed = (
+            None  # list of FakeCapture, or None to omit `parsed` from the event
+        )
+        self.raw_event = None  # an event dict to dispatch verbatim
 
     def register(self, event, cb):
         self.listeners.append(cb)
@@ -80,8 +97,12 @@ class FakeEngine:
         if self.boom:
             raise RuntimeError("decoder fell over")
         em = self.encoder.forward(samples)[0, 0]
-        text, reject = fake_decode(em)
+        text, reject = self.forced or fake_decode(em)
         j = {"phrase": text.split(), "_metadata": {"reject": reject}}
+        if self.parsed is not None:
+            j["parsed"] = self.parsed
+        if self.raw_event is not None:
+            j = self.raw_event
         for cb in self.listeners:
             cb(j)
 
@@ -96,7 +117,8 @@ class Rig:
         self.state = {"enabled": enabled, "record_all": record_all}
         self.mode = mode
         self.allowed = allowed
-        self.tap = PhraseTap()
+        self.awake = True
+        self.tap = PhraseTap(awake=lambda: self.awake)
         self.engine.register("phrase", self.tap.on_phrase)
         install = LiveInstall(
             lambda: self.engine,
@@ -511,8 +533,165 @@ class TestRobustness:
         tap = PhraseTap()
         with tap.capture(0.01) as get:
             tap.on_phrase({"unexpected": 1})
-            assert get() is None
+            assert get() is UNREADABLE
         tap.on_phrase(None)  # no capture active: ignored, never raises
+
+
+OLD_200_KEYS = {"ok", "mode", "text", "reject", "ms", "frames"}
+NEW_200_KEYS = {"status", "why", "kind", "commands", "total_ms"}
+
+
+def ran(rig, text="page down", parsed=("user.cmd",), reject=False):
+    rig.engine.forced = (text, reject)
+    rig.engine.parsed = [FakeCapture(n) for n in parsed]
+    return rig.post(emission_body())
+
+
+class TestOutcome:
+    """The reply says what Talon did with the utterance, from the `phrase` event alone."""
+
+    def test_command_ran(self, rig):
+        r = ran(rig)
+        assert r.status == 200
+        b = r.body
+        assert (b["status"], b["why"], b["kind"], b["commands"]) == (
+            "ran",
+            None,
+            "command",
+            1,
+        )
+        assert b["text"] == "page down" and b["reject"] is False
+
+    def test_chained_commands_count_every_rule(self, rig):
+        b = ran(rig, "page down page up", ("user.a", "user.b")).body
+        assert (b["status"], b["kind"], b["commands"]) == ("ran", "command", 2)
+
+    def test_dictation_catch_all_runs_when_awake(self, rig):
+        b = ran(rig, "hello there", ("___ltphrase_gt__",)).body
+        assert (b["status"], b["kind"], b["commands"]) == ("ran", "dictation", 1)
+
+    def test_dictation_catch_all_is_ignored_asleep(self, rig):
+        rig.awake = False
+        b = ran(rig, "hello there", ("___ltphrase_gt__",)).body
+        assert (b["status"], b["why"], b["kind"]) == ("ignored", "asleep", "dictation")
+        assert b["text"] == "hello there"
+
+    def test_a_real_command_asleep_still_ran(self, rig):
+        rig.awake = False  # the sleep grammar's own commands (e.g. wake) match here
+        b = ran(rig, "welcome back", ("user.wake",)).body
+        assert (b["status"], b["kind"]) == ("ran", "command")
+
+    def test_awake_probe_failure_is_not_a_failure(self, rig):
+        def boom():
+            raise RuntimeError("no talon")
+
+        rig.tap._awake = boom
+        b = ran(rig, "hello", ("___ltphrase_gt__",)).body
+        assert (b["status"], b["kind"]) == ("ran", "dictation")
+
+    def test_engine_reject_is_ignored(self, rig):
+        r = ran(rig, "", reject=True)
+        assert r.status == 200
+        assert (r.body["status"], r.body["why"]) == ("ignored", "rejected")
+        assert r.body["reject"] is True and r.body["text"] == ""
+
+    def test_phrase_with_no_parse_is_ignored(self, rig):
+        rig.engine.forced = ("mumble", False)  # event has no `parsed`
+        b = rig.post(emission_body()).body
+        assert (b["status"], b["why"], b["kind"], b["commands"]) == (
+            "ignored",
+            "no_match",
+            "unknown",
+            0,
+        )
+
+    def test_empty_phrase_is_ignored(self, rig):
+        b = ran(rig, "").body
+        assert (b["status"], b["why"]) == ("ignored", "empty")
+
+    def test_no_phrase_event_is_ignored(self, rig):
+        rig.engine.listeners.clear()
+        b = rig.post(emission_body()).body
+        assert (b["status"], b["why"], b["kind"], b["commands"]) == (
+            "ignored",
+            "no_phrase",
+            "unknown",
+            0,
+        )
+        assert b["text"] is None and b["reject"] is None
+
+    def test_unreadable_phrase_event_is_error(self, rig):
+        rig.engine.raw_event = {"unexpected": 1}
+        r = rig.post(emission_body())
+        assert r.status == 200
+        assert (r.body["status"], r.body["why"]) == ("error", "unreadable_phrase")
+        assert r.body["text"] is None
+
+    def test_pcm_mode_carries_the_same_fields(self, pcm_rig):
+        pcm_rig.engine.forced = ("page down", False)
+        pcm_rig.engine.parsed = [FakeCapture("user.cmd")]
+        b = pcm_rig.post(pcm_body()).body
+        assert (b["mode"], b["status"], b["kind"]) == ("pcm", "ran", "command")
+
+    def test_total_ms_is_the_handoff_to_reply_time(self, rig):
+        ticks = iter([10.0, 10.25])
+        rig.api._timer = lambda: next(ticks)
+        assert ran(rig).body["total_ms"] == 250.0
+
+    def test_added_fields_only_and_old_ones_keep_their_types(self, rig):
+        b = ran(rig).body
+        assert set(b) == OLD_200_KEYS | NEW_200_KEYS
+        assert b["ok"] is True and b["mode"] == "emission"
+        assert isinstance(b["ms"], float) and isinstance(b["frames"], int)
+        assert isinstance(b["total_ms"], float) and b["total_ms"] >= 0
+
+    def test_reply_is_small(self, rig):
+        r = ran(rig)
+        assert len(json.dumps(r.body, separators=(",", ":"))) < 256
+
+    def test_long_text_is_capped_and_marked(self, rig):
+        long = " ".join(["word"] * 400)
+        b = ran(rig, long).body
+        assert len(b["text"]) == listener.MAX_TEXT_CHARS
+        assert b["text_truncated"] is True and b["status"] == "ran"
+        assert "text_truncated" not in ran(rig).body
+
+    def test_old_clients_reading_old_fields_only_still_work(self, rig):
+        b = json.loads(json.dumps(ran(rig).body))
+        assert (b["ok"], b["text"], b["reject"]) == (True, "page down", False)
+
+    @pytest.mark.parametrize(
+        "make,status,error",
+        [
+            (
+                lambda r: r.post(emission_body(), login="nobody@example.com"),
+                403,
+                "forbidden",
+            ),
+            (
+                lambda r: r.post(emission_body(), ctype="text/plain"),
+                415,
+                "unsupported_media_type",
+            ),
+            (lambda r: r.post(b"\x00" * 40), 422, "bad_magic"),
+        ],
+    )
+    def test_4xx_bodies_are_unchanged(self, rig, make, status, error):
+        r = make(rig)
+        assert r.status == status and r.body["error"] == error
+        assert r.body["ok"] is False
+        assert not (set(r.body) & (NEW_200_KEYS | {"text", "reject", "frames"}))
+
+    def test_refusals_after_the_gate_are_unchanged(self):
+        rig = Rig(enabled=False)
+        r = rig.post(emission_body())
+        assert (r.status, r.body["error"]) == (503, "disabled")
+        assert set(r.body) == {"ok", "error", "ms"}
+        rig = Rig()
+        rig.engine.boom = True
+        r = rig.post(emission_body())
+        assert (r.status, r.body["error"]) == (500, "engine_error")
+        assert set(r.body) == {"ok", "error", "ms"}
 
 
 class TestRealSocket:

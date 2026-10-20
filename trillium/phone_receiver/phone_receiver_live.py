@@ -19,7 +19,7 @@ while `speech.record_all` is on (`record_all_on`). See docs/phone-receiver.md.
 import sys
 import types
 
-from talon import Module, app, cron, settings, speech_system
+from talon import Module, actions, app, cron, settings, speech_system
 
 from ..palette_feed.dispatch import run_scheduled
 from . import keyfile, listener, netbind
@@ -88,7 +88,7 @@ def _record_all() -> bool:
 # Hot reload re-executes this module; the install holds no threads or sockets, so a fresh
 # one per load is enough.
 _install = LiveInstall(_engine, _enabled, _record_all)
-_tap = PhraseTap()
+_tap = PhraseTap(awake=lambda: actions.speech.enabled())
 _service = PhoneService(_install, _tap)
 
 # Hot reload re-executes this module, but Talon has no unload hook: the listener and the

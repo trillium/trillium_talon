@@ -12,7 +12,7 @@ add an HTTP listener (loopback, or this Mac's tailnet address with a shared-secr
 | `encoder.py`             | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)`                                                                                                                                                                       |
 | `live.py`                | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python. Refuses `disabled`, `record_all_on`, `no_engine`; otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
 | `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket                                      |
-| `service.py`             | `PhoneService`: one call per utterance, returns `Reply(ok, error, text, reject, ms)`. `PhraseTap` is the `phrase` listener it captures the call's own phrase with                                                                        |
+| `service.py`             | `PhoneService`: one call per utterance, returns `Reply(ok, error, text, reject, ms, ..., kind, status, why, commands)`. `PhraseTap` is the `phrase` listener it captures the call's own phrase with                                      |
 | `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a worker-pool server for `POST /emission` that binds loopback or an assigned tailnet address only                                                                                        |
 | `netbind.py`             | `resolve_bind(host)`: accepts only `127.0.0.1` or a `100.64.0.0/10` address that `tailscale ip -4` lists as assigned to this Mac; `BindError` otherwise                                                                                  |
 | `keyfile.py`             | The shared secret: `ensure_key` / `load_key` (0600 file outside any repo), `matches` (constant-time). `python -m trillium.phone_receiver.keyfile` creates it and prints only the path                                                    |
@@ -162,13 +162,71 @@ in this order and stop at the first failure, before the body is read until step 
 | 7    | `wire.parse_validate` / `wire.parse_pcm`                                                                               | `422 <wire code>` (`bad_magic`, `frame_mismatch`, `non_finite`, `pcm_odd_length`, ...)  |
 | 8    | live gate                                                                                                              | `503 disabled`, `503 record_all_on`, `503 no_engine`; `500 engine_error`; `504 timeout` |
 
-Success: `200 {"ok":true,"mode":"emission","text":"page down","reject":false,"ms":6.9,"frames":43}`.
-`text` is the dispatched phrase's words; it is `null` if no phrase event arrived within 0.5 s of the
-call (the call still ran). `ms` is the time inside the engine call, not network time. Every error is
-`{"ok":false,"error":<code>,"ms"?}`. The handler never raises into Talon: a bug is `500 internal`.
+Success: `200 {"ok":true,"mode":"emission","text":"page down","reject":false,"ms":6.9,"frames":43,"status":"ran","why":null,"kind":"command","commands":1,"total_ms":8.1}`
+(see "Reply fields" below). Every error is `{"ok":false,"error":<code>,"ms"?}` and carries none of the
+outcome fields. The handler never raises into Talon: a bug is `500 internal`.
 
 The phone runs on Talon's main thread (`cron.after("0ms")`, the palette feed's `run_scheduled`),
 because a command can drive UI and keys; a call that does not finish in 5 s answers `504`.
+
+### Reply fields
+
+A `200` tells the phone what Talon did with the utterance. The first six fields are the original
+reply and are unchanged (`text` is now capped, see below); the rest were added and are always present on a `200`,
+so a client that ignores them keeps working. Non-200 bodies are untouched: `{"ok":false,"error":<code>,"ms"?}`
+only, so the phone treats `ok:false` as the error case.
+
+| Field            | Type             | Meaning                                                                                                                                              |
+| ---------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ok`             | `true`           | Always `true` on a `200`                                                                                                                             |
+| `mode`           | string           | `emission` or `pcm`                                                                                                                                  |
+| `text`           | string or null   | The words Talon decoded and dispatched, space-joined. `null` if no `phrase` event arrived within 0.5 s, or it could not be read. Capped, below       |
+| `reject`         | bool or null     | The engine's own reject flag for that decode; `null` when `text` is `null`                                                                           |
+| `ms`             | number           | Time inside the engine call (includes the up-to-0.5 s wait when no phrase arrives)                                                                   |
+| `frames`         | int              | Encoder frames fed                                                                                                                                   |
+| `status`         | string           | `ran`, `ignored` or `error` (below)                                                                                                                  |
+| `why`            | string or null   | `null` when `status` is `ran`; otherwise the reason (below)                                                                                          |
+| `kind`           | string           | `command`, `dictation` or `unknown` (below)                                                                                                          |
+| `commands`       | int              | How many rules the phrase parsed into (`0` for `unknown`); a chained phrase like `page down page up` is `2`                                          |
+| `total_ms`       | number           | Wall time from handing the utterance to Talon's main thread until the reply was built: includes the thread hop and any phrase wait, not network time |
+| `text_truncated` | `true`, optional | Present only when `text` was cut to 512 characters                                                                                                   |
+
+`status` and `why`:
+
+| `status`  | `why`               | When                                                                                                       |
+| --------- | ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `ran`     | `null`              | Talon matched the phrase and dispatched it. A script that then raises is not visible on the `phrase` event |
+| `ignored` | `no_phrase`         | The call ran but no `phrase` event arrived in 0.5 s (a locked macOS session drops them silently)           |
+| `ignored` | `rejected`          | The engine rejected the decode (`reject` is `true`)                                                        |
+| `ignored` | `empty`             | A `phrase` event with no words                                                                             |
+| `ignored` | `asleep`            | Speech is off and only the free-text catch-all rule matched, so nothing ran                                |
+| `ignored` | `no_match`          | The event had no `parsed` rules                                                                            |
+| `error`   | `unreadable_phrase` | A `phrase` event arrived but was not shaped like one                                                       |
+
+`kind` is read from the event's `parsed` list: `dictation` is the free-text catch-all rule (`<phrase>`,
+the rule `skip_phrase_in_sleep` also keys on) matched alone; `command` is any other matched rule, which
+includes prose rules in dictation mode, so `dictation` means "no command matched", not "text was typed";
+`unknown` is no `parsed` list or no event.
+
+How it is learned: only the `phrase` event the receiver's `PhraseTap` already registers on
+`speech_system` (`phrase`, `parsed`, `_metadata.reject`), plus `actions.speech.enabled()` read inside that
+same event for `asleep`. No new hook, grammar or voice command, nothing is written to
+`~/.talon/recordings`, and neither audio nor the shared key reaches the reply or the log.
+
+Size: every added field is a short enum, a count or a number, so a reply is about 150 bytes plus `text`.
+`text` is cut to 512 characters (`text_truncated: true`); a normal utterance is far under that.
+
+Example, `dictation mode` heard while awake: `{"ok":true,"mode":"emission","text":"dictation mode","reject":false,"ms":127.1,"frames":43,"status":"ran","why":null,"kind":"command","commands":1,"total_ms":128.4}`.
+Example, free text while asleep: `{"ok":true,...,"text":"hello there","status":"ignored","why":"asleep","kind":"dictation","commands":1,...}`.
+
+Not run live: the `parsed` list and `actions.speech.enabled()` were checked against the stubs and the
+repo's own use of them (`plugin/subtitles/on_phrase.py`), not against the live engine; the live Talon was not touched.
+
+**Could the palette feed carry this instead?** Only as a poll. `palette_feed/` (port 7399) has `GET /state`
+and `POST /execute`, but no per-utterance result, and `/execute` runs a typed phrase through `_sim`,
+not an injected emission. A "last utterance" endpoint would need a second connection, the feed's token
+(a second credential) and a way to match each result to the request that caused it. The reply to the
+same `POST /emission` is already correlated and costs no extra request, so it is the better carrier.
 
 **On loopback, identity is a convention, not a credential.** `Tailscale-User-Login` is only set by
 `tailscale serve`, which is not used here, so on the loopback bind any process on this Mac can POST
