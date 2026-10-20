@@ -449,8 +449,13 @@ class TestRobustness:
                 raise RuntimeError("x")
 
         api = listener.ListenerApi(Boom(), lambda: "emission", lambda: LOGIN)
-        h = {"Tailscale-User-Login": LOGIN, "Content-Type": TPE1, "Content-Length": "1"}
-        r = api.handle("POST", "/emission", h, io.BytesIO(b"x"))
+        body = emission_body()
+        h = {
+            "Tailscale-User-Login": LOGIN,
+            "Content-Type": TPE1,
+            "Content-Length": str(len(body)),
+        }
+        r = api.handle("POST", "/emission", h, io.BytesIO(body))
         assert (r.status, r.body["error"]) == (500, "internal")
 
     def test_settings_getter_exception_is_contained(self):
@@ -886,6 +891,111 @@ class TestRealSocketKeyAuth:
         assert (
             self.call(srv, {**base, **KEYHDR}, emission_body())[0] == 200
         )  # still serving
+
+
+def exploding_runner(fn):
+    """Stands in for a main-thread hop that fails (Talon busy, engine gone): any call is a 500."""
+    raise RuntimeError("the runner must not be reached for a malformed body")
+
+
+class TestMalformedBodiesAreNever500:
+    """robots-foyk6: a malformed body is a 4xx decided in the listener, before the runner,
+    the main thread or the engine, so a failure there cannot turn it into a 500 `internal`.
+    """
+
+    @staticmethod
+    def api(mode="emission", key=KEY):
+        rig = Rig(mode=mode, key=key)
+        rig.api = listener.ListenerApi(
+            rig.service,
+            lambda: rig.mode,
+            lambda: rig.allowed,
+            runner=exploding_runner,
+            limiter=RateLimiter(1000, 1.0),
+            key=(lambda: key) if key else None,
+        )
+        return rig
+
+    EMISSION = {
+        "one_byte": lambda: b"x",
+        "one_nul": lambda: b"\0",
+        "empty": lambda: b"",
+        "tiny_magic_only": lambda: b"TPE1",
+        "just_under_header": lambda: b"TPE1" + b"\0" * 19,
+        "garbage": lambda: np.random.default_rng(5).bytes(300),
+        "garbage_header_sized": lambda: np.random.default_rng(6).bytes(
+            wire.HEADER.size
+        ),
+        "truncated_mid_array": lambda: emission_body()[: wire.HEADER.size + 40],
+        "truncated_last_byte": lambda: emission_body()[:-1],
+        "wrong_dtype_byte": lambda: emission_body()[:4] + b"\x07" + emission_body()[5:],
+        "f16_header_f32_payload": lambda: (
+            emission_body()[:4] + bytes([wire.DTYPE_F16]) + emission_body()[5:]
+        ),
+        "f32_header_f16_payload": lambda: (
+            emission_body()[:4] + bytes([wire.DTYPE_F32]) + emission_body(fp16=True)[5:]
+        ),
+        "at_the_cap_zeros": lambda: b"\0" * wire.MAX_PAYLOAD_BYTES,
+    }
+
+    @pytest.mark.parametrize("name", sorted(EMISSION))
+    @pytest.mark.parametrize("key", [KEY, None])
+    def test_emission_body_is_422_without_reaching_the_runner(self, name, key):
+        rig = self.api(key=key)
+        extra = KEYHDR if key else None
+        r = rig.post(self.EMISSION[name](), login=None if key else LOGIN, extra=extra)
+        assert r.status == 422 and r.body["ok"] is False, name
+        assert isinstance(r.body["error"], str) and r.body["error"] != "internal"
+        assert rig.engine.calls == 0
+
+    @pytest.mark.parametrize(
+        "body",
+        [b"x", b"", b"\0", b"\0" * 3, b"\0" * 2 * (wire.MIN_PCM_SAMPLES - 1)],
+        ids=["one_byte", "empty", "one_nul", "odd_three", "just_too_short"],
+    )
+    def test_pcm_body_is_422_without_reaching_the_runner(self, body):
+        rig = self.api(mode="pcm")
+        r = rig.post(body, login=None, extra=KEYHDR)
+        assert r.status == 422 and r.body["error"] != "internal"
+        assert rig.engine.calls == 0
+
+    def test_oversize_is_413_without_reaching_the_runner(self):
+        rig = self.api()
+        for length in (wire.MAX_PAYLOAD_BYTES + 1, 10**9):
+            h = {"Content-Type": TPE1, "Content-Length": str(length), **KEYHDR}
+            r = rig.api.handle("POST", "/emission", h, ExplodingBody())
+            assert (r.status, r.body["error"]) == (413, "body_too_large")
+        assert rig.engine.calls == 0
+
+    def test_a_valid_body_still_reaches_the_runner(self):
+        r = self.api().post(emission_body(), login=None, extra=KEYHDR)
+        assert (
+            r.status == 500
+        )  # the runner is the failure; only malformed bodies dodge it
+
+    @pytest.mark.parametrize("name", sorted(EMISSION))
+    def test_over_a_real_socket_never_500_and_the_listener_survives(self, name):
+        rig = Rig(key=KEY)
+        srv, _ = listener.start(rig.api, 0)
+        try:
+            h = {"Content-Type": TPE1, **KEYHDR}
+            conn = http.client.HTTPConnection(
+                "127.0.0.1", srv.server_address[1], timeout=5
+            )
+            conn.request("POST", "/emission", body=self.EMISSION[name](), headers=h)
+            resp = conn.getresponse()
+            body = json.loads(resp.read())
+            conn.close()
+            assert resp.status == 422 and body["error"] != "internal", name
+            assert rig.engine.calls == 0
+            conn = http.client.HTTPConnection(
+                "127.0.0.1", srv.server_address[1], timeout=5
+            )
+            conn.request("POST", "/emission", body=emission_body(), headers=h)
+            assert conn.getresponse().status == 200  # Talon-side state untouched
+            conn.close()
+        finally:
+            listener.stop(srv)
 
 
 def make_utterances(n=20):
