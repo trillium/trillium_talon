@@ -13,6 +13,7 @@ Refusals (each is a `Result(ok=False, error=code)`, never an exception):
 import threading
 from typing import Any, Callable
 
+from . import faillog
 from .encoder import PhoneEncoder
 from .receiver import PhoneReceiver, Result
 
@@ -32,7 +33,9 @@ class LiveInstall:
         get_engine: Callable[[], Any],
         is_enabled: Callable[[], bool],
         record_all: Callable[[], bool],
+        log: faillog.Log | None = None,
     ):
+        self._log = log or print
         self._get_engine = get_engine
         self._is_enabled = is_enabled
         self._record_all = record_all
@@ -51,7 +54,7 @@ class LiveInstall:
         with self._lock:
             rx = self._receiver
             if rx is None or rx.engine is not engine:
-                rx = self._receiver = PhoneReceiver(engine)
+                rx = self._receiver = PhoneReceiver(engine, log=self._log)
                 self._original = None
             if self._original is None and not isinstance(engine.encoder, PhoneEncoder):
                 self._original = engine.encoder
@@ -84,7 +87,8 @@ class LiveInstall:
                 return Result(False, "no_engine")
             self.heal()
             return run(self._receiver_for(engine))
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            faillog.report(self._log, "live gate", exc)
             return Result(False, "engine_error")
 
     def handle(self, buf: bytes) -> Result:
