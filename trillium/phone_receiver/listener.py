@@ -1,5 +1,6 @@
 """HTTP front for the phone receiver: `POST /emission` (one utterance per request),
-`POST /snippet` (one saved audio snippet per request, see `snippet`), `GET /result/<id>` to ask
+`POST /snippet` (one saved audio snippet per request, see `snippet`), `POST /noise` (one
+phone-detected noise per request, see `noise`), `GET /result/<id>` to ask
 what became of one, and `GET /metrics` (see `metrics`).
 
 Pure stdlib, no `talon` import. `ListenerApi.handle` is the whole policy and takes plain
@@ -46,9 +47,9 @@ from ..palette_feed.limits import (
     parse_content_length,
     read_body,
 )
-from . import faillog, keyfile, ledger, netbind, snippet, wire
+from . import faillog, keyfile, ledger, netbind, noise, snippet, wire
 from .hop import SchedulerUnavailable
-from .metrics import EMISSION, SNIPPET, Metrics, Sample, Trace
+from .metrics import EMISSION, NOISE, SNIPPET, Metrics, Sample, Trace
 from .service import Reply
 
 DEFAULT_PORT = 7403
@@ -91,7 +92,15 @@ _STATUS = {
 # (`retriable`) and the next request under that id executes. Everything else is final, because
 # the command may have run (a 504 or a 500 from inside the engine) or did (any 200).
 _RETRIABLE_ERRORS = (
-    frozenset({"scheduler_unavailable", "disabled", "record_all_on", "no_engine"})
+    frozenset(
+        {
+            "scheduler_unavailable",
+            "disabled",
+            "record_all_on",
+            "no_engine",
+            "registry_error",
+        }
+    )
     | snippet.RETRIABLE_ERRORS
 )
 
@@ -186,6 +195,8 @@ class ListenerApi:
         snippet_limiter: RateLimiter | None = None,
         metrics_limiter: RateLimiter | None = None,
         trace_timer: Callable[[], float] | None = None,
+        noises: noise.NoiseService | None = None,
+        noise_limiter: RateLimiter | None = None,
     ):
         self._backend = backend
         self._get_mode = get_mode
@@ -208,6 +219,10 @@ class ListenerApi:
         self._metrics = metrics
         self._snippet_limiter = snippet_limiter or RateLimiter(*snippet.RATE)
         self._metrics_limiter = metrics_limiter or RateLimiter(*METRICS_RATE)
+        # Optional too: without it `/noise` is 404. Its own bucket, so a flurry of noise events
+        # cannot starve utterances and the other way round.
+        self._noises = noises
+        self._noise_limiter = noise_limiter or RateLimiter(*noise.RATE)
         self._trace_timer = (
             trace_timer or time.perf_counter
         )  # apart from `timer`, which times total_ms
@@ -314,6 +329,8 @@ class ListenerApi:
             routes[METRICS_PATH] = None
         if self._snippets is None:
             routes.pop(snippet.PATH)
+        if self._noises is not None:
+            routes[noise.PATH] = NOISE
         if path not in routes:
             return _error(404, "not_found")
         want = "GET" if path == METRICS_PATH else "POST"
@@ -335,6 +352,8 @@ class ListenerApi:
         self._absorb_rtt(h, kind)
         if kind == SNIPPET:
             return self._snippet(h, rfile, ctx, trace)
+        if kind == NOISE:
+            return self._noise(h, rfile, ctx, trace)
         ctx["stage"] = "mode"
         mode = self._mode()
         ctx["mode"] = mode
@@ -569,6 +588,93 @@ class ListenerApi:
             return Response(out.status, out.body, headers)
 
         return self._once(uid, save, replay)
+
+    def _noise(self, h, rfile, ctx, trace) -> Response:
+        """`POST /noise`: the checks `/emission` makes, then `NoiseService.handle` on the main thread.
+
+        The id is required and goes through the same table: a repeat of a finished id replays the
+        stored reply and never runs the trigger again; an id in flight is `409 in_progress`.
+        """
+        ctx["stage"] = "noise"
+        if media_type(h.get("content-type"))[0] != "application/json":
+            return _error(415, "unsupported_media_type", want="application/json")
+        limited = self._rate_limited(self._noise_limiter)
+        if limited is not None:
+            return limited
+        try:
+            uid = ledger.parse_id(h.get(ledger.ID_HEADER))
+        except ledger.BadId:
+            return _error(400, "bad_utterance_id")
+        if uid is None:
+            return _error(400, "missing_utterance_id")
+        if "transfer-encoding" in h:
+            return _error(411, "length_required")
+        ctx["stage"] = "read_body"
+        try:
+            length = parse_content_length(h.get("content-length"), noise.MAX_BODY_BYTES)
+            ctx["bytes"] = length
+            body = read_body(rfile, length) if rfile is not None else b""
+        except BodyError as exc:
+            return _error(exc.status, exc.code)
+        ctx["bytes"] = ctx["read_bytes"] = len(body)
+        trace.mark("received")
+        ctx["stage"] = "validate"
+        try:
+            event = noise.parse_body(body)
+        except noise.NoiseError as exc:
+            return _error(exc.status, exc.code)
+        trace.mark("decoded")
+        return self._once(uid, lambda: self._execute_noise(event, ctx, trace))
+
+    def _execute_noise(self, event, ctx, trace) -> Response:
+        ctx["stage"] = "runner"
+        t0 = self._timer()
+        try:
+            try:
+                reply = self._run(lambda: self._noises.handle(event))
+            finally:
+                trace.mark("dispatched")
+        except (TimeoutError, DispatchTimeout):
+            faillog.note(
+                self._log, "runner timed out", **ctx, ms=_ms(self._timer() - t0)
+            )
+            return _error(504, "timeout")
+        except SchedulerUnavailable as exc:
+            faillog.report(
+                self._log, "scheduler", exc, **{**ctx, "ms": _ms(self._timer() - t0)}
+            )
+            return _error(503, "scheduler_unavailable")
+        except Exception as exc:  # noqa: BLE001
+            faillog.report(
+                self._log, "runner", exc, **{**ctx, "ms": _ms(self._timer() - t0)}
+            )
+            return _error(500, "internal")
+        total_ms = _ms(self._timer() - t0)
+        ctx["stage"] = "reply"
+        if not reply.ok:
+            extra = {"detail": reply.detail} if reply.detail else {}
+            return _error(
+                _STATUS.get(reply.error or "error", 500), reply.error, **extra
+            )
+        if reply.status == noise.STATUS_ERROR:
+            faillog.note(
+                self._log,
+                f"noise {reply.name} {reply.edge}: {reply.why}",
+                detail=reply.detail,
+            )
+        return Response(
+            200,
+            {
+                "ok": True,
+                "name": reply.name,
+                "edge": reply.edge,
+                "status": reply.status,
+                "why": reply.why,
+                "commands": reply.commands,
+                "ms": reply.ms,
+                "total_ms": total_ms,
+            },
+        )
 
 
 def _ms(seconds: float) -> float:
