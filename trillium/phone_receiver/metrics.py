@@ -1,6 +1,6 @@
 """Per-request latency and byte metrics for the phone listener, and their rolling summary.
 
-Pure stdlib, no `talon` import. Each `POST /emission` and `POST /snippet` request becomes one
+Pure stdlib, no `talon` import. Each `POST /emission`, `POST /snippet` and `POST /noise` request becomes one
 `Sample`; `Metrics.summary()` is what `GET /metrics` returns and `Metrics.tick_line()` is the one
 line Talon's log gets every few minutes. Nothing in a sample can carry a phrase or audio: the
 fields are a kind, a status, five numbers and two byte counts.
@@ -35,7 +35,8 @@ from typing import Any, Callable, Iterable
 
 EMISSION = "emission"
 SNIPPET = "snippet"
-KINDS = (EMISSION, SNIPPET)
+NOISE = "noise"
+KINDS = (EMISSION, SNIPPET, NOISE)
 WINDOW = 500  # "last N" in the summary
 RETAIN = 20000  # samples kept per kind; the oldest drop first
 HOURS = 24  # hourly buckets in the summary

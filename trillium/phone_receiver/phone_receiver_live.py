@@ -14,7 +14,9 @@ no socket is opened. On loopback it answers 403 unless `Tailscale-User-Login` is
 recordings folder (`<talon_home>/recordings`), the one write this module makes there, and only
 when `user.phone_receiver_snippets_enabled` is also on (default off). `GET /metrics` returns
 request timings and byte counts, and every few minutes a one-line summary goes to the log.
-It never changes a Talon setting, in particular not `speech.record_all`.
+`POST /noise` runs the `parrot(<name>)` trigger a phone-detected noise stands for: the last impl in
+`registry.impls.parrot_noises[<key>]`, on the main thread, in this module's context (`noise.py`).
+It writes no grammar. It never changes a Talon setting, in particular not `speech.record_all`.
 
 The setting defaults to off. With it off `user.phone_receiver_handle` returns `disabled`
 and never touches the engine; microphone dictation is unaffected either way, because the
@@ -26,7 +28,12 @@ import os
 import sys
 import types
 
-from talon import Module, actions, app, cron, settings, speech_system
+from talon import Module, actions, app, cron, registry, settings, speech_system
+
+try:
+    from talon.experimental.parrot import ParrotFrame
+except ImportError:  # an older Talon: /noise then answers `dispatch_failed`
+    ParrotFrame = None
 
 try:
     from talon.lib import flac
@@ -36,7 +43,7 @@ except (
     flac = None
 
 from ..palette_feed.dispatch import run_scheduled
-from . import audio, hop, keyfile, listener, netbind, snippet_ledger
+from . import audio, hop, keyfile, listener, netbind, noise, snippet_ledger
 from .live import LiveInstall, active_engine
 from .metrics import Metrics
 from .recordings import RecordingsWriter
@@ -181,6 +188,30 @@ def _on_main_thread(fn):
     return run_scheduled(_schedule, fn, DISPATCH_TIMEOUT_S)
 
 
+def _noise_impls(key: str):
+    # The trigger scripts Talon registered for `parrot(<key>)`; an inactive tag leaves none.
+    return list(registry.impls.parrot_noises.get(key) or ())
+
+
+def _run_noise(impl, event: noise.NoiseEvent) -> None:
+    # What `ParrotSystem` itself calls for a detection. The classes and formants are not on the
+    # wire (L2), so the frame carries the phone's power and timestamp and zeros elsewhere.
+    frame = ParrotFrame(
+        classes={}, power=event.power, f0=0.0, f1=0.0, f2=0.0, ts=event.ts
+    )
+    ctx = _owner() or rctx.active()
+    actions.core.run_talon_script(ctx, impl.script, frame)
+
+
+# The lambdas look the names up per call, so a test (or a reload of a helper) is seen.
+_noises = noise.NoiseService(
+    lambda key: _noise_impls(key),
+    lambda impl, event: _run_noise(impl, event),
+    lambda: _enabled(),
+    lambda: _record_all(),
+)
+
+
 def _log_metrics():
     line = _metrics.tick_line()
     if line:
@@ -220,6 +251,7 @@ def start_listener():
         key=(lambda: key) if key is not None else None,
         snippets=_snippets,
         metrics=_metrics,
+        noises=_noises,
     )
     try:
         _holder.server, _ = listener.start(api, listener.DEFAULT_PORT, plan.host)

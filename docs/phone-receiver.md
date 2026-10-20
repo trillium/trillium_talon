@@ -7,6 +7,7 @@ live engine behind `user.phone_receiver_enabled` (default off); see "Live instal
 add an HTTP listener (loopback, or this Mac's tailnet address with a shared-secret key) and a PCM fallback on the same switch; see "Listener" and "Tailnet bind" below.
 An optional utterance id makes a retry safe after a lost reply (replay, `GET /result/<id>`); see "Durable delivery".
 `POST /snippet` saves a short phone recording into Talon's recordings folder, and `GET /metrics` reports per-request latency and bytes; see "Snippets" and "Metrics" below.
+`POST /noise` runs the `parrot(<name>)` trigger for a sound the phone detected; see "Noises" below.
 
 | File                     | Role                                                                                                                                                                                                                                                                                                                   |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -24,6 +25,7 @@ An optional utterance id makes a retry safe after a lost reply (replay, `GET /re
 | `parity.py`              | Parity harness: both paths on the same audio through `ListenerApi`, phrase output diffed                                                                                                                                                                                                                               |
 | `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                                                                                                   |
 | `snippet.py`             | `SnippetService.handle`: header checks, checksum, idempotent save, ack for `POST /snippet`; pure, no `talon` import                                                                                                                                                                                                    |
+| `noise.py`               | `parse_body` and `NoiseService.handle`: validate a phone-detected noise event, gate, drop a stale `seq`, floor per name, run the last `parrot_noises` impl for `POST /noise`; pure, no `talon` import                                                                                                                  |
 | `audio.py`               | Header-level FLAC / WAV validation (16 kHz mono 16-bit, 0.1 to 30 s) against the body's own length; `AudioError(code)`; no decoding                                                                                                                                                                                    |
 | `recordings.py`          | `RecordingsWriter`: the only code that writes into Talon's recordings folder; new files only, temp then fsync then no-overwrite link                                                                                                                                                                                   |
 | `snippet_ledger.py`      | Durable `utterance id -> ack` table (JSON lines, fsynced), the file-ack layer behind `ledger.py`'s memory table: a retry of a saved snippet, however late, writes nothing; a pending entry covers a crash after the file landed                                                                                        |
@@ -610,13 +612,44 @@ no conversion.
 Other errors: `500 save_failed`, `500 encode_failed`, `500 ledger_write_failed`, `503 no_recordings_dir`. Log lines name the
 class and `file:line` only (see "Failure log"); never the id, name, bytes or audio.
 
+## Noises (`POST /noise`)
+
+The phone runs Parrot on-device and sends one JSON event per detected sound. The Mac runs the
+trigger scripts Talon registered for `parrot(<name>)`: the last impl in
+`talon.registry.impls.parrot_noises[<key>]`, through `actions.core.run_talon_script`, on the main
+thread in the module's context. The captain's own `.talon` triggers, their tag and mode gating and
+every `user.noise_*` override therefore apply unchanged; this adds no grammar. (Design: the
+2026-10-19 parrot spike, level L2.) It is gated by `user.phone_receiver_enabled` and refused with
+`503 record_all_on` while `speech.record_all` is on, like `/emission`.
+
+| Item    | Rule                                                                                                                                                                                                                                                                 |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Request | `POST /noise`, `Content-Type: application/json`, `Content-Length` required, body at most 1 KiB (`413` above)                                                                                                                                                         |
+| Auth    | As `/emission`: `X-Talon-Phone-Key` on the tailnet bind, `Tailscale-User-Login` allow-list on loopback                                                                                                                                                               |
+| Id      | `X-Talon-Utterance-Id` **required** (`400 missing_utterance_id`); same table as `/emission`: a repeat replays the stored reply and never runs the trigger again                                                                                                      |
+| Rate    | its own bucket, 20 per second per server (`429 rate_limited`), apart from `/emission`'s                                                                                                                                                                              |
+| Body    | `{v:1, name, edge, power, prob, ts, session, seq}`; `name` is `[A-Za-z0-9][A-Za-z0-9_-]*`, at most 32 chars; `edge` is `start` (default), `repeat` or `stop` and picks the registry key `name`, `name:repeat`, `name:stop`; `prob` is 0 to 1; numbers must be finite |
+| Errors  | `400 bad_json`; `422 bad_version, bad_name, bad_edge, bad_session, bad_seq, bad_field, non_finite`; `503 disabled, record_all_on, registry_error, scheduler_unavailable`; `504 timeout`                                                                              |
+
+Reply: `200 {"ok":true,"name","edge","status":"ran|ignored|error","why","commands","ms","total_ms"}` plus
+the ledger stamp. `ran` means the last impl was handed to `run_talon_script` (`commands: 1`; a script
+that then raises is logged by Talon, not visible here). `ignored` carries `why`: `no_trigger` (no
+impl for that key: an unknown name, or a gated trigger such as an inactive `user.parrot_on` tag),
+`stale_seq` (a `start` whose `seq` is not above the last `start` for that `(session, name)`; the
+state is bounded to 256 entries) or `throttled` (a `start` for the same name within 30 ms of the last
+one that ran). The phone applies the real `patterns.json` throttles. `error` / `dispatch_failed`
+means looking up or running the impl raised (the log line and `detail` hold the exception class only).
+A refusal where nothing ran (`disabled`, `record_all_on`, `registry_error`, `scheduler_unavailable`)
+leaves the id usable. `GET /result/<id>` answers a lost reply. The body is never logged; the key
+never is.
+
 ## Metrics (`GET /metrics`)
 
 Key-authenticated like the rest (`403` without it), `GET` only, 5 per second per server. Returns counts and
 timings and nothing else: no phrase, id, filename, audio or key can reach it (`Sample` has a kind, a
 status, five numbers and two byte counts).
 
-Every `/emission` and `/snippet` request that passes routing becomes one sample, whatever its status, and its
+Every `/emission`, `/snippet` and `/noise` request that passes routing becomes one sample, whatever its status, and its
 response carries `X-Talon-Server-Ms` (the handler total). Reading `/metrics` is not a sample.
 
 | Timing (ms, on the Mac)   | Covers                                                                                                                        |
@@ -627,12 +660,12 @@ response carries `X-Talon-Server-Ms` (the handler total). Reading `/metrics` is 
 | `total_ms`                | handler start to the response built. The socket write and the network are not in it                                           |
 | `req_bytes`, `resp_bytes` | Body bytes read (0 if refused before the body, or if the body came up short) and the JSON bytes sent. Headers are not counted |
 
-Response shape (`emission` and `snippet` each hold the same two blocks):
+Response shape (`emission`, `snippet` and `noise` each hold the same two blocks):
 
 ```
 {"ok": true, "generated_at": "...Z", "window": 500, "client_rtt_rejected": 0,
  "emission": {"last_n": STATS, "hours": [{"hour": "2026-10-20T14:00:00Z", ...STATS}], "client_rtt_ms": {...}},
- "snippet":  {...}}
+ "snippet":  {...}, "noise": {...}}
 STATS = {"n", "ok", "by_status": {"200": 41, "403": 2}, "bytes_in", "bytes_out",
          "receive_ms": {"p50","p95"}, "decode_ms": {...}, "dispatch_ms": {...}, "total_ms": {...},
          "req_bytes": {...}, "resp_bytes": {...}}
@@ -653,12 +686,12 @@ phone_listener: metrics: emission 4 req (200:3 429:1) total p50 20.0 p95 30.0 ms
 
 **Client round trip.** The server cannot see network time, so the phone measures its own (request sent to
 response received, for a request that already completed) and sends it on its **next** authenticated
-request to `/emission` or `/snippet`:
+request to `/emission`, `/snippet` or `/noise`:
 
-| Header                    | Value                                                                                                                   |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `X-Talon-Client-Rtt-Ms`   | Milliseconds, a decimal from 0 to 600,000                                                                               |
-| `X-Talon-Client-Rtt-Kind` | Optional: `emission` or `snippet`, which request kind was measured; default the kind of the request carrying the header |
+| Header                    | Value                                                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `X-Talon-Client-Rtt-Ms`   | Milliseconds, a decimal from 0 to 600,000                                                                                        |
+| `X-Talon-Client-Rtt-Kind` | Optional: `emission`, `snippet` or `noise`, which request kind was measured; default the kind of the request carrying the header |
 
 Kept and summarised under `client_rtt_ms` (`last_n` and `hours`, each `{n, p50, p95}`). Subtract the matching
 `X-Talon-Server-Ms` to get the network share. A value that is not a number in range, or an unknown kind, is
