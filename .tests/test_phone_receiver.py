@@ -8,7 +8,7 @@ import pytest
 
 from trillium.phone_receiver import wire
 from trillium.phone_receiver.encoder import PhoneEncoder
-from trillium.phone_receiver.receiver import PhoneReceiver
+from trillium.phone_receiver.receiver import PhoneReceiver, Result
 
 N_PCM = 12981  # -> T = 43 frames
 T = 43
@@ -177,7 +177,7 @@ class TestReceiver:
         eng = FakeEngine()
         r = PhoneReceiver(eng)
         res = r.handle(good())
-        assert res == (True, None, T, N_PCM)
+        assert res == Result(True, None, T, N_PCM)
         assert len(eng.native_calls) == 1 and eng.frames == [(N_PCM, 1.25)]
         assert (r.accepted, r.rejected) == (1, 0)
 

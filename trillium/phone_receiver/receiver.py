@@ -20,6 +20,7 @@ class Result(NamedTuple):
     )
     frames: int = 0
     n_pcm: int = 0
+    detail: str | None = None  # one line: what a gate refusal is missing (see live.py)
 
 
 class PhoneReceiver:

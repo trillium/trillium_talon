@@ -23,7 +23,7 @@ from talon import Module, actions, app, cron, settings, speech_system
 
 from ..palette_feed.dispatch import run_scheduled
 from . import hop, keyfile, listener, netbind
-from .live import LiveInstall
+from .live import LiveInstall, active_engine
 from .service import PhoneService, PhraseTap
 
 try:
@@ -75,7 +75,9 @@ DISPATCH_TIMEOUT_S = 5.0
 
 
 def _engine():
-    return speech_system.engine.engine
+    # `speech_system.engine` is the proxy of the active engine; `active_engine` raises
+    # `NoEngine` saying which link is missing, and the refusal reply carries that.
+    return active_engine(speech_system)
 
 
 def _enabled() -> bool:
