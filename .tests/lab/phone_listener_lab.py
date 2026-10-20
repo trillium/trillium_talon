@@ -71,6 +71,7 @@ for _name, _rel in [
     ("phlab.phone_receiver.wire", "phone_receiver/wire.py"),
     ("phlab.phone_receiver.encoder", "phone_receiver/encoder.py"),
     ("phlab.phone_receiver.faillog", "phone_receiver/faillog.py"),
+    ("phlab.phone_receiver.hop", "phone_receiver/hop.py"),
     ("phlab.phone_receiver.receiver", "phone_receiver/receiver.py"),
     ("phlab.phone_receiver.live", "phone_receiver/live.py"),
     ("phlab.phone_receiver.service", "phone_receiver/service.py"),

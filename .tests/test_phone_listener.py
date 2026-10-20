@@ -5,20 +5,31 @@ Every refusal here must happen before the engine is called, and Talon must stay 
 malformed case asserts `engine.calls == 0` and ends with a request that still succeeds.
 """
 
+import contextlib
 import http.client
 import importlib.util
 import io
 import json
 import os
 import threading
+import types
 
 import numpy as np
 import pytest
+import talon.scripting
 from talon import Module
 
 from trillium.palette_feed.dispatch import DispatchTimeout
 from trillium.palette_feed.limits import RateLimiter
-from trillium.phone_receiver import faillog, keyfile, listener, netbind, parity, wire
+from trillium.phone_receiver import (
+    faillog,
+    hop,
+    keyfile,
+    listener,
+    netbind,
+    parity,
+    wire,
+)
 from trillium.phone_receiver.encoder import PhoneEncoder
 from trillium.phone_receiver.live import LiveInstall
 from trillium.phone_receiver.service import (
@@ -1295,6 +1306,44 @@ class TestGlue:
             glue._holder.server = None
             talon.speech_system.reset()
 
+    def test_hops_inside_the_module_owned_resource_context(self, monkeypatch):
+        events = []
+        owner = FakeOwner(events)
+        monkeypatch.setattr(
+            talon.scripting,
+            "rctx",
+            types.SimpleNamespace(active=lambda: owner),
+            raising=False,
+        )
+        glue, _ = self.load(monkeypatch)
+        monkeypatch.setattr(
+            glue.cron, "after", lambda delay, job: (events.append(delay), job())
+        )
+        assert glue._on_main_thread(lambda: 42) == 42
+        assert events == ["enter", "0ms", "exit"]
+
+    def test_without_resource_contexts_it_schedules_plainly(self, monkeypatch):
+        glue, _ = self.load(monkeypatch)  # the test stubs have no talon.scripting.rctx
+        assert glue.rctx is None and glue._owner() is None
+        seen = []
+        monkeypatch.setattr(
+            glue.cron, "after", lambda delay, job: (seen.append(delay), job())
+        )
+        assert glue._on_main_thread(lambda: "ran") == "ran" and seen == ["0ms"]
+
+    def test_an_rctx_that_cannot_name_its_context_falls_back(self, monkeypatch):
+        def active():
+            raise RuntimeError("no context")
+
+        monkeypatch.setattr(
+            talon.scripting,
+            "rctx",
+            types.SimpleNamespace(active=active),
+            raising=False,
+        )
+        glue, _ = self.load(monkeypatch)
+        assert glue._owner() is None
+
 
 class TestFailureLog:
     """A failure while running an utterance leaves its exception class and frames in Talon's
@@ -1511,6 +1560,37 @@ class TestFailureLog:
         rig.engine.boom = True
         assert rig.post(emission_body()).body["error"] == "engine_error"
 
+    def test_scheduler_failure_is_503_and_names_the_cause(self):
+        def runner(fn):
+            try:
+                raise RuntimeError(self.SECRET)
+            except RuntimeError as e:
+                raise hop.SchedulerUnavailable("RuntimeError") from e
+
+        lines = []
+        _, api = self.api(runner, lines, key=self.LOGKEY)
+        r = self.post(api, key=self.LOGKEY)
+        assert (r.status, r.body["error"]) == (503, "scheduler_unavailable")
+        text = "\n".join(lines)
+        assert lines[0].startswith(
+            "phone_listener: scheduler failed: "
+            "trillium.phone_receiver.hop.SchedulerUnavailable (mode emission, "
+        )
+        assert "from RuntimeError" in text
+        assert self.SECRET not in text and self.LOGKEY not in text
+
+    def test_a_log_that_raises_system_exit_does_not_escape(self):
+        seen = []
+
+        def log(line):
+            seen.append(line)
+            raise SystemExit  # Talon's print, in a thread whose context was freed
+
+        rig = Rig(log=log)
+        rig.engine.boom = True
+        assert rig.post(emission_body()).body["error"] == "engine_error"
+        assert len(seen) > 1  # the first dropped line did not hide the rest
+
     def test_over_a_real_socket_the_runner_failure_reaches_the_log(self):
         lines = []
 
@@ -1572,3 +1652,63 @@ class TestFailureLog:
         api.handle = lambda *a, **k: listener.Response(200, {"bad": object()})
         self.serve_once(api, self.LOGKEY)
         assert any("connection failed: TypeError" in line for line in lines)
+
+
+class FakeOwner:
+    """A Talon resource context: `enter()` scopes what runs inside it; a freed one refuses."""
+
+    def __init__(self, events, freed=False):
+        self.events = events
+        self.freed = freed
+
+    @contextlib.contextmanager
+    def enter(self):
+        if self.freed:
+            raise RuntimeError("context freed")
+        self.events.append("enter")
+        try:
+            yield
+        finally:
+            self.events.append("exit")
+
+
+class TestHop:
+    """The main-thread hop must not depend on the context of the thread that calls it."""
+
+    def test_without_an_owner_it_schedules_directly(self):
+        jobs = []
+        hop.main_thread(jobs.append)(print)
+        assert jobs == [print]
+
+    def test_schedules_inside_the_owner_context(self):
+        events = []
+        schedule = hop.main_thread(
+            lambda job: events.append("after"), FakeOwner(events)
+        )
+        schedule(print)
+        assert events == ["enter", "after", "exit"]
+
+    def test_a_scheduler_that_raises_is_unavailable_with_its_cause_but_not_its_message(
+        self,
+    ):
+        def after(job):
+            raise KeyError("s3cret")
+
+        with pytest.raises(hop.SchedulerUnavailable) as e:
+            hop.main_thread(after)(print)
+        assert isinstance(e.value.__cause__, KeyError)
+        assert "s3cret" not in str(e.value) and str(e.value) == "KeyError"
+
+    def test_a_freed_owner_never_reaches_the_scheduler(self):
+        events = []
+        schedule = hop.main_thread(
+            lambda job: events.append("after"), FakeOwner(events, freed=True)
+        )
+        with pytest.raises(hop.SchedulerUnavailable):
+            schedule(print)
+        assert events == []
+
+    def test_the_job_is_not_run_by_the_hop_itself(self):
+        ran = []
+        hop.main_thread(lambda job: None)(lambda: ran.append(1))
+        assert ran == []

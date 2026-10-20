@@ -22,9 +22,14 @@ import types
 from talon import Module, actions, app, cron, settings, speech_system
 
 from ..palette_feed.dispatch import run_scheduled
-from . import keyfile, listener, netbind
+from . import hop, keyfile, listener, netbind
 from .live import LiveInstall
 from .service import PhoneService, PhraseTap
+
+try:
+    from talon.scripting import rctx
+except ImportError:  # the test stubs have no resource contexts
+    rctx = None
 
 SETTING = "user.phone_receiver_enabled"
 DEFAULT_BIND = "127.0.0.1"
@@ -99,9 +104,22 @@ _holder = sys.modules.setdefault(
 )
 
 
+def _owner():
+    # The context this module is loaded under: it lasts until Talon reloads the module. A worker
+    # thread's own context is the one of whoever started the listener (a REPL statement, say) and
+    # may already be freed, which makes every `cron.after` from it raise `ResourceClosed`.
+    try:
+        return rctx.active() if rctx is not None else None
+    except Exception:  # noqa: BLE001 - an older Talon: fall back to the calling thread's context
+        return None
+
+
+_schedule = hop.main_thread(lambda job: cron.after("0ms", job), _owner())
+
+
 def _on_main_thread(fn):
     # Commands can drive UI and keys, so the injected phrase runs on Talon's main thread.
-    return run_scheduled(lambda job: cron.after("0ms", job), fn, DISPATCH_TIMEOUT_S)
+    return run_scheduled(_schedule, fn, DISPATCH_TIMEOUT_S)
 
 
 def start_listener():

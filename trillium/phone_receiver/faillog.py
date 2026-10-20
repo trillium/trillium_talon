@@ -64,19 +64,29 @@ def _context(ctx: dict[str, Any]) -> str:
     return f" ({', '.join(parts)})" if parts else ""
 
 
+def _emit(log: Log, line: str) -> None:
+    # Talon's `print` raises SystemExit in a thread whose resource context was freed (a listener
+    # started from a REPL statement). Left alone it would end the worker, so the phone would see a
+    # dropped connection instead of the status code, and the lines after it would be lost.
+    try:
+        log(f"{PREFIX} {line}")
+    except (Exception, SystemExit):  # noqa: BLE001
+        pass
+
+
 def report(log: Log, where: str, exc: BaseException, **ctx: Any) -> None:
     """Log `where` failed with `exc`'s class and frames. Never raises."""
     try:
-        log(f"{PREFIX} {where} failed: {qualname(exc)}{_context(ctx)}")
-        for line in trace_lines(exc):
-            log(f"{PREFIX} {line}")
+        lines = [f"{where} failed: {qualname(exc)}{_context(ctx)}", *trace_lines(exc)]
     except Exception:  # noqa: BLE001 - reporting must not become the failure
-        pass
+        return
+    for line in lines:
+        _emit(log, line)
 
 
 def note(log: Log, what: str, **ctx: Any) -> None:
     """One line for a refusal that has no exception to show (a timeout, a service code)."""
     try:
-        log(f"{PREFIX} {what}{_context(ctx)}")
+        _emit(log, f"{what}{_context(ctx)}")
     except Exception:  # noqa: BLE001
-        pass
+        pass  # building the line failed; `_emit` already contains the log call

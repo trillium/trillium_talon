@@ -35,6 +35,7 @@ from ..palette_feed.limits import (
     read_body,
 )
 from . import faillog, keyfile, netbind, wire
+from .hop import SchedulerUnavailable
 from .service import Reply
 
 DEFAULT_PORT = 7403
@@ -245,6 +246,12 @@ class ListenerApi:
                 self._log, "runner timed out", **ctx, ms=_ms(self._timer() - t0)
             )
             return _error(504, "timeout")
+        except SchedulerUnavailable as exc:
+            # never queued, so the command did not run: unlike the generic 500 below
+            faillog.report(
+                self._log, "scheduler", exc, **{**ctx, "ms": _ms(self._timer() - t0)}
+            )
+            return _error(503, "scheduler_unavailable")
         except Exception as exc:  # noqa: BLE001
             faillog.report(
                 self._log, "runner", exc, **{**ctx, "ms": _ms(self._timer() - t0)}
