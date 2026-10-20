@@ -48,6 +48,7 @@ CONTENT_TYPES = {MODE_EMISSION: "application/x-talon-tpe1", MODE_PCM: "audio/l16
 MAX_IDENTITY_LEN = 256
 REQUEST_TIMEOUT_S = 10
 RATE = (10, 1.0)  # utterances per window seconds, counted per server
+MAX_TEXT_CHARS = 512  # cap on the echoed phrase; the other reply fields are short enums
 
 # Wire-level mistakes are the caller's; the rest say why the host could not serve.
 _STATUS = {
@@ -125,6 +126,7 @@ class ListenerApi:
         limiter: RateLimiter | None = None,
         clock: Callable[[], float] | None = None,
         key: Callable[[], str | None] | None = None,
+        timer: Callable[[], float] | None = None,
     ):
         self._backend = backend
         self._get_mode = get_mode
@@ -134,6 +136,7 @@ class ListenerApi:
         self._run = runner or (lambda fn: fn())
         self._limiter = limiter or RateLimiter(*RATE)
         self._clock = clock or time.time
+        self._timer = timer or time.perf_counter
 
     @property
     def uses_key(self) -> bool:
@@ -217,13 +220,14 @@ class ListenerApi:
             call = lambda: self._backend.pcm(body, ts)  # noqa: E731
         else:
             call = lambda: self._backend.emission(body)  # noqa: E731
+        t0 = self._timer()
         try:
             reply = self._run(call)
         except (TimeoutError, DispatchTimeout):
             return _error(504, "timeout")
         except Exception:  # noqa: BLE001
             return _error(500, "internal")
-        return _reply(reply, mode)
+        return _reply(reply, mode, round((self._timer() - t0) * 1000, 2))
 
 
 def _wire_error(mode: str, body: bytes) -> str | None:
@@ -242,21 +246,28 @@ def _wire_error(mode: str, body: bytes) -> str | None:
     return None
 
 
-def _reply(r: Reply, mode: str) -> Response:
+def _reply(r: Reply, mode: str, total_ms: float) -> Response:
     if not r.ok:
         err = r.error or "error"
         return _error(_STATUS.get(err, 422), err, ms=r.ms)
-    return Response(
-        200,
-        {
-            "ok": True,
-            "mode": mode,
-            "text": r.text,
-            "reject": r.reject,
-            "ms": r.ms,
-            "frames": r.frames,
-        },
-    )
+    body: dict[str, Any] = {
+        "ok": True,
+        "mode": mode,
+        "text": r.text,
+        "reject": r.reject,
+        "ms": r.ms,
+        "frames": r.frames,
+        # Outcome of the utterance (see docs/phone-receiver.md, "Reply fields").
+        "status": r.status,
+        "why": r.why,
+        "kind": r.kind,
+        "commands": r.commands,
+        "total_ms": total_ms,
+    }
+    if isinstance(r.text, str) and len(r.text) > MAX_TEXT_CHARS:
+        body["text"] = r.text[:MAX_TEXT_CHARS]
+        body["text_truncated"] = True
+    return Response(200, body)
 
 
 def make_handler(api: ListenerApi) -> type[BaseHTTPRequestHandler]:
