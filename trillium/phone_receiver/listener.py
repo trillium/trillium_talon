@@ -395,7 +395,9 @@ def _wire_error(mode: str, body: bytes) -> str | None:
             wire.parse_validate(body)
     except wire.WireError as exc:
         return exc.code
-    except Exception:  # noqa: BLE001 - anything unparsable is the caller's fault, not a 500
+    except (
+        Exception
+    ):  # noqa: BLE001 - anything unparsable is the caller's fault, not a 500
         return "invalid"
     return None
 

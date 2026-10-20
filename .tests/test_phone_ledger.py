@@ -570,7 +570,8 @@ class TestInFlight:
 
 class TestRefusals:
     """Retriable: nothing ran, so the same id may be sent again and executes. Final: it may have
-    run (or did), so the stored reply is replayed and the executor is not called again."""
+    run (or did), so the stored reply is replayed and the executor is not called again.
+    """
 
     @pytest.mark.parametrize(
         "code,break_it,fix_it",

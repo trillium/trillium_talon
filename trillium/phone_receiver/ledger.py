@@ -182,7 +182,8 @@ class Ledger:
         self, entry: Entry, status: int, body: dict[str, Any], retriable: bool = False
     ) -> Entry:
         """Store the reply for the attempt `entry` was claimed for. If the table has dropped or
-        replaced the entry meanwhile (it outlived the TTL), the reply is still returned, unstored."""
+        replaced the entry meanwhile (it outlived the TTL), the reply is still returned, unstored.
+        """
         with self._lock:
             done = dataclasses.replace(
                 entry,
