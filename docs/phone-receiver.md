@@ -6,6 +6,7 @@ padding, decode, rejection and `phrase` dispatch, replacing only the encoder cal
 live engine behind `user.phone_receiver_enabled` (default off); see "Live install" below. Work items 4 (Mac side) and 5
 add an HTTP listener (loopback, or this Mac's tailnet address with a shared-secret key) and a PCM fallback on the same switch; see "Listener" and "Tailnet bind" below.
 An optional utterance id makes a retry safe after a lost reply (replay, `GET /result/<id>`); see "Durable delivery".
+`POST /snippet` saves a short phone recording into Talon's recordings folder, and `GET /metrics` reports per-request latency and bytes; see "Snippets" and "Metrics" below.
 
 | File                     | Role                                                                                                                                                                                                                                                                                                                   |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -22,6 +23,11 @@ An optional utterance id makes a retry safe after a lost reply (replay, `GET /re
 | `hop.py`                 | Pure: hands a job to the main thread inside a given Talon resource context; `SchedulerUnavailable` when it cannot                                                                                                                                                                                                      |
 | `parity.py`              | Parity harness: both paths on the same audio through `ListenerApi`, phrase output diffed                                                                                                                                                                                                                               |
 | `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                                                                                                   |
+| `snippet.py`             | `SnippetService.handle`: header checks, checksum, idempotent save, ack for `POST /snippet`; pure, no `talon` import                                                                                                                                                                                                    |
+| `audio.py`               | Header-level FLAC / WAV validation (16 kHz mono 16-bit, 0.1 to 30 s) against the body's own length; `AudioError(code)`; no decoding                                                                                                                                                                                    |
+| `recordings.py`          | `RecordingsWriter`: the only code that writes into Talon's recordings folder; new files only, temp then fsync then no-overwrite link                                                                                                                                                                                   |
+| `snippet_ledger.py`      | Durable `utterance id -> ack` table (JSON lines, fsynced), the file-ack layer behind `ledger.py`'s memory table: a retry of a saved snippet, however late, writes nothing; a pending entry covers a crash after the file landed                                                                                        |
+| `metrics.py`             | `Trace` (per-request stopwatch), `Sample`, `Metrics` (rolling p50/p95, hourly buckets, log line); no phrase or audio can enter it                                                                                                                                                                                      |
 
 ## Wire format
 
@@ -306,8 +312,8 @@ with hyphens dropped, so `3F2A…` and `3f2a…` are one id. One id names one ut
 (UUIDv4), keep it with the queued utterance, and send the same id on every retry of that utterance and
 on no other. The id names the utterance, not its bytes: a replay is answered from the table even if the
 body differs, and the same id covers an emission sent first and its PCM fallback sent after
-(`emission` and `pcm` modes use one table). A future snippet upload takes the same header and the same
-table (`ListenerApi._once(id, run)`); do not reuse one id across endpoints.
+(`emission` and `pcm` modes use one table). `POST /snippet` takes the same header and the same table
+(`ListenerApi._once(id, run)`; see "Snippets"); do not reuse one id across endpoints.
 
 A present but malformed header is `400 bad_utterance_id` and nothing runs, because the phone believes it
 is protected against a double run. Only a missing header means "no id".
@@ -504,6 +510,160 @@ s of audio**, so a longer utterance answers `413`. The cap is the brief's hard l
 `wire.MAX_PAYLOAD_BYTES` for PCM only if longer fallback utterances are needed. `record_all` refuses
 PCM too, since it would write the phone's real audio to `~/.talon/recordings`.
 
+## Snippets (`POST /snippet`)
+
+The phone uploads a short recording (a FLAC or WAV, 16 kHz mono 16-bit, 0.1 to 30 s) and the Mac
+saves it as a new file in Talon's own recordings folder. It is off until
+`user.phone_receiver_snippets_enabled` is on (default `false`; the listener switch
+`user.phone_receiver_enabled` must be on too). Off answers `503 snippets_disabled`. The receiver
+never enables `speech.record_all` or changes any other Talon setting.
+
+**The one write.** The folder is `actions.path.talon_home() / "recordings"`, the place Talon's own
+`speech.record_all` writes, taken from Talon at call time and never hard-coded. `RecordingsWriter`
+only creates new files there. It never lists the folder, opens, reads, copies, moves, renames or
+deletes an existing entry (the sole thing it removes is its own `.phone-snippet-*.tmp`), never
+overwrites, and never creates the folder: if it is missing or unwritable the reply is `503
+no_recordings_dir`. A write is: temp file (`O_EXCL`), write, `fsync`, hard link to the final name (which
+fails if the name exists, so a collision draws a new random name and the other file is untouched),
+unlink the temp, `fsync` the folder, `stat` the size. The ack is built only after that.
+
+**Name.** Talon's recordings are `<phrase>-<8 letters or digits>.flac`. A snippet is
+`phone-snippet-<8 letters or digits>.flac`. A spoken phrase is words separated by spaces and never
+holds a hyphen, so the fixed `phone-snippet` cannot be a real command and the files are told apart by
+name alone (anything that derives a command name from the filename gets `phone-snippet`). No subfolder
+fallback was needed. Mode `0644`.
+
+Request, after the same auth, rate, content-length and cap rules as `/emission`:
+
+| Item                     | Rule                                                                                                                                                                          |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Path, method             | `POST /snippet`; `405` otherwise; `404` if the listener has no snippet service                                                                                                |
+| Auth                     | Identical to `/emission`: `X-Talon-Phone-Key` on the tailnet bind, `Tailscale-User-Login` allow-list on loopback; `403 forbidden` before any body is read                     |
+| `Content-Type`           | `audio/flac` (or `audio/x-flac`) stored byte for byte; `audio/wav` (or `x-wav`, `wave`, `vnd.wave`) is converted to FLAC. Else `415` with `want`                              |
+| `Content-Length`         | Required, no chunked. **Cap 1 MiB (1,048,576 bytes)**, against 64 KiB for `/emission`; 30 s of WAV is 960,044 bytes. Over it is `413` and nothing is read                     |
+| Rate                     | 4 per second per server, counted apart from `/emission` and `/metrics`; `429` + `Retry-After`. A retry of a saved upload still spends one                                     |
+| `X-Talon-Utterance-Id`   | **Required**, and the same header, alphabet and table as `/emission` (see "Durable delivery"): a UUID or 16 to 64 hex digits. `400 missing_utterance_id` / `bad_utterance_id` |
+| `X-Talon-Sample-Rate`    | Optional, an integer. Must equal the audio's own rate (16000), else `422 sample_rate_mismatch`. The rate is also read from the audio header                                   |
+| `X-Talon-Content-Sha256` | Optional, 64 hex digits of the request body. A mismatch is `422 checksum_mismatch` and nothing is written                                                                     |
+| `X-Talon-Client-Rtt-Ms`  | Optional, see "Client round trip" below                                                                                                                                       |
+
+Validation is of headers against the body's own length, not a decode (`audio.py`): FLAC needs
+`fLaC`, a STREAMINFO of 16 kHz, 1 channel, 16 bits and a non-zero total sample count, a frame sync after
+the metadata, and a frame-data size between 8 bytes a block and the verbatim bound for that many samples. WAV
+needs `RIFF/WAVE`, a PCM `fmt ` before `data`, a finalized `data` size that fits the body and is whole
+samples. Anything else is `422` with one of `not_flac`, `not_wav`, `bad_streaminfo`, `bad_wav`,
+`bad_sample_rate`, `bad_channels`, `bad_bit_depth`, `unsupported_wav_format`, `unfinalized_audio`,
+`truncated_audio`, `length_mismatch`, `no_audio_frames`, `too_short`, `too_long`, `bad_audio`.
+A failed validation writes nothing and does not spend the id.
+
+**Ack.** `200` with:
+
+| Field                                | Meaning                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------- |
+| `ok`                                 | `true`                                                                             |
+| `id`                                 | The canonical key of the `X-Talon-Utterance-Id` sent (lower-case hex, no hyphens)  |
+| `name`                               | Basename of the saved file (never a directory), e.g. `phone-snippet-aB3dE9fG.flac` |
+| `received_bytes`, `received_sha256`  | Length and SHA-256 of the body the phone sent                                      |
+| `stored_bytes`, `stored_sha256`      | Length and SHA-256 of the file on disk (equal to the received ones for a FLAC)     |
+| `container`, `converted`             | What was sent (`flac` / `wav`) and whether it was converted to FLAC to store       |
+| `sample_rate`, `channels`, `seconds` | From the audio header                                                              |
+| `duplicate`                          | `false` the first time, `true` for a replay                                        |
+
+A reply that went through the id table also carries the stamp fields (`seq`, `instance`,
+`boot_time`; see "Reply stamp").
+
+**The phone deletes its copy only on a verified ack:** status `200`, `ok` true, `id` equal to its
+own id (compare canonical keys), and `received_sha256` / `received_bytes` equal to the SHA-256 and length of what it sent. An
+error, a timeout or a mismatch means keep the audio and retry with the same id.
+
+**Idempotency, in two layers.** The id is the one `/emission` uses and goes through the same memory
+table, so the rules of "Repeat of an id" apply: an id in flight is `409 in_progress` + `Retry-After: 1`;
+a finished one is answered from the table with `X-Talon-Replayed: 1` and `duplicate: true`; `GET
+/result/<id>` works. Two differences: the replay checks the bytes (the same id with different bytes is
+`409 id_conflict`, not the old ack), and a snippet has more retriable refusals (nothing was saved): a
+`422` validation error, `snippets_disabled`, `no_recordings_dir`, `wav_unavailable`, `id_conflict`,
+`ledger_write_failed`, `save_failed`, `encode_failed` and the two bad-header codes
+(`snippet.RETRIABLE_ERRORS`).
+
+Behind it is the **file-ack table**, `~/.config/talon-phone/snippets.jsonl` (next to the key; directory
+0700, file 0600; ids, basenames, sizes, checksums only; code in `snippet_ledger.py`), appended and
+`fsync`ed before the ack leaves. The memory table forgets after ten minutes or a restart; this one does
+not, so a retry any time later still gets the stored ack (`duplicate: true`, nothing written) instead of a
+second file. It keeps the last 10,000 ids; an older id would be saved again. `GET /result/<id>` falls back
+to it when the memory table does not hold the id: `200` with `"stored": true` and the original ack in
+`reply` (no `seq`, `attempts` or `age_s`). A `404` for a snippet id therefore means neither table holds a
+finished ack for it. Check, save and entry are one step under a lock, so two requests with one id at once
+write one file.
+
+**A crash between the file landing and the ack saves it once.** Before the write, a _pending_ entry
+naming the reserved file goes into the table (if that cannot be written, nothing is saved:
+`500 ledger_write_failed`). If the process dies, or the folder fsync fails, after the file landed, the
+retry finds the pending entry, `confirm`s the file (one `stat` of that exact name plus a folder fsync; the
+file is not opened or read) and acks it as a duplicate. If the file is not there, it is saved afresh.
+Remaining hole: a name collision (one in 62^8) followed by a crash.
+
+**WAV to FLAC** uses `talon.lib.flac.encode(samples, sample_rate=16000, channels=1)`, the same call Talon
+records with; without the library a WAV is `503 wav_unavailable` and a FLAC upload still works. Not yet
+verified live: the exact float scale and a decoded round trip of the converted file. A FLAC upload involves
+no conversion.
+
+Other errors: `500 save_failed`, `500 encode_failed`, `500 ledger_write_failed`, `503 no_recordings_dir`. Log lines name the
+class and `file:line` only (see "Failure log"); never the id, name, bytes or audio.
+
+## Metrics (`GET /metrics`)
+
+Key-authenticated like the rest (`403` without it), `GET` only, 5 per second per server. Returns counts and
+timings and nothing else: no phrase, id, filename, audio or key can reach it (`Sample` has a kind, a
+status, five numbers and two byte counts).
+
+Every `/emission` and `/snippet` request that passes routing becomes one sample, whatever its status, and its
+response carries `X-Talon-Server-Ms` (the handler total). Reading `/metrics` is not a sample.
+
+| Timing (ms, on the Mac)   | Covers                                                                                                                        |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `receive_ms`              | handler start (headers parsed) to the body read in full                                                                       |
+| `decode_ms`               | validation (emission: `wire.parse_validate`; snippet: audio checks plus WAV to FLAC). Absent if refused earlier               |
+| `dispatch_ms`             | emission: main-thread hop and engine call; snippet: write, fsync, link, folder fsync and the table append                     |
+| `total_ms`                | handler start to the response built. The socket write and the network are not in it                                           |
+| `req_bytes`, `resp_bytes` | Body bytes read (0 if refused before the body, or if the body came up short) and the JSON bytes sent. Headers are not counted |
+
+Response shape (`emission` and `snippet` each hold the same two blocks):
+
+```
+{"ok": true, "generated_at": "...Z", "window": 500, "client_rtt_rejected": 0,
+ "emission": {"last_n": STATS, "hours": [{"hour": "2026-10-20T14:00:00Z", ...STATS}], "client_rtt_ms": {...}},
+ "snippet":  {...}}
+STATS = {"n", "ok", "by_status": {"200": 41, "403": 2}, "bytes_in", "bytes_out",
+         "receive_ms": {"p50","p95"}, "decode_ms": {...}, "dispatch_ms": {...}, "total_ms": {...},
+         "req_bytes": {...}, "resp_bytes": {...}}
+```
+
+`last_n` is the newest 500 requests of that kind; `hours` is one block per UTC hour (up to 24, oldest first)
+over the last 20,000 samples kept. Percentiles are **nearest-rank** (the value at rank `ceil(p/100 * n)`, always an
+observed value) and use the `200` responses only, because a `403` or `429` is answered in microseconds and
+would drag p50 down; `by_status`, `n`, `bytes_in` and `bytes_out` count every response. A number with no
+data is `null`. The window is in memory and starts empty when Talon reloads the module.
+
+**Log line.** Every 5 minutes, if there were any requests since the last line, Talon's log gets one line (the
+`phone_listener:` prefix, no ids or text):
+
+```
+phone_listener: metrics: emission 4 req (200:3 429:1) total p50 20.0 p95 30.0 ms, in 300 B out 180 B | snippet 1 req (200:1) total p50 80.0 p95 80.0 ms, in 5000 B out 300 B
+```
+
+**Client round trip.** The server cannot see network time, so the phone measures its own (request sent to
+response received, for a request that already completed) and sends it on its **next** authenticated
+request to `/emission` or `/snippet`:
+
+| Header                    | Value                                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `X-Talon-Client-Rtt-Ms`   | Milliseconds, a decimal from 0 to 600,000                                                                               |
+| `X-Talon-Client-Rtt-Kind` | Optional: `emission` or `snippet`, which request kind was measured; default the kind of the request carrying the header |
+
+Kept and summarised under `client_rtt_ms` (`last_n` and `hours`, each `{n, p50, p95}`). Subtract the matching
+`X-Talon-Server-Ms` to get the network share. A value that is not a number in range, or an unknown kind, is
+counted in `client_rtt_rejected` and never fails the request. The header is read only after auth.
+
 ## Parity harness
 
 `parity.run_parity(post, set_mode, utterances, emit)` posts each utterance twice through the same
@@ -511,6 +671,7 @@ PCM too, since it would write the phone's real audio to `~/.talon/recordings`.
 phone's acoustic model; the PCM path receives the same int16-quantized samples. `Report.identical`
 is false for an empty set or any difference, and `Report.format()` prints one line per utterance.
 
+- `python -m pytest .tests/test_phone_snippet.py .tests/test_phone_metrics.py`: audio parsing (synthetic and, where installed, real `flac` / `afconvert` / `sox` output), the recordings writer (atomic, no overwrite, collisions, never lists or reads the folder), the id table, the service, the HTTP rules (auth, caps, rate, content types), the metrics maths and the `/metrics` endpoint. Every folder is a pytest temp dir; no Talon, no key.
 - `python -m pytest .tests/test_phone_listener.py`: policy, malformed bodies, oversize, identity, shared-key
   auth (wrong, missing, wrong header), bind refusals, key file, content type, real loopback socket, and the harness against a fake engine (including that it flags a phone
   model that disagrees).

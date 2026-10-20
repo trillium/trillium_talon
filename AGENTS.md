@@ -127,7 +127,7 @@ Talon is a voice-coding framework with a custom Python runtime. Key concepts:
 - `~/.talon` is itself a git repo; keep secrets in `~/.config/...`, not under `~/.talon`.
 - A private `W2lEngine` (`W2lEngine(info=live._model_info)`, never registered) is the safe target for decoder experiments; a wrongly shaped array handed to the native decoder aborts Talon. The phone-emission receiver and its lab script are in `docs/phone-receiver.md`; the encoder frame count is `ceil(((n_pcm+8000-400)//160+1)/3)`.
 - `service refused: no_engine` in `talon.log` can be a lab's private `W2lEngine` that lost its `encoder` (talon.log:38857-38862 were), not a missing live engine; the line and the reply now end with a `detail` naming what is missing. Check the live one in the REPL: `speech_system.engine.engine`.
-- The live Talon loads `~/.talon/user/trillium_talon`, a separate checkout from any task worktree, and `settings.talon` there sets `speech.record_all = 1` (Talon has no public runtime setter). Anything that injects audio-less utterances (`trillium/phone_receiver/`) refuses while it is on; never touch `~/.talon/recordings`.
+- The live Talon loads `~/.talon/user/trillium_talon`, a separate checkout from any task worktree, and `settings.talon` there sets `speech.record_all = 1` (Talon has no public runtime setter). Anything that injects audio-less utterances (`trillium/phone_receiver/`) refuses while it is on; never open, read, move, modify or delete anything in `~/.talon/recordings`. The one exception is `trillium/phone_receiver/recordings.py`, which adds new `phone-snippet-*.flac` files there (atomic, no overwrite, never reads the folder); tests point it at a tmp dir.
 
 ## Maintaining this file
 
