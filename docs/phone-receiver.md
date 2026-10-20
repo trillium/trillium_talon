@@ -6,20 +6,20 @@ padding, decode, rejection and `phrase` dispatch, replacing only the encoder cal
 live engine behind `user.phone_receiver_enabled` (default off); see "Live install" below. Work items 4 (Mac side) and 5
 add an HTTP listener (loopback, or this Mac's tailnet address with a shared-secret key) and a PCM fallback on the same switch; see "Listener" and "Tailnet bind" below.
 
-| File                     | Role                                                                                                                                                                                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wire.py`                | `parse_validate` / `validate_array` / `pack` / `frames_for`; every check runs before native code, failures are `WireError(code)`                                                                                                         |
-| `encoder.py`             | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)`                                                                                                                                                                       |
-| `live.py`                | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python. Refuses `disabled`, `record_all_on`, `no_engine`; otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
-| `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket                                      |
-| `service.py`             | `PhoneService`: one call per utterance, returns `Reply(ok, error, text, reject, ms, ..., kind, status, why, commands)`. `PhraseTap` is the `phrase` listener it captures the call's own phrase with                                      |
-| `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a worker-pool server for `POST /emission` that binds loopback or an assigned tailnet address only                                                                                        |
-| `netbind.py`             | `resolve_bind(host)`: accepts only `127.0.0.1` or a `100.64.0.0/10` address that `tailscale ip -4` lists as assigned to this Mac; `BindError` otherwise                                                                                  |
-| `keyfile.py`             | The shared secret: `ensure_key` / `load_key` (0600 file outside any repo), `matches` (constant-time). `python -m trillium.phone_receiver.keyfile` creates it and prints only the path                                                    |
-| `faillog.py`             | What a failure writes to Talon's log (below): exception class and `file:line in function` frames, never the message, key, phrase text or audio                                                                                           |
-| `hop.py`                 | Pure: hands a job to the main thread inside a given Talon resource context; `SchedulerUnavailable` when it cannot                                                                                                                        |
-| `parity.py`              | Parity harness: both paths on the same audio through `ListenerApi`, phrase output diffed                                                                                                                                                 |
-| `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                     |
+| File                     | Role                                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wire.py`                | `parse_validate` / `validate_array` / `pack` / `frames_for`; every check runs before native code, failures are `WireError(code)`                                                                                                                                                                                       |
+| `encoder.py`             | `PhoneEncoder`: bounded queue, `forward()` returns `(1, 1, T, 29)`                                                                                                                                                                                                                                                     |
+| `live.py`                | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python; `active_engine(speech_system)` is the glue's lookup. Refuses `disabled`, `record_all_on`, `no_engine` (with a `detail`, below); otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
+| `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket                                                                                                                    |
+| `service.py`             | `PhoneService`: one call per utterance, returns `Reply(ok, error, text, reject, ms, ..., kind, status, why, commands)`. `PhraseTap` is the `phrase` listener it captures the call's own phrase with                                                                                                                    |
+| `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a worker-pool server for `POST /emission` that binds loopback or an assigned tailnet address only                                                                                                                                                                      |
+| `netbind.py`             | `resolve_bind(host)`: accepts only `127.0.0.1` or a `100.64.0.0/10` address that `tailscale ip -4` lists as assigned to this Mac; `BindError` otherwise                                                                                                                                                                |
+| `keyfile.py`             | The shared secret: `ensure_key` / `load_key` (0600 file outside any repo), `matches` (constant-time). `python -m trillium.phone_receiver.keyfile` creates it and prints only the path                                                                                                                                  |
+| `faillog.py`             | What a failure writes to Talon's log (below): exception class and `file:line in function` frames, never the message, key, phrase text or audio                                                                                                                                                                         |
+| `hop.py`                 | Pure: hands a job to the main thread inside a given Talon resource context; `SchedulerUnavailable` when it cannot                                                                                                                                                                                                      |
+| `parity.py`              | Parity harness: both paths on the same audio through `ListenerApi`, phrase output diffed                                                                                                                                                                                                                               |
+| `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                                                                                                   |
 
 ## Wire format
 
@@ -167,7 +167,7 @@ in this order and stop at the first failure, before the body is read until step 
 
 Success: `200 {"ok":true,"mode":"emission","text":"page down","reject":false,"ms":6.9,"frames":43,"status":"ran","why":null,"kind":"command","commands":1,"total_ms":8.1}`
 (see "Reply fields" below). Every error is `{"ok":false,"error":<code>,"ms"?}` and carries none of the
-outcome fields. The handler never raises into Talon: a bug is `500 internal`.
+outcome fields; `no_engine` adds one `"detail"` line (below). The handler never raises into Talon: a bug is `500 internal`.
 
 The phone runs on Talon's main thread (`cron.after("0ms")`, the palette feed's `run_scheduled`),
 because a command can drive UI and keys; a call that does not finish in 5 s answers `504`.
@@ -185,8 +185,22 @@ orphaned listener) the reply is `503 scheduler_unavailable`. Start the listener 
 
 A `200` tells the phone what Talon did with the utterance. The first six fields are the original
 reply and are unchanged (`text` is now capped, see below); the rest were added and are always present on a `200`,
-so a client that ignores them keeps working. Non-200 bodies are untouched: `{"ok":false,"error":<code>,"ms"?}`
-only, so the phone treats `ok:false` as the error case.
+so a client that ignores them keeps working. Non-200 bodies are `{"ok":false,"error":<code>,"ms"?}`
+only (plus `detail` on `no_engine`), so the phone treats `ok:false` as the error case.
+
+#### `no_engine` detail
+
+`503 no_engine` means the receiver found no engine it can drive. `detail` says which link is missing, and the
+same text ends the `service refused: no_engine` log line. It names engines and attributes, never an exception
+message or a payload.
+
+| `detail`                                                                        | Meaning                                                                                                                                            |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `speech_system.engine is None: no speech engine is active`                      | Talon has no active engine (still starting, or the engine was unloaded)                                                                            |
+| `EngineProxy(...) wraps no engine`                                              | the proxy is there but holds nothing                                                                                                               |
+| `<engine> cannot take injected audio: it has no lock, encoder, _on_audio_frame` | the active engine is not a W2l engine (a Dragon engine), or a W2l engine that lost its encoder (a private lab engine once its REPL statement ends) |
+| `engine lookup raised <Class>`                                                  | looking the engine up threw; the log has `engine lookup failed: <Class>` and the frames                                                            |
+| `engine lookup returned None`                                                   | a getter returned nothing                                                                                                                          |
 
 | Field            | Type             | Meaning                                                                                                                                              |
 | ---------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -259,16 +273,16 @@ phone_listener: raised RuntimeError
 phone_listener:   dispatch.py:48 in run_scheduled
 ```
 
-| Line                                                     | Means                                                                                                | Reply                       |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------- |
-| `scheduler failed: SchedulerUnavailable`                 | the main-thread hop could not queue the job (the `from` lines name why, e.g. `ResourceClosed`)       | `503 scheduler_unavailable` |
-| `runner failed: <Class>`                                 | the service raised on the main thread                                                                | `500 internal`              |
-| `handling at <stage> failed: <Class>`                    | policy code raised; stage is `auth`, `mode`, `read_body`, `validate` or `reply`                      | `500 internal`              |
-| `engine feed failed: <Class>`                            | `_on_audio_frame` (or the encoder swap) raised, swallowed by `PhoneReceiver`                         | `500 engine_error`          |
-| `live gate failed: <Class>`                              | the gate (`settings`, `speech_system.engine`, `heal`) raised                                         | `500 engine_error`          |
-| `runner timed out`                                       | the main thread did not finish in 5 s; the command may still complete                                | `504 timeout`               |
-| `service refused: <code>`                                | `disabled`, `record_all_on`, `no_engine` or `engine_error` came back from the service (no exception) | `503` / `500`               |
-| `request failed: <Class>` / `connection failed: <Class>` | the HTTP handler raised, or the reply could not be built or written                                  | `500 internal` / none       |
+| Line                                                     | Means                                                                                                                                    | Reply                       |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `scheduler failed: SchedulerUnavailable`                 | the main-thread hop could not queue the job (the `from` lines name why, e.g. `ResourceClosed`)                                           | `503 scheduler_unavailable` |
+| `runner failed: <Class>`                                 | the service raised on the main thread                                                                                                    | `500 internal`              |
+| `handling at <stage> failed: <Class>`                    | policy code raised; stage is `auth`, `mode`, `read_body`, `validate` or `reply`                                                          | `500 internal`              |
+| `engine feed failed: <Class>`                            | `_on_audio_frame` (or the encoder swap) raised, swallowed by `PhoneReceiver`                                                             | `500 engine_error`          |
+| `live gate failed: <Class>`                              | the gate (`settings`, `speech_system.engine`, `heal`) raised                                                                             | `500 engine_error`          |
+| `runner timed out`                                       | the main thread did not finish in 5 s; the command may still complete                                                                    | `504 timeout`               |
+| `service refused: <code>`                                | `disabled`, `record_all_on`, `no_engine` or `engine_error` came back from the service (no exception); `no_engine` ends with `: <detail>` | `503` / `500`               |
+| `request failed: <Class>` / `connection failed: <Class>` | the HTTP handler raised, or the reply could not be built or written                                                                      | `500 internal` / none       |
 
 ## Tailnet bind
 

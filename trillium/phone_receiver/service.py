@@ -151,6 +151,7 @@ class Reply(NamedTuple):
     status: str | None = None
     why: str | None = None
     commands: int | None = None
+    detail: str | None = None  # a refusal only: what is missing (see live.py)
 
 
 class PhoneService:
@@ -179,7 +180,7 @@ class PhoneService:
             seen = get() if r.ok else None
         ms = round((self._clock() - t0) * 1000, 2)
         if not r.ok:
-            return Reply(False, r.error or "error", ms=ms)
+            return Reply(False, r.error or "error", ms=ms, detail=r.detail)
         status, why = outcome(seen)
         if seen is None or seen is UNREADABLE:
             text = reject = None  # nothing readable was dispatched

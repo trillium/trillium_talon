@@ -261,7 +261,11 @@ class ListenerApi:
         ctx["stage"] = "reply"
         if not reply.ok and _STATUS.get(reply.error or "error", 422) >= 500:
             faillog.note(
-                self._log, f"service refused: {reply.error}", **ctx, ms=total_ms
+                self._log,
+                f"service refused: {reply.error}",
+                **ctx,
+                ms=total_ms,
+                detail=reply.detail,
             )
         return _reply(reply, mode, total_ms)
 
@@ -289,7 +293,8 @@ def _wire_error(mode: str, body: bytes) -> str | None:
 def _reply(r: Reply, mode: str, total_ms: float) -> Response:
     if not r.ok:
         err = r.error or "error"
-        return _error(_STATUS.get(err, 422), err, ms=r.ms)
+        extra = {"detail": r.detail} if r.detail else {}
+        return _error(_STATUS.get(err, 422), err, ms=r.ms, **extra)
     body: dict[str, Any] = {
         "ok": True,
         "mode": mode,

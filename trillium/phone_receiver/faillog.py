@@ -61,7 +61,8 @@ def _context(ctx: dict[str, Any]) -> str:
         parts.append(f"{ctx['bytes']} bytes")
     if ctx.get("ms") is not None:
         parts.append(f"{ctx['ms']} ms")
-    return f" ({', '.join(parts)})" if parts else ""
+    text = f" ({', '.join(parts)})" if parts else ""
+    return f"{text}: {ctx['detail']}" if ctx.get("detail") else text
 
 
 def _emit(log: Log, line: str) -> None:

@@ -10,7 +10,7 @@ from talon import Module
 
 from trillium.phone_receiver import wire
 from trillium.phone_receiver.encoder import PhoneEncoder
-from trillium.phone_receiver.live import LiveInstall
+from trillium.phone_receiver.live import LiveInstall, NoEngine, active_engine
 
 N_PCM = 12981
 GLUE_PATH = os.path.join(
@@ -76,6 +76,118 @@ def test_engine_getter_raising_is_no_engine():
 
     r = LiveInstall(boom, lambda: True, lambda: False).handle(good())
     assert r.error == "no_engine"
+
+
+class Proxy:
+    """Talon's `EngineProxy`: `speech_system.engine`, with the real engine at `.engine`."""
+
+    def __init__(self, engine):
+        self.engine = engine
+
+    def __repr__(self):
+        return f"EngineProxy({self.engine!r})"
+
+
+class Speech:
+    def __init__(self, engine):
+        self.engine = engine
+
+
+def detail_for(engine_getter):
+    lines = []
+    r = LiveInstall(
+        engine_getter, lambda: True, lambda: False, log=lines.append
+    ).handle(good())
+    assert (r.ok, r.error) == (False, "no_engine")
+    return r.detail, lines
+
+
+def test_active_engine_unwraps_the_proxy():
+    eng = FakeEngine()
+    assert active_engine(Speech(Proxy(eng))) is eng
+
+
+def test_no_active_engine_says_so():
+    detail, _ = detail_for(lambda: active_engine(Speech(None)))
+    assert detail == "speech_system.engine is None: no speech engine is active"
+
+
+def test_proxy_with_nothing_inside_is_named():
+    detail, _ = detail_for(lambda: active_engine(Speech(Proxy(None))))
+    assert detail == "EngineProxy(None) wraps no engine"
+
+
+def test_active_engine_lookup_is_what_the_glue_calls():
+    with pytest.raises(NoEngine):
+        active_engine(Speech(None))
+    with pytest.raises(NoEngine):
+        active_engine(Speech(Proxy(None)))
+
+
+class DragonLike:
+    """An engine that is attached but is not a W2l engine: no lock, encoder or frame entry."""
+
+    def __repr__(self):
+        return "DragonEngine(dragon)"
+
+
+def test_engine_without_the_w2l_surface_names_the_engine_and_what_it_lacks():
+    detail, _ = detail_for(lambda: active_engine(Speech(Proxy(DragonLike()))))
+    assert detail == (
+        "DragonEngine(dragon) cannot take injected audio: "
+        "it has no lock, encoder, _on_audio_frame"
+    )
+
+
+def test_w2l_engine_that_lost_its_encoder_says_only_that():
+    eng = FakeEngine()
+    del eng.encoder
+    eng.__class__ = type(
+        "W2lEngine", (FakeEngine,), {"__repr__": lambda s: "W2lEngine(x)"}
+    )
+    detail, _ = detail_for(lambda: eng)
+    assert detail == "W2lEngine(x) cannot take injected audio: it has no encoder"
+
+
+def test_lookup_that_raises_names_the_class_not_the_message_and_logs_where():
+    def boom():
+        raise RuntimeError("secret-looking message")
+
+    detail, lines = detail_for(boom)
+    assert detail == "engine lookup raised RuntimeError"
+    text = "\n".join(lines)
+    assert "phone_listener: engine lookup failed: RuntimeError" in text
+    assert "secret-looking" not in text and "secret-looking" not in detail
+
+
+def test_lookup_returning_none_is_named():
+    detail, _ = detail_for(lambda: None)
+    assert detail == "engine lookup returned None"
+
+
+def test_detail_is_one_short_line_even_for_a_wild_repr():
+    class Wild:
+        def __repr__(self):
+            return "W2lEngine(" + "very\nlong " * 100 + ")"
+
+    detail, _ = detail_for(lambda: Wild())
+    assert "\n" not in detail and len(detail) <= 200
+
+
+def test_broken_repr_does_not_hide_the_refusal():
+    class Broken:
+        def __repr__(self):
+            raise ValueError("no repr")
+
+    detail, _ = detail_for(lambda: Broken())
+    assert detail.startswith("Broken cannot take injected audio")
+
+
+def test_other_refusals_carry_no_detail():
+    eng = FakeEngine()
+    assert install(eng, enabled=False).handle(good()).detail is None
+    assert install(eng, record_all=True).handle(good()).detail is None
+    assert install(eng).handle(good()).detail is None
 
 
 def test_gate_checks_that_raise_are_contained():

@@ -31,7 +31,7 @@ from trillium.phone_receiver import (
     wire,
 )
 from trillium.phone_receiver.encoder import PhoneEncoder
-from trillium.phone_receiver.live import LiveInstall
+from trillium.phone_receiver.live import LiveInstall, NoEngine, active_engine
 from trillium.phone_receiver.service import (
     UNREADABLE,
     PhoneService,
@@ -481,6 +481,62 @@ class TestGate:
         assert rig.engine.encoder is rig.engine.mic_encoder
         rig.engine.boom = False
         assert rig.post(emission_body()).status == 200
+
+
+class TestNoEngine:
+    """`no_engine` says which link is missing, in the reply and in the log line."""
+
+    @staticmethod
+    def rig_with(speech_engine, lines):
+        rig = Rig(log=lines.append)
+        speech = types.SimpleNamespace(engine=speech_engine)
+        rig.service._install._get_engine = lambda: active_engine(speech)
+        return rig
+
+    def test_no_active_engine(self):
+        lines = []
+        r = self.rig_with(None, lines).post(emission_body())
+        assert (r.status, r.body["error"]) == (503, "no_engine")
+        assert r.body["detail"] == (
+            "speech_system.engine is None: no speech engine is active"
+        )
+        assert set(r.body) == {"ok", "error", "ms", "detail"}
+        assert len(lines) == 1
+        assert lines[0].startswith(
+            "phone_listener: service refused: no_engine (mode emission"
+        )
+        assert lines[0].endswith("): " + r.body["detail"])
+
+    def test_engine_that_is_not_a_w2l_engine(self):
+        class Dragon:
+            def __repr__(self):
+                return "DragonEngine(dragon)"
+
+        lines = []
+        proxy = types.SimpleNamespace(engine=Dragon())
+        r = self.rig_with(proxy, lines).post(emission_body())
+        assert (r.status, r.body["error"]) == (503, "no_engine")
+        assert r.body["detail"] == (
+            "DragonEngine(dragon) cannot take injected audio: "
+            "it has no lock, encoder, _on_audio_frame"
+        )
+
+    def test_a_usable_engine_has_no_detail_and_serves(self):
+        lines = []
+        rig = Rig(log=lines.append)
+        r = rig.post(emission_body())
+        assert r.status == 200 and "detail" not in r.body and lines == []
+
+    def test_pcm_mode_says_it_too(self):
+        lines = []
+        rig = Rig(mode="pcm", log=lines.append)
+        rig.service._install._get_engine = lambda: active_engine(
+            types.SimpleNamespace(engine=None)
+        )
+        r = rig.post(pcm_body())
+        assert (r.status, r.body["error"]) == (503, "no_engine")
+        assert r.body["detail"].startswith("speech_system.engine is None")
+        assert "service refused: no_engine (mode pcm" in lines[0]
 
 
 class TestRobustness:
@@ -1269,6 +1325,24 @@ class TestGlue:
         assert decl["phone_receiver_mode"]["default"] == "emission"
         assert decl["phone_receiver_allowed_logins"]["default"] == ""
         assert decl["phone_receiver_mode"]["type"] is str
+
+    def test_engine_lookup_returns_the_active_proxys_inner_engine(self, monkeypatch):
+        glue, _ = self.load(monkeypatch)
+        inner = FakeEngine()
+        monkeypatch.setattr(
+            glue,
+            "speech_system",
+            types.SimpleNamespace(engine=types.SimpleNamespace(engine=inner)),
+        )
+        assert glue._engine() is inner
+        assert glue._install._engine() is inner
+
+    def test_engine_lookup_with_nothing_active_says_so(self, monkeypatch):
+        glue, _ = self.load(monkeypatch)
+        monkeypatch.setattr(glue, "speech_system", types.SimpleNamespace(engine=None))
+        with pytest.raises(NoEngine, match="speech_system.engine is None"):
+            glue._engine()
+        assert glue._install._lookup()[0] is None
 
     def test_port_is_the_documented_one(self, monkeypatch):
         glue, _ = self.load(monkeypatch)
