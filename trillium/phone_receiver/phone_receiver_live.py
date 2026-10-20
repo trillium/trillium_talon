@@ -10,21 +10,38 @@ no socket is opened. On loopback it answers 403 unless `Tailscale-User-Login` is
 `X-Talon-Phone-Key` matches the secret in `~/.config/talon-phone/key`, created 0600 if missing.
 `user.phone_receiver_mode` picks the body it accepts: `emission` (TPE1) or `pcm` (seam c).
 
+`POST /snippet` saves an uploaded FLAC/WAV as a new `phone-snippet-<8>.flac` in Talon's own
+recordings folder (`<talon_home>/recordings`), the one write this module makes there, and only
+when `user.phone_receiver_snippets_enabled` is also on (default off). `GET /metrics` returns
+request timings and byte counts, and every few minutes a one-line summary goes to the log.
+It never changes a Talon setting, in particular not `speech.record_all`.
+
 The setting defaults to off. With it off `user.phone_receiver_handle` returns `disabled`
 and never touches the engine; microphone dictation is unaffected either way, because the
 encoder is swapped only for the duration of one injected utterance. The action also refuses
 while `speech.record_all` is on (`record_all_on`). See docs/phone-receiver.md.
 """
 
+import os
 import sys
 import types
 
 from talon import Module, actions, app, cron, settings, speech_system
 
+try:
+    from talon.lib import flac
+except (
+    ImportError
+):  # the test stubs have no flac library; a WAV snippet is then refused
+    flac = None
+
 from ..palette_feed.dispatch import run_scheduled
-from . import hop, keyfile, listener, netbind
+from . import audio, hop, keyfile, listener, netbind, snippet_ledger
 from .live import LiveInstall, active_engine
+from .metrics import Metrics
+from .recordings import RecordingsWriter
 from .service import PhoneService, PhraseTap
+from .snippet import SnippetService
 
 try:
     from talon.scripting import rctx
@@ -68,7 +85,18 @@ mod.setting(
     "tailnet). Anything else is refused and the listener stays off. Read at start or reload.",
 )
 
+mod.setting(
+    "phone_receiver_snippets_enabled",
+    type=bool,
+    default=False,
+    desc="If true (and the listener is on), POST /snippet saves an uploaded 16 kHz mono "
+    "FLAC/WAV as a new phone-snippet-<8>.flac in Talon's recordings folder. Off by default. "
+    "Read per request.",
+)
+
 MODE_SETTING = "user.phone_receiver_mode"
+SNIPPETS_SETTING = "user.phone_receiver_snippets_enabled"
+METRICS_LOG_INTERVAL = "5m"
 ALLOWED_SETTING = "user.phone_receiver_allowed_logins"
 BIND_SETTING = "user.phone_receiver_bind"
 DISPATCH_TIMEOUT_S = 5.0
@@ -97,6 +125,31 @@ def _record_all() -> bool:
 _install = LiveInstall(_engine, _enabled, _record_all)
 _tap = PhraseTap(awake=lambda: actions.speech.enabled())
 _service = PhoneService(_install, _tap)
+_metrics = Metrics()
+
+
+def _recordings_dir() -> str:
+    # Talon's own folder (`speech.record_all` writes here); never created by this module.
+    return os.path.join(str(actions.path.talon_home()), "recordings")
+
+
+def _snippets_enabled() -> bool:
+    return _enabled() and bool(settings.get(SNIPPETS_SETTING))
+
+
+def _encode_wav(pcm: bytes) -> bytes:
+    # Talon's own encoder, with its defaults (16 kHz, mono): the recordings are its output.
+    return flac.encode(
+        audio.pcm16_to_floats(pcm), sample_rate=audio.SAMPLE_RATE, channels=1
+    )
+
+
+_snippets = SnippetService(
+    RecordingsWriter(_recordings_dir),
+    snippet_ledger.SnippetLedger(),
+    _snippets_enabled,
+    encode=_encode_wav if flac is not None else None,
+)
 
 # Hot reload re-executes this module, but Talon has no unload hook: the listener and the
 # phrase tap outlive module globals, so both are kept on a holder and replaced on reload.
@@ -104,6 +157,8 @@ _HOLDER_KEY = "_trillium_phone_listener"
 _holder = sys.modules.setdefault(
     _HOLDER_KEY, types.SimpleNamespace(server=None, tap=None)
 )
+if not hasattr(_holder, "metrics_job"):  # a holder from before the metrics line existed
+    _holder.metrics_job = None
 
 
 def _owner():
@@ -126,7 +181,16 @@ def _on_main_thread(fn):
     return run_scheduled(_schedule, fn, DISPATCH_TIMEOUT_S)
 
 
+def _log_metrics():
+    line = _metrics.tick_line()
+    if line:
+        print(f"phone_listener: {line}")
+
+
 def start_listener():
+    if _holder.metrics_job is not None:
+        cron.cancel(_holder.metrics_job)
+        _holder.metrics_job = None
     if _holder.server is not None:
         listener.stop(_holder.server)
         _holder.server = None
@@ -154,6 +218,8 @@ def start_listener():
         lambda: settings.get(ALLOWED_SETTING),
         runner=_on_main_thread,
         key=(lambda: key) if key is not None else None,
+        snippets=_snippets,
+        metrics=_metrics,
     )
     try:
         _holder.server, _ = listener.start(api, listener.DEFAULT_PORT, plan.host)
@@ -163,6 +229,7 @@ def start_listener():
             f"{getattr(exc, 'strerror', None) or exc}"
         )
         return
+    _holder.metrics_job = cron.interval(METRICS_LOG_INTERVAL, _log_metrics)
     print(
         f"phone_listener: listening on {plan.host}:{listener.DEFAULT_PORT} "
         f"({'tailnet, key auth' if plan.tailnet else 'loopback, identity auth'}; "

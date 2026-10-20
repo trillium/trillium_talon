@@ -1,5 +1,6 @@
-"""HTTP front for the phone receiver: `POST /emission`, one utterance per request, and
-`GET /result/<id>` to ask what became of one.
+"""HTTP front for the phone receiver: `POST /emission` (one utterance per request),
+`POST /snippet` (one saved audio snippet per request, see `snippet`), `GET /result/<id>` to ask
+what became of one, and `GET /metrics` (see `metrics`).
 
 Pure stdlib, no `talon` import. `ListenerApi.handle` is the whole policy and takes plain
 values, so tests drive it without a socket; `start` binds it to loopback or to this Mac's own
@@ -10,7 +11,9 @@ cleared for and no body is read before it is: path (404), method (405), auth (40
 content type for the configured mode (415), rate (429), length headers (411/400/413), then
 the body itself (400), the body's wire format (422, validated here so a malformed body is
 refused before the runner, the main thread or the engine is involved), and only then the
-service, which validates again in Python before any native call.
+service, which validates again in Python before any native call. `/snippet` runs the same
+checks with its own content types, rate and body cap, then hands the body to `SnippetService`;
+`/metrics` is auth then rate, and returns counts and timings only.
 
 Auth has two forms, chosen by how the listener is served. With no `key` provider (the
 loopback case, fronted by `tailscale serve` if at all) it is the `Tailscale-User-Login`
@@ -22,7 +25,10 @@ can forge the header, which is the same boundary the palette feed has. With a `k
 A request may carry `X-Talon-Utterance-Id` (see `ledger`): the id makes the POST idempotent, so a
 retry after a lost reply gets the stored reply instead of running the command a second time, and
 `GET /result/<id>` (same auth, its own rate limit) says what the first attempt came to. Without
-the header a request behaves exactly as it always did.
+the header an `/emission` request behaves exactly as it always did. `/snippet` requires it
+(`400 missing_utterance_id`): it is the same header and the same table, and the snippet service
+keeps a durable ack per id behind that table, so a retry after the table forgot it (ten minutes,
+or a restart) still returns the stored ack, and `GET /result/<id>` still finds it.
 """
 
 import json
@@ -40,13 +46,15 @@ from ..palette_feed.limits import (
     parse_content_length,
     read_body,
 )
-from . import faillog, keyfile, ledger, netbind, wire
+from . import faillog, keyfile, ledger, netbind, snippet, wire
 from .hop import SchedulerUnavailable
+from .metrics import EMISSION, SNIPPET, Metrics, Sample, Trace
 from .service import Reply
 
 DEFAULT_PORT = 7403
 PATH = "/emission"
 RESULT_PREFIX = "/result/"
+METRICS_PATH = "/metrics"
 IDENTITY_HEADER = "tailscale-user-login"
 TS_HEADER = "x-utterance-ts"
 MODE_EMISSION = "emission"
@@ -58,6 +66,16 @@ REQUEST_TIMEOUT_S = 10
 RATE = (10, 1.0)  # utterances per window seconds, counted per server
 # result queries per window seconds; apart from RATE so polling cannot 429 an utterance
 RESULT_RATE = (20, 1.0)
+METRICS_RATE = (5, 1.0)  # summaries per window seconds, counted per server
+RTT_HEADER = (
+    "x-talon-client-rtt-ms"  # the phone's own round trip for an earlier request
+)
+RTT_KIND_HEADER = (
+    "x-talon-client-rtt-kind"  # which request it measured; default: this one's kind
+)
+SERVER_MS_HEADER = (
+    "X-Talon-Server-Ms"  # on every response to a known path: handler total_ms
+)
 MAX_TEXT_CHARS = 512  # cap on the echoed phrase; the other reply fields are short enums
 
 # Wire-level mistakes are the caller's; the rest say why the host could not serve.
@@ -72,8 +90,9 @@ _STATUS = {
 # A refusal where the command provably did not run keeps its id usable: the stored reply says so
 # (`retriable`) and the next request under that id executes. Everything else is final, because
 # the command may have run (a 504 or a 500 from inside the engine) or did (any 200).
-_RETRIABLE_ERRORS = frozenset(
-    {"scheduler_unavailable", "disabled", "record_all_on", "no_engine"}
+_RETRIABLE_ERRORS = (
+    frozenset({"scheduler_unavailable", "disabled", "record_all_on", "no_engine"})
+    | snippet.RETRIABLE_ERRORS
 )
 
 
@@ -87,6 +106,10 @@ class Response:
     status: int
     body: dict[str, Any] = field(default_factory=dict)
     headers: dict[str, str] = field(default_factory=dict)
+
+    def payload(self) -> bytes:
+        """The JSON bytes sent for `body`; also what the byte metrics count."""
+        return json.dumps(self.body, separators=(",", ":")).encode("utf-8")
 
 
 def _error(status: int, code: str, **extra: Any) -> Response:
@@ -158,6 +181,11 @@ class ListenerApi:
         log: faillog.Log | None = None,
         table: ledger.Ledger | None = None,
         result_limiter: RateLimiter | None = None,
+        snippets: snippet.SnippetService | None = None,
+        metrics: Metrics | None = None,
+        snippet_limiter: RateLimiter | None = None,
+        metrics_limiter: RateLimiter | None = None,
+        trace_timer: Callable[[], float] | None = None,
     ):
         self._backend = backend
         self._get_mode = get_mode
@@ -173,6 +201,16 @@ class ListenerApi:
         self._timer = timer or time.perf_counter
         # Talon's log; see faillog for what is (and is not) written
         self._log = log or print
+        # Both optional: without them `/snippet` and `/metrics` are 404, as before they existed.
+        # Snippets and summaries are limited apart from `/emission` so an upload backlog cannot
+        # starve live speech.
+        self._snippets = snippets
+        self._metrics = metrics
+        self._snippet_limiter = snippet_limiter or RateLimiter(*snippet.RATE)
+        self._metrics_limiter = metrics_limiter or RateLimiter(*METRICS_RATE)
+        self._trace_timer = (
+            trace_timer or time.perf_counter
+        )  # apart from `timer`, which times total_ms
 
     @property
     def log(self) -> faillog.Log:
@@ -212,26 +250,91 @@ class ListenerApi:
     ) -> Response:
         """Never raises; every outcome is a `Response`."""
         ctx: dict[str, Any] = {"stage": "request"}
+        trace = Trace(self._trace_timer)
         try:
-            return self._handle(method, target, headers, rfile, ctx)
+            resp = self._handle(method, target, headers, rfile, ctx, trace)
         except Exception as exc:  # noqa: BLE001 - nothing may escape into Talon
             faillog.report(self._log, f"handling at {ctx['stage']}", exc, **ctx)
-            return _error(500, "internal")
+            resp = _error(500, "internal")
+        return self._measure(resp, ctx, trace)
 
-    def _handle(self, method, target, headers, rfile, ctx) -> Response:
+    def _measure(self, resp: Response, ctx: dict[str, Any], trace: Trace) -> Response:
+        """Record the request in the metrics and stamp the server time on the response."""
+        kind = ctx.get("kind")
+        if kind is None:
+            return resp
+        try:
+            timings = trace.timings()
+            resp.headers[SERVER_MS_HEADER] = str(timings["total_ms"])
+            if self._metrics is not None:
+                self._metrics.record(
+                    Sample(
+                        kind,
+                        self._metrics.now(),
+                        resp.status,
+                        ctx.get("read_bytes", 0),
+                        len(resp.payload()),
+                        **timings,
+                    )
+                )
+        except Exception as exc:  # noqa: BLE001 - metrics must never fail a request
+            faillog.report(self._log, "metrics", exc)
+        return resp
+
+    def _rate_limited(self, limiter: RateLimiter) -> Response | None:
+        allowed, retry_after = limiter.check()
+        if allowed:
+            return None
+        return Response(
+            429,
+            {"ok": False, "error": "rate_limited"},
+            {"Retry-After": str(max(1, int(retry_after + 0.999)))},
+        )
+
+    def _absorb_rtt(self, h: Mapping[str, str], kind: str) -> None:
+        """Keep the phone's round trip for an earlier request; a bad value is counted, not an error."""
+        raw = h.get(RTT_HEADER)
+        if raw is None or self._metrics is None:
+            return
+        try:
+            ms = float(raw.strip())
+        except ValueError:
+            ms = float("nan")
+        self._metrics.record_client_rtt(
+            (h.get(RTT_KIND_HEADER) or kind).strip().lower(), ms
+        )
+
+    def _handle(self, method, target, headers, rfile, ctx, trace) -> Response:
         h = {str(k).lower(): v for k, v in headers.items()}
         path = target.split("?", 1)[0]
         if path.startswith(RESULT_PREFIX):
             return self._result(method, path[len(RESULT_PREFIX) :], h, ctx)
-        if path != PATH:
+        routes = {PATH: EMISSION, snippet.PATH: SNIPPET}
+        if self._metrics is not None:
+            routes[METRICS_PATH] = None
+        if self._snippets is None:
+            routes.pop(snippet.PATH)
+        if path not in routes:
             return _error(404, "not_found")
-        if method != "POST":
+        want = "GET" if path == METRICS_PATH else "POST"
+        if method != want:
             return Response(
-                405, {"ok": False, "error": "method_not_allowed"}, {"Allow": "POST"}
+                405, {"ok": False, "error": "method_not_allowed"}, {"Allow": want}
             )
+        kind = routes[path]
+        if kind is not None:
+            ctx["kind"] = kind
         ctx["stage"] = "auth"
         if not self._authorized(h):
             return _error(403, "forbidden")
+        if kind is None:
+            ctx["stage"] = "metrics"
+            return self._rate_limited(self._metrics_limiter) or Response(
+                200, self._metrics.summary()
+            )
+        self._absorb_rtt(h, kind)
+        if kind == SNIPPET:
+            return self._snippet(h, rfile, ctx, trace)
         ctx["stage"] = "mode"
         mode = self._mode()
         ctx["mode"] = mode
@@ -243,13 +346,9 @@ class ListenerApi:
             return _error(
                 415, "unsupported_media_type", want=CONTENT_TYPES[mode], mode=mode
             )
-        allowed, retry_after = self._limiter.check()
-        if not allowed:
-            return Response(
-                429,
-                {"ok": False, "error": "rate_limited"},
-                {"Retry-After": str(max(1, int(retry_after + 0.999)))},
-            )
+        limited = self._rate_limited(self._limiter)
+        if limited is not None:
+            return limited
         try:
             uid = ledger.parse_id(h.get(ledger.ID_HEADER))
         except ledger.BadId:
@@ -265,7 +364,8 @@ class ListenerApi:
             body = read_body(rfile, length) if rfile is not None else b""
         except BodyError as exc:
             return _error(exc.status, exc.code)
-        ctx["bytes"] = len(body)
+        ctx["bytes"] = ctx["read_bytes"] = len(body)
+        trace.mark("received")
         ctx["stage"] = "validate"
         ts = 0.0
         if mode == MODE_PCM:
@@ -275,20 +375,28 @@ class ListenerApi:
         invalid = _wire_error(mode, body)
         if invalid is not None:
             return _error(422, invalid)
+        trace.mark("decoded")
         if mode == MODE_PCM:
             call = lambda: self._backend.pcm(body, ts)  # noqa: E731
         else:
             call = lambda: self._backend.emission(body)  # noqa: E731
         if uid is None:
-            return self._execute(call, mode, ctx)
-        return self._once(uid, lambda: self._execute(call, mode, ctx))
+            return self._execute(call, mode, ctx, trace)
+        return self._once(uid, lambda: self._execute(call, mode, ctx, trace))
 
-    def _once(self, uid: str, run: Callable[[], Response]) -> Response:
+    def _once(
+        self,
+        uid: str,
+        run: Callable[[], Response],
+        replay: Callable[[ledger.Entry], Response | None] | None = None,
+    ) -> Response:
         """`run()` at most once per `uid` (until its refusal is retriable or the entry expires).
 
         Not for wire-level refusals: those return before an id is claimed, since nothing ran and
         nothing needs remembering. `run` is the executor; this is the only caller of it for an
         utterance that carries an id, and it is never called for a replay or an id in flight.
+        `replay`, if given, may answer a replay itself (a snippet checks that the bytes are the
+        ones the stored ack is for); None from it means the stored reply as it was.
         """
         claim = self._ledger.begin(uid)
         entry = claim.entry
@@ -296,6 +404,9 @@ class ListenerApi:
             body = {"ok": False, "error": "in_progress", **self._ledger.stamp(entry)}
             return Response(409, body, {"Retry-After": "1"})
         if claim.kind == ledger.REPLAY:
+            answer = replay(entry) if replay is not None else None
+            if answer is not None:
+                return answer
             return Response(
                 entry.status or 500,
                 dict(entry.body or {}),
@@ -316,12 +427,15 @@ class ListenerApi:
         return Response(resp.status, body, resp.headers)
 
     def _execute(
-        self, call: Callable[[], Reply], mode: str, ctx: dict[str, Any]
+        self, call: Callable[[], Reply], mode: str, ctx: dict[str, Any], trace: Trace
     ) -> Response:
         ctx["stage"] = "runner"
         t0 = self._timer()
         try:
-            reply = self._run(call)
+            try:
+                reply = self._run(call)
+            finally:
+                trace.mark("dispatched")
         except (TimeoutError, DispatchTimeout):
             faillog.note(
                 self._log, "runner timed out", **ctx, ms=_ms(self._timer() - t0)
@@ -375,11 +489,86 @@ class ListenerApi:
             return _error(400, "bad_utterance_id")
         entry = self._ledger.lookup(key) if key is not None else None
         if entry is None:
+            stored = self._snippets.stored(key) if self._snippets and key else None
+            if stored is not None:
+                return Response(200, self._stored_view(key, stored))
             return Response(404, self._ledger.unknown())
         view = self._ledger.view(entry)
         if entry.done:
             return Response(200, view)
         return Response(202, view, {"Retry-After": "1"})
+
+    def _stored_view(self, key: str, ack: dict[str, Any]) -> dict[str, Any]:
+        """`GET /result/<id>` for a snippet the memory table no longer holds but the durable one does.
+
+        The ack is the reply as first sent; there is no attempt count or age here, and `stored`
+        says it came from the file-ack table, which outlives the memory table's TTL and restarts.
+        """
+        return {
+            "ok": True,
+            "state": "done",
+            "id": key,
+            "instance": self._ledger.instance,
+            "boot_time": self._ledger.boot_time,
+            "uptime_s": self._ledger.uptime_s(),
+            "http_status": 200,
+            "retriable": False,
+            "stored": True,
+            "reply": {**ack, "id": key, "duplicate": False},
+        }
+
+    def _snippet(self, h, rfile, ctx, trace) -> Response:
+        """`POST /snippet`: the checks `/emission` makes, then `SnippetService.handle`.
+
+        The id is required (the phone deletes its copy on the ack, so a retry must be safe) and is
+        the same `X-Talon-Utterance-Id` as `/emission`'s, held in the same table: an id in flight
+        is `409 in_progress`, a finished one is replayed (`X-Talon-Replayed`). The service adds the
+        durable layer behind that table, which is what makes a retry after the TTL or a restart
+        return the stored ack instead of saving a second file.
+        """
+        svc = self._snippets
+        ctx["stage"] = "snippet"
+        if not svc.enabled():
+            return _error(503, "snippets_disabled")
+        container = snippet.MEDIA_TYPES.get(media_type(h.get("content-type"))[0])
+        if container is None:
+            return _error(
+                415, "unsupported_media_type", want=sorted(snippet.MEDIA_TYPES)
+            )
+        limited = self._rate_limited(self._snippet_limiter)
+        if limited is not None:
+            return limited
+        try:
+            uid = ledger.parse_id(h.get(ledger.ID_HEADER))
+        except ledger.BadId:
+            return _error(400, "bad_utterance_id")
+        if uid is None:
+            return _error(400, "missing_utterance_id")
+        if "transfer-encoding" in h:
+            return _error(411, "length_required")
+        ctx["stage"] = "read_body"
+        try:
+            length = parse_content_length(h.get("content-length"), snippet.MAX_BYTES)
+            ctx["bytes"] = length
+            body = read_body(rfile, length) if rfile is not None else b""
+        except BodyError as exc:
+            return _error(exc.status, exc.code)
+        ctx["bytes"] = ctx["read_bytes"] = len(body)
+        trace.mark("received")
+        ctx["stage"] = "save"
+
+        def save() -> Response:
+            out = svc.handle(container, uid, body, h, trace)
+            return Response(out.status, out.body)
+
+        def replay(entry: ledger.Entry) -> Response | None:
+            out = svc.replay(entry.body or {}, body)
+            if out is None:
+                return None
+            headers = {ledger.REPLAYED_HEADER: "1"} if out.status == 200 else {}
+            return Response(out.status, out.body, headers)
+
+        return self._once(uid, save, replay)
 
 
 def _ms(seconds: float) -> float:
@@ -441,7 +630,7 @@ def make_handler(api: ListenerApi) -> type[BaseHTTPRequestHandler]:
             except Exception as exc:  # noqa: BLE001
                 faillog.report(api.log, "request", exc)
                 resp = _error(500, "internal")
-            payload = json.dumps(resp.body, separators=(",", ":")).encode("utf-8")
+            payload = resp.payload()
             self.send_response(resp.status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Cache-Control", "no-store")
