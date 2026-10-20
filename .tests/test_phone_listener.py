@@ -129,6 +129,7 @@ class Rig:
         allowed=LOGIN,
         key=None,
         log=None,
+        **api_kw,
     ):
         self.engine = FakeEngine()
         self.state = {"enabled": enabled, "record_all": record_all}
@@ -148,9 +149,12 @@ class Rig:
             self.service,
             lambda: self.mode,
             lambda: self.allowed,
-            limiter=RateLimiter(1000, 1.0),
-            key=(lambda: key) if key is not None else None,
-            log=log,
+            **{
+                "limiter": RateLimiter(1000, 1.0),
+                "key": (lambda: key) if key is not None else None,
+                "log": log,
+                **api_kw,  # runner, table, result_limiter, ... for a test that needs them
+            },
         )
 
     def post(self, body, ctype=None, login=LOGIN, extra=None, length=None):
