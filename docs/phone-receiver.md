@@ -16,6 +16,7 @@ add an HTTP listener (loopback, or this Mac's tailnet address with a shared-secr
 | `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a worker-pool server for `POST /emission` that binds loopback or an assigned tailnet address only                                                                                        |
 | `netbind.py`             | `resolve_bind(host)`: accepts only `127.0.0.1` or a `100.64.0.0/10` address that `tailscale ip -4` lists as assigned to this Mac; `BindError` otherwise                                                                                  |
 | `keyfile.py`             | The shared secret: `ensure_key` / `load_key` (0600 file outside any repo), `matches` (constant-time). `python -m trillium.phone_receiver.keyfile` creates it and prints only the path                                                    |
+| `faillog.py`             | What a failure writes to Talon's log (below): exception class and `file:line in function` frames, never the message, key, phrase text or audio                                                                                           |
 | `parity.py`              | Parity harness: both paths on the same audio through `ListenerApi`, phrase output diffed                                                                                                                                                 |
 | `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                     |
 
@@ -232,6 +233,30 @@ same `POST /emission` is already correlated and costs no extra request, so it is
 `tailscale serve`, which is not used here, so on the loopback bind any process on this Mac can POST
 its own value; that is the same boundary the palette feed has. The `record_all` and body-validation
 gates still apply. On the tailnet bind the identity header is ignored entirely.
+
+### Failure log
+
+Every failure the receiver contains becomes a status code, so the cause is written to Talon's log
+(`print`, prefix `phone_listener:`) before the code goes back. A report is the exception class and one
+`file:line in function` per frame (innermost 12, following `__cause__` up to 4 deep); the exception
+message, source lines, locals, the key, phrase text and audio are never written, and a request is
+described only by mode, byte count and elapsed ms. Ordinary traffic and caller mistakes (`4xx`) log nothing.
+
+```
+phone_listener: runner failed: RuntimeError (mode emission, 5360 bytes, 12.4 ms)
+phone_listener: raised RuntimeError
+phone_listener:   dispatch.py:48 in run_scheduled
+```
+
+| Line                                                     | Means                                                                                                | Reply                 |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------- |
+| `runner failed: <Class>`                                 | the main-thread hop or the service raised                                                            | `500 internal`        |
+| `handling at <stage> failed: <Class>`                    | policy code raised; stage is `auth`, `mode`, `read_body`, `validate` or `reply`                      | `500 internal`        |
+| `engine feed failed: <Class>`                            | `_on_audio_frame` (or the encoder swap) raised, swallowed by `PhoneReceiver`                         | `500 engine_error`    |
+| `live gate failed: <Class>`                              | the gate (`settings`, `speech_system.engine`, `heal`) raised                                         | `500 engine_error`    |
+| `runner timed out`                                       | the main thread did not finish in 5 s; the command may still complete                                | `504 timeout`         |
+| `service refused: <code>`                                | `disabled`, `record_all_on`, `no_engine` or `engine_error` came back from the service (no exception) | `503` / `500`         |
+| `request failed: <Class>` / `connection failed: <Class>` | the HTTP handler raised, or the reply could not be built or written                                  | `500 internal` / none |
 
 ## Tailnet bind
 

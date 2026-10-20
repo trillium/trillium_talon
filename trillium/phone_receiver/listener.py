@@ -34,7 +34,7 @@ from ..palette_feed.limits import (
     parse_content_length,
     read_body,
 )
-from . import keyfile, netbind, wire
+from . import faillog, keyfile, netbind, wire
 from .service import Reply
 
 DEFAULT_PORT = 7403
@@ -127,6 +127,7 @@ class ListenerApi:
         clock: Callable[[], float] | None = None,
         key: Callable[[], str | None] | None = None,
         timer: Callable[[], float] | None = None,
+        log: faillog.Log | None = None,
     ):
         self._backend = backend
         self._get_mode = get_mode
@@ -137,6 +138,12 @@ class ListenerApi:
         self._limiter = limiter or RateLimiter(*RATE)
         self._clock = clock or time.time
         self._timer = timer or time.perf_counter
+        # Talon's log; see faillog for what is (and is not) written
+        self._log = log or print
+
+    @property
+    def log(self) -> faillog.Log:
+        return self._log
 
     @property
     def uses_key(self) -> bool:
@@ -167,12 +174,14 @@ class ListenerApi:
         rfile: BinaryIO | None = None,
     ) -> Response:
         """Never raises; every outcome is a `Response`."""
+        ctx: dict[str, Any] = {"stage": "request"}
         try:
-            return self._handle(method, target, headers, rfile)
-        except Exception:  # noqa: BLE001 - nothing may escape into Talon
+            return self._handle(method, target, headers, rfile, ctx)
+        except Exception as exc:  # noqa: BLE001 - nothing may escape into Talon
+            faillog.report(self._log, f"handling at {ctx['stage']}", exc, **ctx)
             return _error(500, "internal")
 
-    def _handle(self, method, target, headers, rfile) -> Response:
+    def _handle(self, method, target, headers, rfile, ctx) -> Response:
         h = {str(k).lower(): v for k, v in headers.items()}
         path = target.split("?", 1)[0]
         if path != PATH:
@@ -181,9 +190,12 @@ class ListenerApi:
             return Response(
                 405, {"ok": False, "error": "method_not_allowed"}, {"Allow": "POST"}
             )
+        ctx["stage"] = "auth"
         if not self._authorized(h):
             return _error(403, "forbidden")
+        ctx["stage"] = "mode"
         mode = self._mode()
+        ctx["mode"] = mode
         if (
             mode not in MODES
         ):  # a typo in the setting must not fall through to either path
@@ -201,13 +213,17 @@ class ListenerApi:
             )
         if "transfer-encoding" in h:
             return _error(411, "length_required")
+        ctx["stage"] = "read_body"
         try:
             length = parse_content_length(
                 h.get("content-length"), wire.MAX_PAYLOAD_BYTES
             )
+            ctx["bytes"] = length
             body = read_body(rfile, length) if rfile is not None else b""
         except BodyError as exc:
             return _error(exc.status, exc.code)
+        ctx["bytes"] = len(body)
+        ctx["stage"] = "validate"
         ts = 0.0
         if mode == MODE_PCM:
             ts = parse_ts(h.get(TS_HEADER), self._clock())
@@ -220,14 +236,31 @@ class ListenerApi:
             call = lambda: self._backend.pcm(body, ts)  # noqa: E731
         else:
             call = lambda: self._backend.emission(body)  # noqa: E731
+        ctx["stage"] = "runner"
         t0 = self._timer()
         try:
             reply = self._run(call)
         except (TimeoutError, DispatchTimeout):
+            faillog.note(
+                self._log, "runner timed out", **ctx, ms=_ms(self._timer() - t0)
+            )
             return _error(504, "timeout")
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            faillog.report(
+                self._log, "runner", exc, **{**ctx, "ms": _ms(self._timer() - t0)}
+            )
             return _error(500, "internal")
-        return _reply(reply, mode, round((self._timer() - t0) * 1000, 2))
+        total_ms = _ms(self._timer() - t0)
+        ctx["stage"] = "reply"
+        if not reply.ok and _STATUS.get(reply.error or "error", 422) >= 500:
+            faillog.note(
+                self._log, f"service refused: {reply.error}", **ctx, ms=total_ms
+            )
+        return _reply(reply, mode, total_ms)
+
+
+def _ms(seconds: float) -> float:
+    return round(seconds * 1000, 2)
 
 
 def _wire_error(mode: str, body: bytes) -> str | None:
@@ -281,7 +314,8 @@ def make_handler(api: ListenerApi) -> type[BaseHTTPRequestHandler]:
                 resp = api.handle(
                     self.command, self.path, dict(self.headers), self.rfile
                 )
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
+                faillog.report(api.log, "request", exc)
                 resp = _error(500, "internal")
             payload = json.dumps(resp.body, separators=(",", ":")).encode("utf-8")
             self.send_response(resp.status)
@@ -309,7 +343,8 @@ class ListenerServer(HTTPServer):
     WORKERS = 2
     BACKLOG = 8
 
-    def __init__(self, address, handler):
+    def __init__(self, address, handler, log: faillog.Log | None = None):
+        self._log = log or print
         # A failed bind calls server_close from inside super().__init__, before any worker exists.
         self._workers: list[threading.Thread] = []
         super().__init__(address, handler)
@@ -336,7 +371,7 @@ class ListenerServer(HTTPServer):
             try:
                 self.finish_request(request, client_address)
             except Exception as exc:  # noqa: BLE001
-                print(f"phone_listener: connection error: {type(exc).__name__}")
+                faillog.report(self._log, "connection", exc)
             finally:
                 self.shutdown_request(request)
 
@@ -361,7 +396,7 @@ def start(
     plan = netbind.resolve_bind(host, assigned)
     if plan.tailnet and not api.uses_key:
         raise netbind.BindError("a tailnet bind requires shared-secret auth")
-    server = ListenerServer((plan.host, port), make_handler(api))
+    server = ListenerServer((plan.host, port), make_handler(api), api.log)
     thread = threading.Thread(
         target=lambda: server.serve_forever(poll_interval=0.05),
         name="phone-listener",

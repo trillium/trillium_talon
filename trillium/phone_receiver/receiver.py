@@ -9,7 +9,7 @@ import math
 import threading
 from typing import Any, NamedTuple
 
-from . import wire
+from . import faillog, wire
 from .encoder import PhoneEncoder
 
 
@@ -23,9 +23,16 @@ class Result(NamedTuple):
 
 
 class PhoneReceiver:
-    def __init__(self, engine: Any, encoder: PhoneEncoder | None = None):
+    def __init__(
+        self,
+        engine: Any,
+        encoder: PhoneEncoder | None = None,
+        log: faillog.Log | None = None,
+    ):
         self.engine = engine
         self.encoder = encoder or PhoneEncoder()
+        # an engine failure becomes a code; this keeps its cause
+        self._log = log or print
         self._stats_lock = threading.Lock()
         self.accepted = 0
         self.rejected = 0
@@ -44,7 +51,10 @@ class PhoneReceiver:
             self._feed(em)
         except wire.WireError as e:
             return self._count(Result(False, e.code))
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            faillog.report(
+                self._log, "engine feed", exc, mode="emission", bytes=len(buf)
+            )
             return self._count(Result(False, "engine_error"))
         return self._count(Result(True, None, em.array.shape[0], em.n_pcm))
 
@@ -66,7 +76,8 @@ class PhoneReceiver:
         try:
             with self.engine.lock:
                 self.engine._on_audio_frame(pcm.tolist(), ts, pad=True)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            faillog.report(self._log, "engine feed", exc, mode="pcm", bytes=len(buf))
             return self._count(Result(False, "engine_error"))
         return self._count(Result(True, None, wire.frames_for(len(pcm)), len(pcm)))
 

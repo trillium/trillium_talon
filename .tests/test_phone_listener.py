@@ -18,7 +18,7 @@ from talon import Module
 
 from trillium.palette_feed.dispatch import DispatchTimeout
 from trillium.palette_feed.limits import RateLimiter
-from trillium.phone_receiver import keyfile, listener, netbind, parity, wire
+from trillium.phone_receiver import faillog, keyfile, listener, netbind, parity, wire
 from trillium.phone_receiver.encoder import PhoneEncoder
 from trillium.phone_receiver.live import LiveInstall
 from trillium.phone_receiver.service import (
@@ -111,7 +111,13 @@ class Rig:
     """FakeEngine + LiveInstall + PhoneService + ListenerApi, with a mutable mode and allow-list."""
 
     def __init__(
-        self, enabled=True, record_all=False, mode="emission", allowed=LOGIN, key=None
+        self,
+        enabled=True,
+        record_all=False,
+        mode="emission",
+        allowed=LOGIN,
+        key=None,
+        log=None,
     ):
         self.engine = FakeEngine()
         self.state = {"enabled": enabled, "record_all": record_all}
@@ -124,6 +130,7 @@ class Rig:
             lambda: self.engine,
             lambda: self.state["enabled"],
             lambda: self.state["record_all"],
+            log=log,
         )
         self.service = PhoneService(install, self.tap, wait_s=0.05)
         self.api = listener.ListenerApi(
@@ -132,6 +139,7 @@ class Rig:
             lambda: self.allowed,
             limiter=RateLimiter(1000, 1.0),
             key=(lambda: key) if key is not None else None,
+            log=log,
         )
 
     def post(self, body, ctype=None, login=LOGIN, extra=None, length=None):
@@ -1286,3 +1294,264 @@ class TestGlue:
                 glue.listener.stop(glue._holder.server)
             glue._holder.server = None
             talon.speech_system.reset()
+
+
+class TestFailureLog:
+    """A failure while running an utterance leaves its exception class and frames in Talon's
+    log, and nothing a request carried: no message, key, phrase text or audio."""
+
+    SECRET = "s3cret-phrase-and-key-material"
+    LOGKEY = "k" * 43
+
+    @staticmethod
+    def body_headers(body, key=None):
+        h = {"Content-Type": TPE1, "Content-Length": str(len(body))}
+        h.update({keyfile.HEADER: key} if key else {"Tailscale-User-Login": LOGIN})
+        return h
+
+    def api(self, runner, lines, key=None):
+        rig = Rig(key=key, log=lines.append)
+        api = listener.ListenerApi(
+            rig.service,
+            lambda: "emission",
+            lambda: LOGIN,
+            runner=runner,
+            limiter=RateLimiter(1000, 1.0),
+            key=(lambda: key) if key else None,
+            log=lines.append,
+        )
+        return rig, api
+
+    def post(self, api, key=None, body=None):
+        body = body if body is not None else emission_body()
+        return api.handle(
+            "POST", "/emission", self.body_headers(body, key), io.BytesIO(body)
+        )
+
+    def test_runner_exception_logs_class_stage_size_and_frames_but_not_the_message(
+        self,
+    ):
+        def runner(fn):
+            raise KeyError(self.SECRET)
+
+        lines = []
+        _, api = self.api(runner, lines, key=self.LOGKEY)
+        body = emission_body()
+        r = self.post(api, key=self.LOGKEY, body=body)
+        assert (r.status, r.body["error"]) == (500, "internal")
+        text = "\n".join(lines)
+        assert lines[0].startswith(
+            "phone_listener: runner failed: KeyError (mode emission, "
+        )
+        assert f"{len(body)} bytes" in lines[0]
+        assert "phone_listener: raised KeyError" in text
+        assert "test_phone_listener.py:" in text and " in runner" in text
+        assert all(line.startswith("phone_listener:") for line in lines)
+        assert self.SECRET not in text and self.LOGKEY not in text
+
+    def test_report_names_the_module_of_a_non_builtin_class(self):
+        def runner(fn):
+            raise wire.WireError("bad_magic", self.SECRET)
+
+        lines = []
+        _, api = self.api(runner, lines)
+        assert self.post(api).status == 500
+        assert "runner failed: trillium.phone_receiver.wire.WireError" in lines[0]
+        assert self.SECRET not in "\n".join(lines)
+
+    def test_chained_exception_is_followed_without_its_message(self):
+        def runner(fn):
+            try:
+                raise ValueError(self.SECRET)
+            except ValueError as e:
+                raise RuntimeError("outer " + self.SECRET) from e
+
+        lines = []
+        _, api = self.api(runner, lines)
+        self.post(api)
+        text = "\n".join(lines)
+        assert "raised RuntimeError" in text and "from ValueError" in text
+        assert self.SECRET not in text
+
+    def test_report_keeps_only_the_innermost_frames(self):
+        def deep(n):
+            if n:
+                return deep(n - 1)
+            raise RuntimeError
+
+        try:
+            deep(40)
+        except RuntimeError as e:
+            lines = faillog.trace_lines(e)
+        assert len(lines) == 1 + faillog.MAX_FRAMES
+        assert lines[-1].endswith(" in deep")
+
+    def test_failure_before_the_runner_names_its_stage(self):
+        class Dies:
+            def read(self, n=-1):
+                raise TimeoutError("timed out")
+
+        lines = []
+        _, api = self.api(None, lines)
+        body = emission_body()
+        r = api.handle("POST", "/emission", self.body_headers(body), Dies())
+        assert (r.status, r.body["error"]) == (500, "internal")
+        assert lines[0].startswith(
+            "phone_listener: handling at read_body failed: TimeoutError"
+        )
+        assert f"{len(body)} bytes" in lines[0]
+
+    def test_failure_building_the_reply_names_its_stage(self):
+        class Odd:
+            ok = True
+            error = None
+
+            def __getattr__(self, name):
+                raise AttributeError(name)
+
+        lines = []
+        _, api = self.api(lambda fn: Odd(), lines)
+        assert self.post(api).status == 500
+        assert lines[0].startswith(
+            "phone_listener: handling at reply failed: AttributeError"
+        )
+
+    def test_runner_timeout_is_one_line(self):
+        def runner(fn):
+            raise DispatchTimeout()
+
+        lines = []
+        _, api = self.api(runner, lines)
+        assert self.post(api).status == 504
+        assert len(lines) == 1
+        assert lines[0].startswith("phone_listener: runner timed out (mode emission, ")
+
+    def test_engine_failure_logs_where_the_engine_raised_not_what_it_said(self):
+        lines = []
+        rig = Rig(log=lines.append)
+        rig.engine.boom = True
+        r = rig.post(emission_body())
+        assert (r.status, r.body["error"]) == (500, "engine_error")
+        text = "\n".join(lines)
+        assert "phone_listener: engine feed failed: RuntimeError (mode emission" in text
+        assert "in _on_audio_frame" in text and "in _feed" in text
+        assert "phone_listener: service refused: engine_error (mode emission" in text
+        assert "decoder fell over" not in text
+
+    def test_pcm_engine_failure_is_logged_too(self):
+        lines = []
+        rig = Rig(mode="pcm", log=lines.append)
+        rig.engine.boom = True
+        assert rig.post(pcm_body()).status == 500
+        assert "engine feed failed: RuntimeError (mode pcm" in "\n".join(lines)
+
+    def test_gate_exception_is_logged(self):
+        lines = []
+        rig = Rig(log=lines.append)
+
+        def boom():
+            raise RuntimeError(self.SECRET)
+
+        rig.service._install._is_enabled = boom
+        assert rig.post(emission_body()).status == 500
+        text = "\n".join(lines)
+        assert "live gate failed: RuntimeError" in text and self.SECRET not in text
+
+    @pytest.mark.parametrize(
+        "setup,code",
+        [
+            (lambda rig: rig.state.update(enabled=False), "disabled"),
+            (lambda rig: rig.state.update(record_all=True), "record_all_on"),
+        ],
+    )
+    def test_refusals_with_no_exception_are_one_line_each(self, setup, code):
+        lines = []
+        rig = Rig(log=lines.append)
+        setup(rig)
+        assert rig.post(emission_body()).status == 503
+        assert len(lines) == 1 and f"service refused: {code} (mode emission" in lines[0]
+
+    def test_ordinary_traffic_logs_nothing(self):
+        lines = []
+        rig = Rig(log=lines.append)
+        assert rig.post(emission_body()).status == 200
+        assert rig.post(b"junk").status == 422
+        assert rig.post(emission_body(), login="nobody@example.com").status == 403
+        assert lines == []
+
+    def test_default_log_is_print(self, capsys):
+        rig = Rig()
+        rig.engine.boom = True
+        assert rig.post(emission_body()).status == 500
+        out = capsys.readouterr().out
+        assert "phone_listener: engine feed failed: RuntimeError" in out
+
+    def test_a_log_that_raises_does_not_change_the_reply(self):
+        def log(line):
+            raise OSError("log closed")
+
+        rig = Rig(log=log)
+        rig.engine.boom = True
+        assert rig.post(emission_body()).body["error"] == "engine_error"
+
+    def test_over_a_real_socket_the_runner_failure_reaches_the_log(self):
+        lines = []
+
+        def runner(fn):
+            raise RuntimeError(self.SECRET)
+
+        _, api = self.api(runner, lines, key=self.LOGKEY)
+        srv, _ = listener.start(api, 0)
+        try:
+            body = emission_body()
+            conn = http.client.HTTPConnection(
+                "127.0.0.1", srv.server_address[1], timeout=5
+            )
+            conn.request(
+                "POST",
+                "/emission",
+                body=body,
+                headers=self.body_headers(body, self.LOGKEY),
+            )
+            resp = conn.getresponse()
+            payload = json.loads(resp.read())
+            conn.close()
+        finally:
+            listener.stop(srv)
+        assert (resp.status, payload["error"]) == (500, "internal")
+        text = "\n".join(lines)
+        assert "runner failed: RuntimeError" in text
+        assert self.SECRET not in text and self.LOGKEY not in text
+
+    def serve_once(self, api, key):
+        """One real request against a listener whose `api.handle` is already patched."""
+        srv, _ = listener.start(api, 0)
+        try:
+            conn = http.client.HTTPConnection(
+                "127.0.0.1", srv.server_address[1], timeout=5
+            )
+            conn.request(
+                "POST", "/emission", body=b"x", headers=self.body_headers(b"x", key)
+            )
+            try:
+                conn.getresponse().read()
+            except (http.client.HTTPException, OSError):
+                pass  # the worker may drop the connection; the log is what is under test
+            conn.close()
+        finally:
+            listener.stop(srv)
+
+    def test_an_exception_escaping_handle_is_logged_by_the_request_handler(self):
+        lines = []
+        _, api = self.api(None, lines, key=self.LOGKEY)
+        api.handle = lambda *a, **k: (_ for _ in ()).throw(BrokenPipeError(self.SECRET))
+        self.serve_once(api, self.LOGKEY)
+        text = "\n".join(lines)
+        assert "request failed: BrokenPipeError" in text and self.SECRET not in text
+
+    def test_a_failure_writing_the_reply_is_logged_by_the_worker(self):
+        lines = []
+        _, api = self.api(None, lines, key=self.LOGKEY)
+        api.handle = lambda *a, **k: listener.Response(200, {"bad": object()})
+        self.serve_once(api, self.LOGKEY)
+        assert any("connection failed: TypeError" in line for line in lines)
