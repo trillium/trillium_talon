@@ -5,6 +5,7 @@ padding, decode, rejection and `phrase` dispatch, replacing only the encoder cal
 `trillium/phone_receiver/`. The decoder path opens no socket and registers nothing with `speech_system`. Work item 2 wires it to the
 live engine behind `user.phone_receiver_enabled` (default off); see "Live install" below. Work items 4 (Mac side) and 5
 add an HTTP listener (loopback, or this Mac's tailnet address with a shared-secret key) and a PCM fallback on the same switch; see "Listener" and "Tailnet bind" below.
+An optional utterance id makes a retry safe after a lost reply (replay, `GET /result/<id>`); see "Durable delivery".
 
 | File                     | Role                                                                                                                                                                                                                                                                                                                   |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -13,7 +14,8 @@ add an HTTP listener (loopback, or this Mac's tailnet address with a shared-secr
 | `live.py`                | `LiveInstall(get_engine, is_enabled, record_all).handle(bytes)`: the gate, in plain Python; `active_engine(speech_system)` is the glue's lookup. Refuses `disabled`, `record_all_on`, `no_engine` (with a `detail`, below); otherwise `PhoneReceiver.handle`. `heal()` restores the mic encoder if it was left swapped |
 | `phone_receiver_live.py` | Talon glue: declares `user.phone_receiver_enabled` (bool, default false) and the action `user.phone_receiver_handle(payload: bytes) -> str` (`"ok"` or an error code). No voice commands, no socket                                                                                                                    |
 | `service.py`             | `PhoneService`: one call per utterance, returns `Reply(ok, error, text, reject, ms, ..., kind, status, why, commands)`. `PhraseTap` is the `phrase` listener it captures the call's own phrase with                                                                                                                    |
-| `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a worker-pool server for `POST /emission` that binds loopback or an assigned tailnet address only                                                                                                                                                                      |
+| `listener.py`            | `ListenerApi` (the whole HTTP policy, pure) and a worker-pool server for `POST /emission` and `GET /result/<id>` that binds loopback or an assigned tailnet address only                                                                                                                                               |
+| `ledger.py`              | Pure: the idempotency table. `parse_id`, `Ledger.begin` / `finish` / `lookup`: which utterance ids this process has seen and what each came to (memory only, TTL and cap). See "Durable delivery"                                                                                                                      |
 | `netbind.py`             | `resolve_bind(host)`: accepts only `127.0.0.1` or a `100.64.0.0/10` address that `tailscale ip -4` lists as assigned to this Mac; `BindError` otherwise                                                                                                                                                                |
 | `keyfile.py`             | The shared secret: `ensure_key` / `load_key` (0600 file outside any repo), `matches` (constant-time). `python -m trillium.phone_receiver.keyfile` creates it and prints only the path                                                                                                                                  |
 | `faillog.py`             | What a failure writes to Talon's log (below): exception class and `file:line in function` frames, never the message, key, phrase text or audio                                                                                                                                                                         |
@@ -159,11 +161,16 @@ in this order and stop at the first failure, before the body is read until step 
 | 2    | auth: tailnet bind `X-Talon-Phone-Key` matches the key file; loopback bind `Tailscale-User-Login` is in the allow-list | `403 forbidden` (missing, wrong and empty-list are indistinguishable)                   |
 | 3    | mode is `emission` or `pcm`; content type                                                                              | `503 bad_mode`; `415 unsupported_media_type` (names the type wanted)                    |
 | 4    | rate: 10 per second per server                                                                                         | `429 rate_limited` + `Retry-After`                                                      |
+| 4a   | `X-Talon-Utterance-Id`, if present, is a usable id                                                                     | `400 bad_utterance_id` (a present but unusable id never falls back to "no id")          |
 | 5    | `Content-Length` present, not chunked, <= 64 KiB                                                                       | `411 length_required`, `400 bad_content_length`, `413 body_too_large` (nothing read)    |
 | 6    | body read in full                                                                                                      | `400 truncated_body`                                                                    |
 | 7    | `wire.parse_validate` / `wire.parse_pcm`                                                                               | `422 <wire code>` (`bad_magic`, `frame_mismatch`, `non_finite`, `pcm_odd_length`, ...)  |
+| 7a   | id claimed: a finished or running id is answered from the table (replay, `409 in_progress`), not executed              | see "Durable delivery"                                                                  |
 | 8    | live gate                                                                                                              | `503 disabled`, `503 record_all_on`, `503 no_engine`; `500 engine_error`; `504 timeout` |
 | 8a   | main-thread hop (before the gate runs)                                                                                 | `503 scheduler_unavailable` (never queued, so the command did not run)                  |
+
+`GET /result/<id>` is a separate path with its own short list of checks (method, auth, rate, id), below.
+Steps 1 to 7 never claim an id: a request refused there ran nothing and is not remembered.
 
 Success: `200 {"ok":true,"mode":"emission","text":"page down","reject":false,"ms":6.9,"frames":43,"status":"ran","why":null,"kind":"command","commands":1,"total_ms":8.1}`
 (see "Reply fields" below). Every error is `{"ok":false,"error":<code>,"ms"?}` and carries none of the
@@ -284,6 +291,154 @@ phone_listener:   dispatch.py:48 in run_scheduled
 | `service refused: <code>`                                | `disabled`, `record_all_on`, `no_engine` or `engine_error` came back from the service (no exception); `no_engine` ends with `: <detail>` | `503` / `500`               |
 | `request failed: <Class>` / `connection failed: <Class>` | the HTTP handler raised, or the reply could not be built or written                                                                      | `500 internal` / none       |
 
+## Durable delivery (utterance ids)
+
+If the reply to `POST /emission` is lost after the Mac ran the command, the phone sees only a timeout and
+cannot tell "never arrived" from "ran". The phone names each utterance with an id, and the Mac remembers
+what became of it, so a retry cannot run the command twice and the phone can ask what happened. It is
+additive: a request without the header behaves exactly as before and carries none of the fields below.
+Code: `trillium/phone_receiver/ledger.py` (the table), `ListenerApi._once` and `_result` in `listener.py`.
+
+### Request: `X-Talon-Utterance-Id`
+
+A UUID, or 16 to 64 hex digits with optional hyphens, either case. The Mac keys on the lower-case hex
+with hyphens dropped, so `3F2A…` and `3f2a…` are one id. One id names one utterance: generate it once
+(UUIDv4), keep it with the queued utterance, and send the same id on every retry of that utterance and
+on no other. The id names the utterance, not its bytes: a replay is answered from the table even if the
+body differs, and the same id covers an emission sent first and its PCM fallback sent after
+(`emission` and `pcm` modes use one table). A future snippet upload takes the same header and the same
+table (`ListenerApi._once(id, run)`); do not reuse one id across endpoints.
+
+A present but malformed header is `400 bad_utterance_id` and nothing runs, because the phone believes it
+is protected against a double run. Only a missing header means "no id".
+
+### Reply stamp
+
+A reply to a request that carried an id and reached step 7a is stamped with four extra fields (also on
+`409`, and on `500`/`503` replies from step 8). Errors from steps 1 to 7 (`403`, `415`, `429`, `413`,
+`422`, ...) are not stamped, because the id was never claimed.
+
+| Field       | Meaning                                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | The canonical key (lower-case hex, no hyphens)                                                                                               |
+| `seq`       | Server sequence number of the execution attempt this reply describes: starts at 1, monotonic within one `instance`, shared by all ids        |
+| `instance`  | 16 random hex digits, new every time the listener starts (Talon restart, module reload). The table lives and dies with it                    |
+| `boot_time` | Epoch seconds when that instance started, for display. To compare times use `uptime_s` from `/result`, which is on the Mac's monotonic clock |
+
+A phone that sees `instance` change knows every earlier id it holds was asked of a table that no longer
+exists.
+
+### Repeat of an id
+
+| The id is...                                | Reply                                                                                                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| new, or expired, or evicted                 | Runs as usual; the reply is stored and stamped                                                                                                                                              |
+| finished (a final reply)                    | The stored status and body, with the response header `X-Talon-Replayed: 1`. **The executor is not called.** The stored body is exactly what the first answer said, so `seq` is the original |
+| running right now (first request in flight) | `409 {"ok":false,"error":"in_progress","id":…,"seq":…,"instance":…,"boot_time":…}` + `Retry-After: 1`. The executor is not called. Query `/result/<id>` instead of re-posting               |
+| finished with a retriable refusal (below)   | Runs again as a new attempt: new `seq`, `attempts` goes up, the reply replaces the stored one                                                                                               |
+
+A replay still passes steps 1 to 7 first (auth, mode, content type, rate, length, a valid body), so it
+costs the same rate-limit slot as the original and a retry must send a well-formed body. It needs no
+engine and ignores the live gate: a finished id is answered even if the gate was switched off since.
+
+### What is stored
+
+Every reply the id reached step 7a with is stored, successes and failures alike, so a refused command
+retried does not look like a new execution. The entry is the reply the phone was sent (the phrase `text`
+is already capped at 512 characters) plus counters; no audio, request body or key is held.
+
+| Outcome                                                                                   | Stored as     | The same id again                                                                               |
+| ----------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------- |
+| `200` (any `status`: `ran`, `ignored`, `error`)                                           | final         | replay                                                                                          |
+| `504 timeout`                                                                             | final         | replay. The command may still complete on the main thread, so it is never run a second time     |
+| `500 engine_error`, `500 internal`                                                        | final         | replay. The engine may have run partway; a runner that raises settles the id as `500 internal`  |
+| `503 scheduler_unavailable`                                                               | **retriable** | runs again: the job was never queued, so the command did not run                                |
+| `503 disabled`, `503 record_all_on`, `503 no_engine`                                      | **retriable** | runs again: the gate refused before anything ran (the switch may have been turned on since)     |
+| a service-level `413` / `422` (the service refused the payload)                           | **retriable** | runs again: a phone that fixes its payload is not answered with the old refusal for ten minutes |
+| refused at steps 1 to 7 (`403`, `415`, `429`, `400`, `411`, `413`, `422`, `503 bad_mode`) | not stored    | nothing ran and the id was never claimed; `/result` says `unknown`, which is true               |
+
+The rule is "retriable only if the command provably did not run". When in doubt a reply is final. The
+list lives in `listener._RETRIABLE_ERRORS` and `listener.retriable`; `GET /result/<id>` shows it as
+`retriable`, so a phone does not need to know the list.
+
+### TTL, cap and what "unknown" can mean
+
+- An entry expires **10 minutes after it finishes** (`ledger.DEFAULT_TTL_S`; an abandoned in-flight entry
+  expires 10 minutes after it started). At most **512** entries are held (`DEFAULT_MAX_ENTRIES`); past
+  that the oldest finished entry goes first, and an entry in flight is never evicted.
+- **Memory only.** A Talon restart or module reload empties the table and changes `instance`.
+- `unknown` does not say why the id is missing. It covers four cases: the request never arrived; it
+  arrived and was refused at steps 1 to 7; the entry expired or was evicted (the command may have run);
+  or the Mac restarted (the command may have run). `uptime_s`, `ttl_s` and `horizon_s` in the `404` body
+  let the phone separate the first from the rest (see the policy below). `horizon_s` is `ttl_s` unless
+  the cap has evicted an entry younger than that, in which case it is how far back an unknown id still
+  means "never received".
+
+### `GET /result/<id>`
+
+Asks the table what became of an id. It never touches the engine, the gate or the body.
+
+| Step | Check                                                                                        | Failure                                 |
+| ---- | -------------------------------------------------------------------------------------------- | --------------------------------------- |
+| 1    | method is `GET`                                                                              | `405 method_not_allowed` + `Allow: GET` |
+| 2    | auth, exactly as for `POST /emission`                                                        | `403 forbidden`                         |
+| 3    | rate: 20 per second per server, apart from the POST limit so polling cannot 429 an utterance | `429 rate_limited` + `Retry-After`      |
+| 4    | `<id>` is a usable id (query string ignored)                                                 | `400 bad_utterance_id`                  |
+
+Auth and bind rules are the POST's: the tailnet bind needs `X-Talon-Phone-Key`, the loopback bind needs
+an allowed `Tailscale-User-Login`; a refused request spends none of the rate limit. Any spelling of the
+id finds its entry. Replies:
+
+| Status | When             | Body                                                                                                                                              |
+| ------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `200`  | finished         | `{"ok":true,"state":"done","id","seq","instance","boot_time","attempts","uptime_s","age_s","expires_in_s","http_status","retriable","reply":{…}}` |
+| `202`  | running now      | the same without `http_status`, `retriable` and `reply`, and `state` is `"in_progress"`; `Retry-After: 1`                                         |
+| `404`  | not in the table | `{"ok":false,"error":"unknown","instance","boot_time","uptime_s","ttl_s","horizon_s"}`                                                            |
+
+| Field                | Meaning                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `reply`              | The body the POST answered (or would have: it is the stored copy), stamp included; `http_status` is its status code |
+| `retriable`          | `true` if the stored reply is a refusal under which nothing ran, so the same id may be POSTed again                 |
+| `attempts`           | Executions begun under this id: `1`, or more after retriable refusals                                               |
+| `uptime_s`           | Seconds since this `instance` started (monotonic)                                                                   |
+| `age_s`              | Seconds since the id was first received                                                                             |
+| `expires_in_s`       | Seconds until the entry is dropped                                                                                  |
+| `ttl_s`, `horizon_s` | `404` only: the table's TTL, and how far back an unknown id still means "never received"                            |
+
+Example, after a lost reply: `GET /result/3f2a…` → `200 {"ok":true,"state":"done","id":"3f2a…","seq":7,"instance":"9c1e…","boot_time":1792500000.123,"attempts":1,"uptime_s":412.8,"age_s":3.2,"expires_in_s":596.8,"http_status":200,"retriable":false,"reply":{"ok":true,"mode":"emission","text":"page down",…,"id":"3f2a…","seq":7,"instance":"9c1e…","boot_time":1792500000.123}}`.
+
+### Phone client contract
+
+Use one id per utterance and follow this policy; the Mac side does not retry anything itself.
+
+1. Generate the id and store it with the queued utterance **before** the first send. Note the phone's
+   monotonic time of the first send.
+2. `POST /emission` with the id. On a `200` stop: show `text`, `status` and `why`. On a final error
+   (`500`, `504`) stop and show it: the command may have run.
+3. After a timeout or a dropped connection, **do not POST again. Query `GET /result/<id>` first**, then
+   act on the answer (table below).
+4. Back off exponentially between attempts of either request: 0.5 s, 1 s, 2 s, 4 s, ... capped at 30 s,
+   with jitter, and never less than a `Retry-After` the Mac sent. A `409 in_progress` on a POST means
+   the first request is still running: poll `/result/<id>` (`202` until it finishes), do not re-post.
+5. Stop automatic attempts once more than 10 minutes (`ttl_s`; the smaller `horizon_s` once a `404` has
+   reported one) have passed since the first send: after that a replay can no longer be served. Show the
+   state, offer a manual resend.
+
+| `GET /result/<id>` says                                                                                                            | What happened                                                                                  | The phone does                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `200`, `retriable: false`                                                                                                          | It finished (ran, or failed finally); the reply is stored                                      | Show `reply`. Do not POST again                                                                                                      |
+| `200`, `retriable: true`                                                                                                           | The Mac refused it and nothing ran                                                             | Show the refusal (`reply.error`); POST again with **the same id** after backoff, once the cause is fixed or if it may be transient   |
+| `202`                                                                                                                              | Still running on the Mac                                                                       | Poll again after `Retry-After`; do not POST                                                                                          |
+| `404` and the first send was within `horizon_s` and `uptime_s` is at least the time since the first send (allow a second of slack) | The Mac was up the whole time and holds nothing, so **the request never reached the executor** | Safe to POST again, **same id**, after backoff. The Mac will run it once                                                             |
+| `404` and `uptime_s` is less than the time since the first send, or `instance` differs from the one the phone last saw             | The Mac restarted since the first send; the table that would have known is gone                | **Unknown, and say so.** The command may or may not have run. Do not resend automatically; offer the user a manual resend (a new id) |
+| `404` and the first send was more than `horizon_s` ago                                                                             | The entry may have expired or been evicted; the command may have run                           | **Unknown, and say so.** Do not resend automatically; offer a manual resend (a new id)                                               |
+| `403`, `429`, no answer                                                                                                            | A key problem, rate limit, or the Mac is unreachable                                           | Keep the id. `403`: fix the key. Otherwise retry `/result/<id>` with backoff                                                         |
+
+Only the first `404` row resends automatically, and only because `uptime_s` and `horizon_s` prove the
+Mac would have remembered the id. The other two rows do not guess: an unknown that could hide a run is
+shown as unknown. (A `404` is therefore not "never ran": that is a stricter reading than "never seen or
+expired" would give, on purpose, so a restart or an expiry never turns into a silent second run.)
+
 ## Tailnet bind
 
 Set `user.phone_receiver_bind` to the Mac's tailnet address (`tailscale ip -4`) and
@@ -340,6 +495,10 @@ ts, pad=True)` with the engine's own encoder, so frontend and acoustic model run
 is swapped. Anything the engine does after that (decode, reject, `phrase`) is the same code as the
 emission path. `emission` mode refuses PCM and `pcm` mode refuses TPE1 with `415`.
 
+`X-Talon-Utterance-Id` works in `pcm` mode exactly as in `emission` mode ("Durable delivery"), and the id
+names the utterance, not the mode: if an emission landed and the phone then falls back to PCM with the
+same id, the answer is the replay of the emission's reply and nothing runs twice.
+
 Limits: 1600 samples minimum (100 ms), and the 64 KiB cap means **at most 32768 samples, about 2.05
 s of audio**, so a longer utterance answers `413`. The cap is the brief's hard limit; raise
 `wire.MAX_PAYLOAD_BYTES` for PCM only if longer fallback utterances are needed. `record_all` refuses
@@ -355,6 +514,11 @@ is false for an empty set or any difference, and `Report.format()` prints one li
 - `python -m pytest .tests/test_phone_listener.py`: policy, malformed bodies, oversize, identity, shared-key
   auth (wrong, missing, wrong header), bind refusals, key file, content type, real loopback socket, and the harness against a fake engine (including that it flags a phone
   model that disagrees).
+- `python -m pytest .tests/test_phone_ledger.py`: the id protocol with fake engines and a fake clock: id
+  parsing, dedupe and replay, a duplicate never reaching the executor (also under 10 concurrent POSTs),
+  in-flight `409`, retriable vs final refusals, TTL expiry and the cap, restart (`instance` change),
+  `GET /result/<id>` shapes, auth and rate limit, body cap, the no-id path unchanged, and the lost-reply
+  story and PCM fallback over a real loopback socket.
 - `.tests/lab/phone_listener_lab.py`: same harness on a private `W2lEngine` in the Talon REPL, using the
   engine's own emission as the phone's. It loads this checkout's modules under a private `phlab` name,
   because a bare `trillium.*` import in Talon's REPL resolves to the live checkout. Run it as the receiver lab, with `PHONE_LAB_REPO` set as a REPL variable

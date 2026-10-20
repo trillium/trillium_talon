@@ -1,4 +1,5 @@
-"""HTTP front for the phone receiver: `POST /emission`, one utterance per request.
+"""HTTP front for the phone receiver: `POST /emission`, one utterance per request, and
+`GET /result/<id>` to ask what became of one.
 
 Pure stdlib, no `talon` import. `ListenerApi.handle` is the whole policy and takes plain
 values, so tests drive it without a socket; `start` binds it to loopback or to this Mac's own
@@ -17,6 +18,11 @@ header matched against an allow-list; an empty list denies everyone, and any loc
 can forge the header, which is the same boundary the palette feed has. With a `key` provider
 (the tailnet bind, where nothing adds that header) it is the shared secret in
 `X-Talon-Phone-Key`, compared in constant time, and the identity header is ignored.
+
+A request may carry `X-Talon-Utterance-Id` (see `ledger`): the id makes the POST idempotent, so a
+retry after a lost reply gets the stored reply instead of running the command a second time, and
+`GET /result/<id>` (same auth, its own rate limit) says what the first attempt came to. Without
+the header a request behaves exactly as it always did.
 """
 
 import json
@@ -34,12 +40,13 @@ from ..palette_feed.limits import (
     parse_content_length,
     read_body,
 )
-from . import faillog, keyfile, netbind, wire
+from . import faillog, keyfile, ledger, netbind, wire
 from .hop import SchedulerUnavailable
 from .service import Reply
 
 DEFAULT_PORT = 7403
 PATH = "/emission"
+RESULT_PREFIX = "/result/"
 IDENTITY_HEADER = "tailscale-user-login"
 TS_HEADER = "x-utterance-ts"
 MODE_EMISSION = "emission"
@@ -49,6 +56,8 @@ CONTENT_TYPES = {MODE_EMISSION: "application/x-talon-tpe1", MODE_PCM: "audio/l16
 MAX_IDENTITY_LEN = 256
 REQUEST_TIMEOUT_S = 10
 RATE = (10, 1.0)  # utterances per window seconds, counted per server
+# result queries per window seconds; apart from RATE so polling cannot 429 an utterance
+RESULT_RATE = (20, 1.0)
 MAX_TEXT_CHARS = 512  # cap on the echoed phrase; the other reply fields are short enums
 
 # Wire-level mistakes are the caller's; the rest say why the host could not serve.
@@ -59,6 +68,13 @@ _STATUS = {
     "engine_error": 500,
     "payload_too_large": 413,
 }
+
+# A refusal where the command provably did not run keeps its id usable: the stored reply says so
+# (`retriable`) and the next request under that id executes. Everything else is final, because
+# the command may have run (a 504 or a 500 from inside the engine) or did (any 200).
+_RETRIABLE_ERRORS = frozenset(
+    {"scheduler_unavailable", "disabled", "record_all_on", "no_engine"}
+)
 
 
 class Backend(Protocol):
@@ -75,6 +91,17 @@ class Response:
 
 def _error(status: int, code: str, **extra: Any) -> Response:
     return Response(status, {"ok": False, "error": code, **extra})
+
+
+def retriable(resp: Response) -> bool:
+    """True if `resp` is a refusal under which the command did not run, so its id may be reused.
+
+    The wire-level 4xx (413, 422) count: the body was refused before any engine call, and a phone
+    that fixes it should not be answered with the old refusal for ten minutes.
+    """
+    if resp.body.get("ok") is not False:
+        return False
+    return resp.body.get("error") in _RETRIABLE_ERRORS or resp.status in (413, 422)
 
 
 def parse_allowlist(value: Any) -> frozenset[str]:
@@ -129,6 +156,8 @@ class ListenerApi:
         key: Callable[[], str | None] | None = None,
         timer: Callable[[], float] | None = None,
         log: faillog.Log | None = None,
+        table: ledger.Ledger | None = None,
+        result_limiter: RateLimiter | None = None,
     ):
         self._backend = backend
         self._get_mode = get_mode
@@ -137,6 +166,9 @@ class ListenerApi:
         # Talon runs commands from its main thread; the glue passes a runner that hops there.
         self._run = runner or (lambda fn: fn())
         self._limiter = limiter or RateLimiter(*RATE)
+        self._result_limiter = result_limiter or RateLimiter(*RESULT_RATE)
+        # Fresh per listener, so a reload (which loses the table) also changes `instance`.
+        self._ledger = table or ledger.Ledger()
         self._clock = clock or time.time
         self._timer = timer or time.perf_counter
         # Talon's log; see faillog for what is (and is not) written
@@ -145,6 +177,10 @@ class ListenerApi:
     @property
     def log(self) -> faillog.Log:
         return self._log
+
+    @property
+    def table(self) -> ledger.Ledger:
+        return self._ledger
 
     @property
     def uses_key(self) -> bool:
@@ -185,6 +221,8 @@ class ListenerApi:
     def _handle(self, method, target, headers, rfile, ctx) -> Response:
         h = {str(k).lower(): v for k, v in headers.items()}
         path = target.split("?", 1)[0]
+        if path.startswith(RESULT_PREFIX):
+            return self._result(method, path[len(RESULT_PREFIX) :], h, ctx)
         if path != PATH:
             return _error(404, "not_found")
         if method != "POST":
@@ -212,6 +250,10 @@ class ListenerApi:
                 {"ok": False, "error": "rate_limited"},
                 {"Retry-After": str(max(1, int(retry_after + 0.999)))},
             )
+        try:
+            uid = ledger.parse_id(h.get(ledger.ID_HEADER))
+        except ledger.BadId:
+            return _error(400, "bad_utterance_id")
         if "transfer-encoding" in h:
             return _error(411, "length_required")
         ctx["stage"] = "read_body"
@@ -237,6 +279,45 @@ class ListenerApi:
             call = lambda: self._backend.pcm(body, ts)  # noqa: E731
         else:
             call = lambda: self._backend.emission(body)  # noqa: E731
+        if uid is None:
+            return self._execute(call, mode, ctx)
+        return self._once(uid, lambda: self._execute(call, mode, ctx))
+
+    def _once(self, uid: str, run: Callable[[], Response]) -> Response:
+        """`run()` at most once per `uid` (until its refusal is retriable or the entry expires).
+
+        Not for wire-level refusals: those return before an id is claimed, since nothing ran and
+        nothing needs remembering. `run` is the executor; this is the only caller of it for an
+        utterance that carries an id, and it is never called for a replay or an id in flight.
+        """
+        claim = self._ledger.begin(uid)
+        entry = claim.entry
+        if claim.kind == ledger.IN_PROGRESS:
+            body = {"ok": False, "error": "in_progress", **self._ledger.stamp(entry)}
+            return Response(409, body, {"Retry-After": "1"})
+        if claim.kind == ledger.REPLAY:
+            return Response(
+                entry.status or 500,
+                dict(entry.body or {}),
+                {ledger.REPLAYED_HEADER: "1"},
+            )
+        try:
+            resp = run()
+        except BaseException:
+            # It may have run, so the id is spent: settle it before `handle` answers 500.
+            self._ledger.finish(
+                entry,
+                500,
+                {"ok": False, "error": "internal", **self._ledger.stamp(entry)},
+            )
+            raise
+        body = {**resp.body, **self._ledger.stamp(entry)}
+        self._ledger.finish(entry, resp.status, body, retriable(resp))
+        return Response(resp.status, body, resp.headers)
+
+    def _execute(
+        self, call: Callable[[], Reply], mode: str, ctx: dict[str, Any]
+    ) -> Response:
         ctx["stage"] = "runner"
         t0 = self._timer()
         try:
@@ -269,6 +350,37 @@ class ListenerApi:
             )
         return _reply(reply, mode, total_ms)
 
+    def _result(
+        self, method: str, raw_id: str, h: Mapping[str, str], ctx: dict[str, Any]
+    ) -> Response:
+        """`GET /result/<id>`: what became of an utterance, from the table and nothing else."""
+        if method != "GET":
+            return Response(
+                405, {"ok": False, "error": "method_not_allowed"}, {"Allow": "GET"}
+            )
+        ctx["stage"] = "auth"
+        if not self._authorized(h):
+            return _error(403, "forbidden")
+        allowed, retry_after = self._result_limiter.check()
+        if not allowed:
+            return Response(
+                429,
+                {"ok": False, "error": "rate_limited"},
+                {"Retry-After": str(max(1, int(retry_after + 0.999)))},
+            )
+        ctx["stage"] = "result"
+        try:
+            key = ledger.parse_id(raw_id)
+        except ledger.BadId:
+            return _error(400, "bad_utterance_id")
+        entry = self._ledger.lookup(key) if key is not None else None
+        if entry is None:
+            return Response(404, self._ledger.unknown())
+        view = self._ledger.view(entry)
+        if entry.done:
+            return Response(200, view)
+        return Response(202, view, {"Retry-After": "1"})
+
 
 def _ms(seconds: float) -> float:
     return round(seconds * 1000, 2)
@@ -283,9 +395,7 @@ def _wire_error(mode: str, body: bytes) -> str | None:
             wire.parse_validate(body)
     except wire.WireError as exc:
         return exc.code
-    except (
-        Exception
-    ):  # noqa: BLE001 - anything unparsable is the caller's fault, not a 500
+    except Exception:  # noqa: BLE001 - anything unparsable is the caller's fault, not a 500
         return "invalid"
     return None
 
