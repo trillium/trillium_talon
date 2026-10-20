@@ -107,8 +107,7 @@ def make_api(svc=None, *, key=KEY, runner=None, **kw):
     return api
 
 
-def post(api, body, ctype="application/json", key=uid(), auth=None, extra=None,
-         length=None, path="/noise", method="POST"):  # fmt: skip
+def post(api, body, ctype="application/json", key=uid(), auth=None, extra=None,length=None, path="/noise", method="POST"):  # fmt: skip
     h = {"Content-Length": str(len(body) if length is None else length)}
     if ctype:
         h["Content-Type"] = ctype

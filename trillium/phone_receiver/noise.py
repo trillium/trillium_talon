@@ -209,7 +209,9 @@ class NoiseService:
                     return reply(STATUS_IGNORED, WHY_THROTTLED)
         try:
             impls = self._lookup(event.key)
-        except Exception as exc:  # noqa: BLE001 - the registry is Talon's; say it failed
+        except (
+            Exception
+        ) as exc:  # noqa: BLE001 - the registry is Talon's; say it failed
             return NoiseReply(
                 False,
                 "registry_error",

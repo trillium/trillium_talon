@@ -25,7 +25,7 @@ An optional utterance id makes a retry safe after a lost reply (replay, `GET /re
 | `parity.py`              | Parity harness: both paths on the same audio through `ListenerApi`, phrase output diffed                                                                                                                                                                                                                               |
 | `receiver.py`            | `PhoneReceiver(engine).handle(bytes) -> Result`: validate, then under `engine.lock` swap encoder, queue, `_on_audio_frame([0.0]*n_pcm, ts, pad=True)`, restore encoder. Never raises                                                                                                                                   |
 | `snippet.py`             | `SnippetService.handle`: header checks, checksum, idempotent save, ack for `POST /snippet`; pure, no `talon` import                                                                                                                                                                                                    |
-| `noise.py`               | `parse_body` and `NoiseService.handle`: validate a phone-detected noise event, gate, drop a stale `seq`, floor per name, run the last `parrot_noises` impl for `POST /noise`; pure, no `talon` import |
+| `noise.py`               | `parse_body` and `NoiseService.handle`: validate a phone-detected noise event, gate, drop a stale `seq`, floor per name, run the last `parrot_noises` impl for `POST /noise`; pure, no `talon` import                                                                                                                  |
 | `audio.py`               | Header-level FLAC / WAV validation (16 kHz mono 16-bit, 0.1 to 30 s) against the body's own length; `AudioError(code)`; no decoding                                                                                                                                                                                    |
 | `recordings.py`          | `RecordingsWriter`: the only code that writes into Talon's recordings folder; new files only, temp then fsync then no-overwrite link                                                                                                                                                                                   |
 | `snippet_ledger.py`      | Durable `utterance id -> ack` table (JSON lines, fsynced), the file-ack layer behind `ledger.py`'s memory table: a retry of a saved snippet, however late, writes nothing; a pending entry covers a crash after the file landed                                                                                        |
@@ -622,14 +622,14 @@ every `user.noise_*` override therefore apply unchanged; this adds no grammar. (
 2026-10-19 parrot spike, level L2.) It is gated by `user.phone_receiver_enabled` and refused with
 `503 record_all_on` while `speech.record_all` is on, like `/emission`.
 
-| Item        | Rule                                                                                                                               |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Request     | `POST /noise`, `Content-Type: application/json`, `Content-Length` required, body at most 1 KiB (`413` above)                      |
-| Auth        | As `/emission`: `X-Talon-Phone-Key` on the tailnet bind, `Tailscale-User-Login` allow-list on loopback                              |
-| Id          | `X-Talon-Utterance-Id` **required** (`400 missing_utterance_id`); same table as `/emission`: a repeat replays the stored reply and never runs the trigger again |
-| Rate        | its own bucket, 20 per second per server (`429 rate_limited`), apart from `/emission`'s                                            |
-| Body        | `{v:1, name, edge, power, prob, ts, session, seq}`; `name` is `[A-Za-z0-9][A-Za-z0-9_-]*`, at most 32 chars; `edge` is `start` (default), `repeat` or `stop` and picks the registry key `name`, `name:repeat`, `name:stop`; `prob` is 0 to 1; numbers must be finite |
-| Errors      | `400 bad_json`; `422 bad_version, bad_name, bad_edge, bad_session, bad_seq, bad_field, non_finite`; `503 disabled, record_all_on, registry_error, scheduler_unavailable`; `504 timeout` |
+| Item    | Rule                                                                                                                                                                                                                                                                 |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Request | `POST /noise`, `Content-Type: application/json`, `Content-Length` required, body at most 1 KiB (`413` above)                                                                                                                                                         |
+| Auth    | As `/emission`: `X-Talon-Phone-Key` on the tailnet bind, `Tailscale-User-Login` allow-list on loopback                                                                                                                                                               |
+| Id      | `X-Talon-Utterance-Id` **required** (`400 missing_utterance_id`); same table as `/emission`: a repeat replays the stored reply and never runs the trigger again                                                                                                      |
+| Rate    | its own bucket, 20 per second per server (`429 rate_limited`), apart from `/emission`'s                                                                                                                                                                              |
+| Body    | `{v:1, name, edge, power, prob, ts, session, seq}`; `name` is `[A-Za-z0-9][A-Za-z0-9_-]*`, at most 32 chars; `edge` is `start` (default), `repeat` or `stop` and picks the registry key `name`, `name:repeat`, `name:stop`; `prob` is 0 to 1; numbers must be finite |
+| Errors  | `400 bad_json`; `422 bad_version, bad_name, bad_edge, bad_session, bad_seq, bad_field, non_finite`; `503 disabled, record_all_on, registry_error, scheduler_unavailable`; `504 timeout`                                                                              |
 
 Reply: `200 {"ok":true,"name","edge","status":"ran|ignored|error","why","commands","ms","total_ms"}` plus
 the ledger stamp. `ran` means the last impl was handed to `run_talon_script` (`commands: 1`; a script
@@ -688,9 +688,9 @@ phone_listener: metrics: emission 4 req (200:3 429:1) total p50 20.0 p95 30.0 ms
 response received, for a request that already completed) and sends it on its **next** authenticated
 request to `/emission`, `/snippet` or `/noise`:
 
-| Header                    | Value                                                                                                                   |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `X-Talon-Client-Rtt-Ms`   | Milliseconds, a decimal from 0 to 600,000                                                                               |
+| Header                    | Value                                                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `X-Talon-Client-Rtt-Ms`   | Milliseconds, a decimal from 0 to 600,000                                                                                        |
 | `X-Talon-Client-Rtt-Kind` | Optional: `emission`, `snippet` or `noise`, which request kind was measured; default the kind of the request carrying the header |
 
 Kept and summarised under `client_rtt_ms` (`last_n` and `hours`, each `{n, p50, p95}`). Subtract the matching
