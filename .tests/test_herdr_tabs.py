@@ -267,3 +267,66 @@ def test_extra_allowed_readmits_fm_label(monkeypatch):
     monkeypatch.setattr(ht, "EXTRA_ALLOWED", ["FM-Advisor"])
     merged = ht.refresh_all([])
     assert set(ht.voice_labels(merged)) == {"fm-advisor"}
+
+
+# --- local next / previous ---
+
+
+def _t(ws, n, focused=False):
+    return {"workspace_id": ws, "tab_id": f"{ws}:t{n}", "number": n, "focused": focused}
+
+
+STEP_TABS = [
+    _t("wA", 50),
+    _t("wA", 7, focused=True),  # number is NOT the visual order; list order is
+    _t("wA", 90),
+    _t("wB", 1),
+    _t("wB", 2),
+]
+
+
+def test_adjacent_follows_list_order_not_number():
+    assert ht.adjacent_tab_id(STEP_TABS, 1) == "wA:t90"
+    assert ht.adjacent_tab_id(STEP_TABS, -1) == "wA:t50"
+
+
+def test_adjacent_wraps_around():
+    last = [_t("wA", 1), _t("wA", 2), _t("wA", 3, focused=True)]
+    assert ht.adjacent_tab_id(last, 1) == "wA:t1"
+    first = [_t("wA", 1, focused=True), _t("wA", 2), _t("wA", 3)]
+    assert ht.adjacent_tab_id(first, -1) == "wA:t3"
+
+
+def test_adjacent_single_tab_and_no_focus_are_noops():
+    assert ht.adjacent_tab_id([_t("wA", 1, focused=True)], 1) is None
+    assert ht.adjacent_tab_id([_t("wA", 1), _t("wA", 2)], 1) is None
+    assert ht.adjacent_tab_id([], 1) is None
+    assert ht.adjacent_tab_id(None, -1) is None
+    assert ht.adjacent_tab_id([{"focused": True}], 1) is None
+
+
+def test_adjacent_workspace_isolation():
+    tabs = [_t("wA", 1), _t("wB", 1, focused=True), _t("wA", 2), _t("wB", 2)]
+    assert ht.adjacent_tab_id(tabs, 1) == "wB:t2"
+    assert ht.adjacent_tab_id(tabs, -1) == "wB:t2"
+
+
+def test_step_local_tab_runs_local_focus_only(fresh):
+    fresh.tabs = STEP_TABS
+    assert ht.step_local_tab(1) is True
+    assert fresh.calls == [
+        ["herdr", "tab", "list"],
+        ["herdr", "tab", "focus", "wA:t90"],
+    ]
+    assert all(c[0] != "ssh" for c in fresh.calls)
+
+
+def test_step_local_tab_never_raises(monkeypatch):
+    monkeypatch.setattr(ht.subprocess, "run", Run(exc=FileNotFoundError("herdr")))
+    assert ht.step_local_tab(1) is False
+
+
+def test_step_local_tab_noop_runs_no_focus(fresh):
+    fresh.tabs = [_t("wA", 1, focused=True)]
+    assert ht.step_local_tab(-1) is False
+    assert fresh.calls == [["herdr", "tab", "list"]]

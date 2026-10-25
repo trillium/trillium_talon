@@ -241,3 +241,49 @@ def focus_any(label, hosts=None):
     except Exception as e:
         print(f"[herdr_tabs] focus {label!r} failed: {e}")
         return False
+
+
+# --- local next/previous tab: always the MacBook's Herdr, never ssh ---
+
+
+def adjacent_tab_id(tabs, step):
+    """tab_id of the tab `step` places from the focused tab, within the SAME
+    workspace, wrapping at the ends; None if there is no focused tab, no id,
+    or nothing to move to.
+
+    Order is the order `herdr tab list` returns within the workspace: that is
+    the visual tab order (`number` is a global creation counter, not a
+    position). Pure: never raises."""
+    try:
+        tabs = [t for t in tabs or [] if isinstance(t, dict)]
+        focused = next((t for t in tabs if t.get("focused") is True), None)
+        if not focused:
+            return None
+        ws = focused.get("workspace_id")
+        group = [t for t in tabs if t.get("workspace_id") == ws and t.get("tab_id")]
+        ids = [t["tab_id"] for t in group]
+        if focused.get("tab_id") not in ids or len(ids) < 2:
+            return None
+        return ids[(ids.index(focused["tab_id"]) + step) % len(ids)]
+    except Exception:
+        return None
+
+
+def step_local_tab(step):
+    """Focus the next (+1) / previous (-1) tab of THIS machine's Herdr. One
+    local `herdr tab list`, one local `herdr tab focus`; no ssh, no keystrokes.
+    Returns True if a focus ran. Never raises."""
+    try:
+        target = adjacent_tab_id(fetch_tabs(), step)
+        if not target:
+            return False
+        subprocess.run(
+            herdr_cmd(["tab", "focus", target]),
+            check=False,
+            timeout=TIMEOUT,
+            capture_output=True,
+        )
+        return True
+    except Exception as e:
+        print(f"[herdr_tabs] step {step} failed: {e}")
+        return False
