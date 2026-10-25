@@ -15,9 +15,9 @@ Talon hot path (use `get_tabs(allow_fetch=False)` there).
 import json
 import re
 import subprocess
-from concurrent.futures import ThreadPoolExecutor
 import time
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 
 HERDR = "herdr"
 HOST_APP = "WezTerm"
@@ -186,9 +186,7 @@ def refresh_all(hosts=None):
 def merge_tabs(hosts=None):
     """[(host-or-None, tab)] from the caches only; never runs a subprocess."""
     hosts = list(HOSTS if hosts is None else hosts)
-    return [
-        (h, t) for h in [None, *hosts] for t in get_tabs(h, allow_fetch=False)
-    ]
+    return [(h, t) for h in [None, *hosts] for t in get_tabs(h, allow_fetch=False)]
 
 
 def unique_labels_all(merged):
@@ -202,9 +200,7 @@ def resolve_any(label, hosts=None):
     from cache only, else None. Never raises."""
     try:
         merged = merge_tabs(hosts)
-        matches = [
-            (h, t) for h, t in merged if _norm(t.get("label")) == _norm(label)
-        ]
+        matches = [(h, t) for h, t in merged if _norm(t.get("label")) == _norm(label)]
         if len(matches) != 1 or not _norm(label):
             if len(matches) > 1:
                 print(f"[herdr_tabs] ambiguous label {label!r}: {len(matches)} tabs")
