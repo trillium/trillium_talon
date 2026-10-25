@@ -314,7 +314,10 @@ def test_adjacent_workspace_isolation():
 def test_step_local_tab_runs_local_focus_only(fresh):
     fresh.tabs = STEP_TABS
     assert ht.step_local_tab(1) is True
-    assert fresh.calls == [["herdr", "tab", "list"], ["herdr", "tab", "focus", "wA:t90"]]
+    assert fresh.calls == [
+        ["herdr", "tab", "list"],
+        ["herdr", "tab", "focus", "wA:t90"],
+    ]
     assert all(c[0] != "ssh" for c in fresh.calls)
 
 
