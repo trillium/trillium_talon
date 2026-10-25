@@ -37,7 +37,9 @@ def fetch_tabs(host=None):
     try:
         out = subprocess.run(
             herdr_cmd(["tab", "list"], host),
-            capture_output=True, text=True, timeout=TIMEOUT,
+            capture_output=True,
+            text=True,
+            timeout=TIMEOUT,
         ).stdout
         tabs = json.loads(out).get("result", {}).get("tabs")
         if not isinstance(tabs, list):
@@ -102,7 +104,11 @@ def label_index(tabs):
 
 def unique_labels(tabs):
     """{normalised label: label as shown} for labels held by exactly one tab."""
-    return {k: clean_label(v[0]["label"]) for k, v in label_index(tabs).items() if len(v) == 1}
+    return {
+        k: clean_label(v[0]["label"])
+        for k, v in label_index(tabs).items()
+        if len(v) == 1
+    }
 
 
 def resolve(label, host=None, allow_fetch=True):
@@ -140,8 +146,7 @@ def focus_tab(label, host=None):
         if not target:
             return False
         for argv in focus_commands(*target, host=host):
-            subprocess.run(argv, check=False, timeout=TIMEOUT,
-                           capture_output=True)
+            subprocess.run(argv, check=False, timeout=TIMEOUT, capture_output=True)
         return True
     except Exception as e:
         print(f"[herdr_tabs] focus {label!r} failed: {e}")

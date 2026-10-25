@@ -71,7 +71,8 @@ def test_herdr_unavailable_returns_none(monkeypatch):
 
 def test_bad_json_returns_none(monkeypatch):
     monkeypatch.setattr(
-        ht.subprocess, "run",
+        ht.subprocess,
+        "run",
         lambda argv, **kw: subprocess.CompletedProcess(argv, 0, stdout="garbage"),
     )
     assert ht.fetch_tabs() is None
@@ -98,7 +99,13 @@ def test_no_fetch_mode_never_runs_subprocess(fresh):
 
 def test_ssh_command_construction():
     assert ht.herdr_cmd(["tab", "list"]) == ["herdr", "tab", "list"]
-    assert ht.herdr_cmd(["tab", "list"], "box") == ["ssh", "box", "herdr", "tab", "list"]
+    assert ht.herdr_cmd(["tab", "list"], "box") == [
+        "ssh",
+        "box",
+        "herdr",
+        "tab",
+        "list",
+    ]
     assert ht.focus_commands("w1", "w1:t2", "box") == [
         ["ssh", "box", "herdr", "workspace", "focus", "w1"],
         ["ssh", "box", "herdr", "tab", "focus", "w1:t2"],
@@ -128,19 +135,23 @@ def test_focus_unknown_runs_nothing_but_list(fresh):
 
 
 EMOJI_TABS = [
-    {"label": "\U0001F48E\U0001F48E Fixer", "tab_id": "w1:t1", "workspace_id": "w1"},
-    {"label": "\U0001F48E\U0001F451 mayor", "tab_id": "w2:t1", "workspace_id": "w2"},
-    {"label": "\u2764\ufe0f\u200d\U0001F525 hot", "tab_id": "w3:t1", "workspace_id": "w3"},
-    {"label": "\U0001F48E", "tab_id": "w4:t1", "workspace_id": "w4"},
-    {"label": "\U0001F451 dup", "tab_id": "w5:t1", "workspace_id": "w5"},
-    {"label": "\U0001F48E dup", "tab_id": "w6:t1", "workspace_id": "w6"},
+    {"label": "\U0001f48e\U0001f48e Fixer", "tab_id": "w1:t1", "workspace_id": "w1"},
+    {"label": "\U0001f48e\U0001f451 mayor", "tab_id": "w2:t1", "workspace_id": "w2"},
+    {
+        "label": "\u2764\ufe0f\u200d\U0001f525 hot",
+        "tab_id": "w3:t1",
+        "workspace_id": "w3",
+    },
+    {"label": "\U0001f48e", "tab_id": "w4:t1", "workspace_id": "w4"},
+    {"label": "\U0001f451 dup", "tab_id": "w5:t1", "workspace_id": "w5"},
+    {"label": "\U0001f48e dup", "tab_id": "w6:t1", "workspace_id": "w6"},
 ]
 
 
 def test_clean_label():
-    assert ht.clean_label("\U0001F48E\U0001F48E Fixer") == "Fixer"
-    assert ht.clean_label("  \u2764\ufe0f\u200d\U0001F525 hot  ") == "hot"
-    assert ht.clean_label("\U0001F48E") == ""
+    assert ht.clean_label("\U0001f48e\U0001f48e Fixer") == "Fixer"
+    assert ht.clean_label("  \u2764\ufe0f\u200d\U0001f525 hot  ") == "hot"
+    assert ht.clean_label("\U0001f48e") == ""
     assert ht.clean_label("a-b") == "a-b"
 
 
@@ -156,4 +167,7 @@ def test_emoji_only_label_skipped_and_stripped_dupes_refused(monkeypatch):
     assert ht.resolve("") is None
     assert ht.resolve("dup") is None
     assert ht.unique_labels(EMOJI_TABS) == {
-        "fixer": "Fixer", "mayor": "mayor", "hot": "hot"}
+        "fixer": "Fixer",
+        "mayor": "mayor",
+        "hot": "hot",
+    }
