@@ -38,6 +38,7 @@ class Run:
 @pytest.fixture(autouse=True)
 def fresh(monkeypatch):
     ht._cache.clear()
+    ht._misses.clear()
     run = Run()
     monkeypatch.setattr(ht.subprocess, "run", run)
     return run
@@ -101,21 +102,23 @@ def test_ssh_command_construction():
     assert ht.herdr_cmd(["tab", "list"]) == ["herdr", "tab", "list"]
     assert ht.herdr_cmd(["tab", "list"], "box") == [
         "ssh",
+        *ht.SSH_OPTS,
         "box",
         "herdr",
         "tab",
         "list",
     ]
     assert ht.focus_commands("w1", "w1:t2", "box") == [
-        ["ssh", "box", "herdr", "workspace", "focus", "w1"],
-        ["ssh", "box", "herdr", "tab", "focus", "w1:t2"],
+        ["ssh", *ht.SSH_OPTS, "box", "herdr", "workspace", "focus", "w1"],
+        ["ssh", *ht.SSH_OPTS, "box", "herdr", "tab", "focus", "w1:t2"],
         ["open", "-a", "WezTerm"],
     ]
 
 
 def test_remote_fetch_uses_ssh_and_separate_cache(fresh):
     assert ht.resolve("mayor", host="box") == ("wY7", "wY7:t5Q")
-    assert fresh.calls[0][:3] == ["ssh", "box", "herdr"]
+    assert fresh.calls[0][:2] == ["ssh", "-o"]
+    assert "box" in fresh.calls[0]
     ht.resolve("mayor")
     assert len(fresh.calls) == 2
 
@@ -171,3 +174,78 @@ def test_emoji_only_label_skipped_and_stripped_dupes_refused(monkeypatch):
         "mayor": "mayor",
         "hot": "hot",
     }
+
+
+# --- multi-host ---
+
+ZEPHYR = [{"label": "💎0️⃣ Zephyr", "tab_id": "wK:t2", "workspace_id": "wK"}]
+
+
+class MultiRun:
+    """Per-host fake: host (or None) -> tabs list, or an exception to raise."""
+
+    def __init__(self, by_host):
+        self.by_host, self.calls = by_host, []
+
+    def __call__(self, argv, **kw):
+        self.calls.append(argv)
+        host = argv[argv.index("herdr") - 1] if argv[0] == "ssh" else None
+        val = self.by_host.get(host)
+        if isinstance(val, Exception):
+            raise val
+        out = json.dumps({"result": {"tabs": val or []}})
+        return subprocess.CompletedProcess(argv, 0, stdout=out, stderr="")
+
+
+def _multi(monkeypatch, by_host):
+    run = MultiRun(by_host)
+    monkeypatch.setattr(ht.subprocess, "run", run)
+    return run
+
+
+def test_remote_tab_resolves_and_focuses_with_ssh_argv(monkeypatch):
+    run = _multi(monkeypatch, {None: TABS, "mini0": ZEPHYR})
+    ht.refresh_all(["mini0"])
+    assert ht.resolve_any("zephyr", ["mini0"]) == ("mini0", "wK", "wK:t2")
+    run.calls.clear()
+    assert ht.focus_any("Zephyr", ["mini0"]) is True
+    assert run.calls == [
+        ["ssh", *ht.SSH_OPTS, "mini0", "herdr", "workspace", "focus", "wK"],
+        ["ssh", *ht.SSH_OPTS, "mini0", "herdr", "tab", "focus", "wK:t2"],
+        ["open", "-a", "WezTerm"],
+    ]
+
+
+def test_resolve_any_runs_no_subprocess(monkeypatch):
+    run = _multi(monkeypatch, {None: TABS, "mini0": ZEPHYR})
+    assert ht.resolve_any("zephyr", ["mini0"]) is None  # cold cache
+    assert run.calls == []
+
+
+def test_unreachable_host_skipped_then_dropped(monkeypatch):
+    run = _multi(monkeypatch, {None: TABS, "mini0": ZEPHYR})
+    ht.refresh_all(["mini0"])
+    run.by_host["mini0"] = subprocess.TimeoutExpired("ssh", 5)
+    for _ in range(ht.MAX_MISSES - 1):
+        ht.refresh_all(["mini0"])
+        assert ht.resolve_any("zephyr", ["mini0"]) == ("mini0", "wK", "wK:t2")
+        assert ht.resolve_any("mayor", ["mini0"])[0] is None  # local unaffected
+    ht.refresh_all(["mini0"])
+    assert ht.resolve_any("zephyr", ["mini0"]) is None
+    assert ht.resolve_any("mayor", ["mini0"]) == (None, "wY7", "wY7:t5Q")
+
+
+def test_cross_host_duplicate_refused(monkeypatch):
+    dup = [{"label": "💎 Mayor", "tab_id": "wZ:t1", "workspace_id": "wZ"}]
+    _multi(monkeypatch, {None: TABS, "mini0": dup + ZEPHYR})
+    merged = ht.refresh_all(["mini0"])
+    assert ht.resolve_any("mayor", ["mini0"]) is None
+    assert "mayor" not in ht.unique_labels_all(merged)
+    assert "zephyr" in ht.unique_labels_all(merged)
+
+
+def test_local_only_unchanged(monkeypatch):
+    _multi(monkeypatch, {None: TABS})
+    merged = ht.refresh_all([])
+    assert ht.resolve_any("fixer", []) == (None, "wY5", "wY5:t8F")
+    assert set(ht.unique_labels_all(merged)) == {"mayor", "fixer"}

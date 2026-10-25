@@ -1,6 +1,6 @@
 """Talon glue for herdr_tabs: the `herdr_tab_names` dynamic list + focus action.
 
-The list is rebuilt from `herdr tab list` by a cron job. The cron callback is the
+The list is rebuilt from `herdr tab list` on local + herdr_tabs.HOSTS by a cron job. The cron callback is the
 only place that runs the subprocess; the voice action resolves from the cache. Saved recall window names/aliases WIN on a clash, so
 today's recall behaviour is unchanged.
 """
@@ -33,8 +33,9 @@ def build_name_map(tabs, blocked):
     }
 
 
-def _apply(tabs):
-    name_map = build_name_map(tabs, _blocked_names())
+def _apply(merged):
+    """merged: [(host, tab)] across local + remote hosts."""
+    name_map = build_name_map([t for _, t in merged], _blocked_names())
     if not name_map:
         ctx.lists["self.herdr_tab_names"] = {}
         return
@@ -47,7 +48,7 @@ def refresh_names():
     """Cron tick (every REFRESH_INTERVAL, never on the voice path): one
     `herdr tab list` with a short timeout, then rebuild the list."""
     try:
-        _apply(herdr_tabs.refresh())
+        _apply(herdr_tabs.refresh_all())
     except Exception as e:
         print(f"[herdr_tab_voice] refresh failed: {e}")
 
@@ -56,7 +57,7 @@ def refresh_names():
 class Actions:
     def herdr_tab_focus(label: str):
         """Focus the herdr tab with this label and bring WezTerm forward."""
-        herdr_tabs.focus_tab(label)
+        herdr_tabs.focus_any(label)
 
 
 cron.interval(REFRESH_INTERVAL, refresh_names)

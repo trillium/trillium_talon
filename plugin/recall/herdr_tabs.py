@@ -13,7 +13,9 @@ Talon hot path (use `get_tabs(allow_fetch=False)` there).
 """
 
 import json
+import re
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 import time
 import unicodedata
 
@@ -22,13 +24,21 @@ HOST_APP = "WezTerm"
 CACHE_TTL = 10.0
 TIMEOUT = 5
 
+# Remote hosts whose tabs join the spoken list (ssh aliases). Edit this list.
+HOSTS = ["mini0"]
+# Never let a dead host stall a refresh; BatchMode forbids password prompts.
+SSH_OPTS = ["-o", "ConnectTimeout=3", "-o", "BatchMode=yes"]
+# Consecutive failed refreshes before a host's stale cache is dropped.
+MAX_MISSES = 3
+
 _cache = {}  # host-key -> {"at": float, "tabs": list}
+_misses = {}  # host-key -> consecutive failed refreshes
 
 
 def herdr_cmd(args, host=None):
     """argv for a herdr call, local or `ssh <host> herdr ...` for a remote leg."""
     argv = [HERDR, *args]
-    return ["ssh", host, *argv] if host else argv
+    return ["ssh", *SSH_OPTS, host, *argv] if host else argv
 
 
 def fetch_tabs(host=None):
@@ -57,6 +67,11 @@ def refresh(host=None):
     tabs = fetch_tabs(host)
     if tabs is not None:
         _cache[key] = {"at": time.time(), "tabs": tabs}
+        _misses[key] = 0
+    else:
+        _misses[key] = _misses.get(key, 0) + 1
+        if _misses[key] >= MAX_MISSES:
+            _cache.pop(key, None)
     return list(_cache.get(key, {}).get("tabs", []))
 
 
@@ -76,7 +91,9 @@ def clean_label(label):
     whitespace removed ("💎💎 Fixer" -> "Fixer"). Matching and spoken forms use
     this text only."""
     kept = []
-    for ch in str(label or ""):
+    # keycap emoji "0️⃣" is digit + optional FE0F + U+20E3: drop the digit too
+    text = re.sub("[0-9#*]\ufe0f?\u20e3", "", str(label or ""))
+    for ch in text:
         cat = unicodedata.category(ch)
         if cat[0] == "S" or cat in ("Cf", "Co", "Cs", "Cc"):
             continue
@@ -146,6 +163,69 @@ def focus_tab(label, host=None):
         if not target:
             return False
         for argv in focus_commands(*target, host=host):
+            subprocess.run(argv, check=False, timeout=TIMEOUT, capture_output=True)
+        return True
+    except Exception as e:
+        print(f"[herdr_tabs] focus {label!r} failed: {e}")
+        return False
+
+
+# --- multi-host: local + HOSTS merged, labels unique across all of them ---
+
+
+def refresh_all(hosts=None):
+    """Refresh local + every host in parallel (bounded by TIMEOUT; unreachable
+    hosts just count a miss). Returns merge_tabs() of the caches."""
+    hosts = list(HOSTS if hosts is None else hosts)
+    legs = [None, *hosts]
+    with ThreadPoolExecutor(max_workers=len(legs)) as pool:
+        list(pool.map(refresh, legs))
+    return merge_tabs(hosts)
+
+
+def merge_tabs(hosts=None):
+    """[(host-or-None, tab)] from the caches only; never runs a subprocess."""
+    hosts = list(HOSTS if hosts is None else hosts)
+    return [
+        (h, t) for h in [None, *hosts] for t in get_tabs(h, allow_fetch=False)
+    ]
+
+
+def unique_labels_all(merged):
+    """{normalised label: label as shown} for labels held by exactly one tab
+    across ALL hosts."""
+    return unique_labels([t for _, t in merged])
+
+
+def resolve_any(label, hosts=None):
+    """(host, workspace_id, tab_id) for a label unique across every host,
+    from cache only, else None. Never raises."""
+    try:
+        merged = merge_tabs(hosts)
+        matches = [
+            (h, t) for h, t in merged if _norm(t.get("label")) == _norm(label)
+        ]
+        if len(matches) != 1 or not _norm(label):
+            if len(matches) > 1:
+                print(f"[herdr_tabs] ambiguous label {label!r}: {len(matches)} tabs")
+            return None
+        host, tab = matches[0]
+        tid = tab.get("tab_id")
+        return (host, tab.get("workspace_id"), tid) if tid else None
+    except Exception as e:
+        print(f"[herdr_tabs] resolve_any failed: {e}")
+        return None
+
+
+def focus_any(label, hosts=None):
+    """Focus a label unique across local + HOSTS, routing to its host. Cache
+    only for resolution (no ssh on the voice path); the focus legs run ssh."""
+    try:
+        target = resolve_any(label, hosts)
+        if not target:
+            return False
+        host, ws, tid = target
+        for argv in focus_commands(ws, tid, host=host):
             subprocess.run(argv, check=False, timeout=TIMEOUT, capture_output=True)
         return True
     except Exception as e:
