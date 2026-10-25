@@ -16,3 +16,8 @@ mouse clock,User excluded command
 hints off [{user.rango_hints_toggle_levels}],User excluded command
 pomodoro start,User excluded command
 reverse,Reverse should not override last_repeatable_cmd so parrot cmere keeps reversing
+<phrase>,Raw dictation phrase — must not clear pondering click_to_finish submit/re-enter overrides
+pondering <user.text>,Pondering start — must not clear its own follow-up submit/re-enter overrides
+pondering,Pondering start — must not clear its own follow-up submit/re-enter overrides
+^{user.herdr_tab_names}$,Herdr tab switch must not become the repeat target so pop/click stay free for dictation
+{user.herdr_tab_names},Herdr tab switch (rule text without anchors)

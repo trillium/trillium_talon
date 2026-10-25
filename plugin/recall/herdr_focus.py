@@ -16,6 +16,8 @@ import subprocess
 
 from talon import Module, actions
 
+from . import reentry_card
+
 mod = Module()
 
 # Spoken alias -> focus target token. Values are either a herdr agent NAME, or
@@ -23,7 +25,8 @@ mod = Module()
 # Edit herdr_tab_alias.talon-list to add/rename aliases.
 mod.list("herdr_tab_alias", desc="Spoken alias -> herdr focus target (agent name or cwd:<substr>)")
 
-HERDR = "herdr"          # on PATH (~/.local/bin/herdr)
+# AI Added: corrected install path in the comment below.
+HERDR = "herdr"          # on PATH (/opt/homebrew/bin/herdr)
 HERDR_HOST_APP = "WezTerm"  # the macOS app that hosts the herdr workspace
 
 
@@ -59,6 +62,7 @@ class Actions:
         except Exception as e:
             print(f"[herdr_focus] focus '{focus_arg}' failed: {e}")
             return
+        reentry_card.on_switch(target)  # async, silent, never delays the switch
         # Bring the herdr host terminal forward so the focused tab is visible.
         try:
             subprocess.run(["open", "-a", HERDR_HOST_APP], check=False, timeout=5)
