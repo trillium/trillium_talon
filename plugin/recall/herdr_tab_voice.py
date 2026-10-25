@@ -60,6 +60,14 @@ class Actions:
         """Focus the herdr tab with this label and bring WezTerm forward."""
         herdr_tabs.focus_any(label)
 
+    def herdr_tab_next():
+        """Focus the next tab in the local (MacBook) Herdr, whatever the focused pane is connected to."""
+        herdr_tabs.step_local_tab(1)
+
+    def herdr_tab_previous():
+        """Focus the previous tab in the local (MacBook) Herdr, whatever the focused pane is connected to."""
+        herdr_tabs.step_local_tab(-1)
+
 
 cron.interval(REFRESH_INTERVAL, refresh_names)
 cron.after("2s", refresh_names)
