@@ -26,6 +26,10 @@ TIMEOUT = 5
 
 # Remote hosts whose tabs join the spoken list (ssh aliases). Edit this list.
 HOSTS = ["mini0"]
+# Spoken list skips transient worker tabs whose cleaned label starts with one
+# of these; EXTRA_ALLOWED re-admits specific labels (e.g. "fm-advisor").
+FM_PREFIXES = ("fm-",)
+EXTRA_ALLOWED = []
 # Never let a dead host stall a refresh; BatchMode forbids password prompts.
 SSH_OPTS = ["-o", "ConnectTimeout=3", "-o", "BatchMode=yes"]
 # Consecutive failed refreshes before a host's stale cache is dropped.
@@ -193,6 +197,16 @@ def unique_labels_all(merged):
     """{normalised label: label as shown} for labels held by exactly one tab
     across ALL hosts."""
     return unique_labels([t for _, t in merged])
+
+
+def voice_labels(merged):
+    """unique_labels_all minus FM_PREFIXES labels (unless in EXTRA_ALLOWED)."""
+    allowed = {_norm(x) for x in EXTRA_ALLOWED}
+    return {
+        k: v
+        for k, v in unique_labels_all(merged).items()
+        if k in allowed or not k.startswith(tuple(p.lower() for p in FM_PREFIXES))
+    }
 
 
 def resolve_any(label, hosts=None):

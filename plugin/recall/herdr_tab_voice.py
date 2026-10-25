@@ -24,18 +24,19 @@ def _blocked_names():
     return names
 
 
-def build_name_map(tabs, blocked):
-    """{label: label} for unique, non-empty, non-blocked tab labels."""
+def build_name_map(merged, blocked):
+    """{label: label} for unique, non-empty, non-blocked, non-fm-* labels
+    across all hosts. merged: [(host, tab)]."""
     return {
         label: label
-        for key, label in herdr_tabs.unique_labels(tabs).items()
+        for key, label in herdr_tabs.voice_labels(merged).items()
         if key not in blocked and not recall_state.is_forbidden(key)
     }
 
 
 def _apply(merged):
     """merged: [(host, tab)] across local + remote hosts."""
-    name_map = build_name_map([t for _, t in merged], _blocked_names())
+    name_map = build_name_map(merged, _blocked_names())
     if not name_map:
         ctx.lists["self.herdr_tab_names"] = {}
         return

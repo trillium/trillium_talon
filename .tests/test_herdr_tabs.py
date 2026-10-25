@@ -249,3 +249,21 @@ def test_local_only_unchanged(monkeypatch):
     merged = ht.refresh_all([])
     assert ht.resolve_any("fixer", []) == (None, "wY5", "wY5:t8F")
     assert set(ht.unique_labels_all(merged)) == {"mayor", "fixer"}
+
+
+def test_voice_labels_exclude_fm_workers(monkeypatch):
+    tabs = [
+        {"label": "fm-advisor", "tab_id": "w1:t1", "workspace_id": "w1"},
+        {"label": "💎 FM-Scout", "tab_id": "w1:t2", "workspace_id": "w1"},
+    ]
+    _multi(monkeypatch, {None: TABS, "mini0": ZEPHYR + tabs})
+    merged = ht.refresh_all(["mini0"])
+    assert set(ht.voice_labels(merged)) == {"mayor", "fixer", "zephyr"}
+
+
+def test_extra_allowed_readmits_fm_label(monkeypatch):
+    tabs = [{"label": "fm-advisor", "tab_id": "w1:t1", "workspace_id": "w1"}]
+    _multi(monkeypatch, {None: tabs})
+    monkeypatch.setattr(ht, "EXTRA_ALLOWED", ["FM-Advisor"])
+    merged = ht.refresh_all([])
+    assert set(ht.voice_labels(merged)) == {"fm-advisor"}
