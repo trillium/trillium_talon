@@ -23,12 +23,12 @@ It replaces the Claude-only usage text in the bar. That text came from
 
 ## Colors (percent left)
 
-| Left | Color |
-|---|---|
-| >= 50 | green |
-| 25-49 | yellow |
-| 10-24 | orange |
-| < 10 | red (0 also tints the cell red) |
+| Left       | Color                               |
+| ---------- | ----------------------------------- |
+| >= 50      | green                               |
+| 25-49      | yellow                              |
+| 10-24      | orange                              |
+| < 10       | red (0 also tints the cell red)     |
 | no reading | gray with `login` / `setup` / `n/a` |
 
 Runway bumps: `projected_exhaustion` is at least orange, `exhausted_now` red.

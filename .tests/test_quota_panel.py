@@ -103,8 +103,16 @@ def test_windows_fallback_when_no_semantics_uses_lowest_window_and_dup_ids():
                 "provider": "agy",
                 "state": {"status": "fresh"},
                 "windows": [
-                    {"id": "w", "percentRemaining": 94, "resetsAt": "2026-10-31T21:00:00Z"},
-                    {"id": "w", "percentRemaining": 31, "resetsAt": "2026-11-01T07:00:00Z"},
+                    {
+                        "id": "w",
+                        "percentRemaining": 94,
+                        "resetsAt": "2026-10-31T21:00:00Z",
+                    },
+                    {
+                        "id": "w",
+                        "percentRemaining": 31,
+                        "resetsAt": "2026-11-01T07:00:00Z",
+                    },
                 ],
             }
         ]
@@ -204,7 +212,12 @@ def test_parse_iso_rejects_junk_and_assumes_utc():
 
 
 def test_format_age():
-    assert [qd.format_age(s) for s in (5, 600, 7300, 200000)] == ["1m", "10m", "2h", "2d"]
+    assert [qd.format_age(s) for s in (5, 600, 7300, 200000)] == [
+        "1m",
+        "10m",
+        "2h",
+        "2d",
+    ]
 
 
 # ── cells: poll health ──
@@ -218,7 +231,13 @@ def cells(rows, **kw):
 
 def test_cells_healthy_show_value_reset_bar_and_flags():
     cc, oc, gpt, grk, agy = cells(qd.parse(fixture()))
-    assert (cc.label, cc.value, cc.frac, cc.dim, cc.dot) == ("CC", "22%", 0.22, False, True)
+    assert (cc.label, cc.value, cc.frac, cc.dim, cc.dot) == (
+        "CC",
+        "22%",
+        0.22,
+        False,
+        True,
+    )
     assert cc.sub == "5h0m"
     assert oc.exhausted and oc.value == "0%"
     assert (gpt.value, gpt.sub, gpt.frac, gpt.color) == ("—", "login", None, qd.GRAY)
@@ -362,7 +381,7 @@ def test_runner_real_child_process_does_not_block_tick(tmp_path):
     script = tmp_path / "fake-quota"
     script.write_text(
         f"#!{sys.executable}\nimport time\ntime.sleep(0.3)\n"
-        'print(\'{"providers": []}\')\n'
+        "print('{\"providers\": []}')\n"
     )
     script.chmod(script.stat().st_mode | stat.S_IEXEC)
     r = qr.QuotaRunner(tool=str(script), tmp_dir=str(tmp_path))
@@ -426,7 +445,9 @@ def test_panel_sits_right_of_the_bar_with_the_bars_height(panel, talon_settings)
     assert rect.height == 35 and rect.width == 5 * 66 + 8
 
 
-def test_panel_left_x_setting_overrides_and_panel_stays_on_screen(panel, talon_settings):
+def test_panel_left_x_setting_overrides_and_panel_stays_on_screen(
+    panel, talon_settings
+):
     talon_settings.set("user.quota_panel_left_x", 0.5)
     assert panel.panel_rect(_Screen.rect, 5).x == pytest.approx(864)
     talon_settings.set("user.quota_panel_left_x", 0.95)

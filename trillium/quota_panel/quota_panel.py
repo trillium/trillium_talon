@@ -116,9 +116,11 @@ def panel_rect(screen_rect, n_cells):
     cell_w = float(_get("user.quota_panel_cell_w", 66))
     left_x = float(_get("user.quota_panel_left_x", 0))
     if left_x <= 0:
-        x = screen_rect.left + screen_rect.width * float(
-            _get("user.mode_indicator_bar_right_x", 0.51)
-        ) + 2
+        x = (
+            screen_rect.left
+            + screen_rect.width * float(_get("user.mode_indicator_bar_right_x", 0.51))
+            + 2
+        )
     else:
         x = screen_rect.left + screen_rect.width * left_x
     w = n_cells * cell_w + PAD * 2

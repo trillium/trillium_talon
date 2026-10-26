@@ -198,19 +198,22 @@ def parse_provider(provider: dict) -> Row:
     entries = _entries(provider)
     if entries:
         overall = [e for e in entries if e.get("scope") in _OVERALL_SCOPES]
-        head = overall[0] if overall else min(
-            entries, key=lambda e: _pct(e["effectivePercentRemaining"])
+        head = (
+            overall[0]
+            if overall
+            else min(entries, key=lambda e: _pct(e["effectivePercentRemaining"]))
         )
         row.percent = _pct(head["effectivePercentRemaining"])
         row.color = color_for(row.percent, _runway(head))
         row.resets_at = _limiting_reset(provider, head)
         row.dot = any(
-            e is not head and _pct(e["effectivePercentRemaining"]) == 0
-            for e in entries
+            e is not head and _pct(e["effectivePercentRemaining"]) == 0 for e in entries
         )
         return row
 
-    wins = [w for w in _windows(provider) if _pct(w.get("percentRemaining")) is not None]
+    wins = [
+        w for w in _windows(provider) if _pct(w.get("percentRemaining")) is not None
+    ]
     if wins:
         low = min(wins, key=lambda w: _pct(w["percentRemaining"]))
         row.percent = _pct(low["percentRemaining"])
