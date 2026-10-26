@@ -324,7 +324,8 @@ def picker_query(label, hosts=None):
 
 def goto_steps(label, hosts=None):
     """Ordered key steps that drive the Goto picker to `label`:
-    [("key", "ctrl-b"), ("key", "g"), ("key", "/"), ("insert", "💎0️⃣ Zephyr"), ("key", "enter")]."""
+    [("key", "ctrl-b"), ("key", "g"), ("key", "/"), ("insert", "💎0️⃣ Zephyr"), ("key", "enter")].
+    """
     return [
         ("key", PREFIX_KEY),
         ("key", GOTO_KEY),
