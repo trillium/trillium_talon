@@ -1,6 +1,9 @@
 settings():
     user.mode_indicator_show = true
     user.mode_indicator_show_mic_name = true
+    # Per-subscription quota panel (quota-axi) replaces the Claude-only usage text
+    user.mode_indicator_show_usage = false
+    user.quota_panel_show = true
     # Opacity (0=transparent, 1=opaque)
     user.mode_indicator_color_alpha = 0.75
     # Gradient brightness (0=darkest, 1=brightest)
