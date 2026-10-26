@@ -5,7 +5,10 @@ only place that runs the subprocess; the voice action resolves from the cache. S
 today's recall behaviour is unchanged.
 """
 
-from talon import Context, Module, actions, cron
+import socket
+import subprocess
+
+from talon import Context, Module, actions, cron, ui
 
 from . import herdr_tabs, recall_state
 
@@ -54,10 +57,42 @@ def refresh_names():
         print(f"[herdr_tab_voice] refresh failed: {e}")
 
 
+def _viewing_remote():
+    """True when the WezTerm/Herdr window title names a machine other than this
+    one (the title is "<server hostname>: <workspace>"). Unreadable -> False."""
+    try:
+        local = socket.gethostname().split(".")[0].lower()
+        for w in ui.windows():
+            if w.app.name == herdr_tabs.HOST_APP:
+                host = w.title.replace("[mosh]", "").split(":")[0].strip().lower()
+                return bool(host) and host != local
+    except Exception as e:
+        print(f"[herdr_tab_voice] view detect failed: {e}")
+    return False
+
+
 @mod.action_class
 class Actions:
     def herdr_tab_focus(label: str):
         """Focus the herdr tab with this label and bring WezTerm forward."""
+        # The client's selected machine is UI-only state, so a CLI focus on the
+        # wrong machine is invisible. Use the Goto picker whenever the target is
+        # remote OR the client is currently viewing a remote machine.
+        if herdr_tabs.remote_target(label) or _viewing_remote():
+            subprocess.run(
+                ["open", "-a", herdr_tabs.HOST_APP],
+                check=False,
+                timeout=herdr_tabs.TIMEOUT,
+            )
+            actions.sleep("300ms")
+            print(f"[herdr_tab_voice] goto picker for {label!r}")
+            for kind, value in herdr_tabs.goto_steps(label):
+                if kind == "key":
+                    actions.key(value)
+                else:
+                    actions.insert(value)
+                actions.sleep("80ms")
+            return
         herdr_tabs.focus_any(label)
 
     def herdr_tab_next():
