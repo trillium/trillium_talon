@@ -25,7 +25,7 @@ CACHE_TTL = 10.0
 TIMEOUT = 5
 
 # Remote hosts whose tabs join the spoken list (ssh aliases). Edit this list.
-HOSTS = ["mini0"]
+HOSTS = ["mini0", "mini1"]
 # Spoken list skips transient worker tabs whose cleaned label starts with one
 # of these; EXTRA_ALLOWED re-admits specific labels (e.g. "fm-advisor").
 FM_PREFIXES = ("fm-",)
