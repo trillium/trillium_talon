@@ -287,3 +287,30 @@ def step_local_tab(step):
     except Exception as e:
         print(f"[herdr_tabs] step {step} failed: {e}")
         return False
+
+
+# --- remote tabs: the client's selected machine is UI-only state ---
+# Herdr has no CLI/API to retarget the attached client (`--machine` only talks to
+# that machine's own server). The one way to switch the client onto a remote's
+# tab is its Goto picker: prefix+g, "/" to search, Enter on the match.
+
+PREFIX_KEY = "ctrl-b"
+GOTO_KEY = "g"
+
+
+def goto_steps(label):
+    """Ordered key steps that drive the Goto picker to `label`:
+    [("key", "ctrl-b"), ("key", "g"), ("key", "/"), ("insert", "zephyr"), ("key", "enter")]."""
+    return [
+        ("key", PREFIX_KEY),
+        ("key", GOTO_KEY),
+        ("key", "/"),
+        ("insert", clean_label(label)),
+        ("key", "enter"),
+    ]
+
+
+def remote_target(label, hosts=None):
+    """host name when `label` resolves to a tab on a remote host, else None."""
+    target = resolve_any(label, hosts)
+    return target[0] if target and target[0] else None
