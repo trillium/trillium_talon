@@ -1,0 +1,469 @@
+{
+ "generatedAt": "2026-10-26T19:00:05.999Z",
+ "schemaVersion": 5,
+ "providers": [
+  {
+   "provider": "claude",
+   "plan": "pro",
+   "windows": [
+    {
+     "id": "five_hour",
+     "label": "session",
+     "kind": "session",
+     "resetsAt": "2026-10-26T22:30:00.300380+00:00",
+     "percentRemaining": 81,
+     "pace": {
+      "status": "behind",
+      "reservePercentPoints": 11.0317,
+      "burnMultiple": 0.6327
+     }
+    },
+    {
+     "id": "seven_day",
+     "label": "week",
+     "kind": "weekly",
+     "resetsAt": "2026-10-27T00:00:00.300404+00:00",
+     "percentRemaining": 22,
+     "pace": {
+      "status": "behind",
+      "reservePercentPoints": 19.0248,
+      "burnMultiple": 0.8039
+     }
+    },
+    {
+     "id": "model:fable",
+     "label": "Fable week",
+     "kind": "model",
+     "resetsAt": "2026-10-27T00:00:00.300584+00:00",
+     "percentRemaining": 0,
+     "pace": {
+      "status": "ahead",
+      "reservePercentPoints": -2.9752,
+      "burnMultiple": 1.0307
+     }
+    }
+   ],
+   "state": {
+    "status": "fresh",
+    "stale": false
+   },
+   "quotaSemantics": {
+    "status": "known",
+    "effectiveAvailability": [
+     {
+      "scope": "all_models",
+      "status": "known",
+      "effectivePercentRemaining": 22,
+      "boundedBy": [
+       "five_hour",
+       "seven_day"
+      ],
+      "limitingWindowIds": [
+       "seven_day"
+      ],
+      "pace": {
+       "status": "behind",
+       "worstReservePercentPoints": 11.0317,
+       "worstReserveWindowId": "five_hour"
+      },
+      "runway": {
+       "status": "through_reset",
+       "projectionConfidence": "established"
+      },
+      "selection": {
+       "status": "known",
+       "spendPriority": 6.4153
+      }
+     },
+     {
+      "scope": "model:fable",
+      "status": "known",
+      "effectivePercentRemaining": 0,
+      "boundedBy": [
+       "five_hour",
+       "seven_day",
+       "model:fable"
+      ],
+      "limitingWindowIds": [
+       "model:fable"
+      ],
+      "pace": {
+       "status": "mixed",
+       "aheadWindowIds": [
+        "model:fable"
+       ],
+       "worstReservePercentPoints": -2.9752,
+       "worstReserveWindowId": "model:fable"
+      },
+      "runway": {
+       "status": "exhausted_now",
+       "usableRunwaySeconds": 0,
+       "limitingWindowId": "model:fable",
+       "projectedExhaustedAt": "2026-10-26T19:00:05.999Z"
+      },
+      "selection": {
+       "status": "known",
+       "spendPriority": 2.7469
+      }
+     }
+    ]
+   },
+   "accountKeys": [
+    "default"
+   ]
+  },
+  {
+   "provider": "codex",
+   "windows": [],
+   "state": {
+    "status": "unavailable",
+    "stale": false,
+    "error": "Codex access token expired",
+    "authStatus": "expired_refreshable"
+   },
+   "accountKeys": [
+    "codex-home"
+   ],
+   "quotaSemantics": {
+    "status": "unknown",
+    "effectiveAvailability": []
+   }
+  },
+  {
+   "provider": "cursor",
+   "windows": [],
+   "state": {
+    "status": "auth_required",
+    "stale": false,
+    "error": "Cursor sign-in required"
+   },
+   "quotaSemantics": {
+    "status": "unknown",
+    "effectiveAvailability": []
+   },
+   "accountKeys": [
+    "default"
+   ],
+   "notSetUp": true
+  },
+  {
+   "provider": "grok",
+   "windows": [
+    {
+     "id": "credits",
+     "label": "week",
+     "kind": "weekly",
+     "percentRemaining": 89,
+     "resetsAt": "2026-11-01T05:23:31.000Z",
+     "pace": {
+      "status": "behind",
+      "reservePercentPoints": 11.3867,
+      "burnMultiple": 0.4914
+     }
+    },
+    {
+     "id": "product:grok_build",
+     "label": "Grok Build",
+     "kind": "weekly",
+     "percentRemaining": 89,
+     "resetsAt": "2026-11-01T05:23:31.000Z",
+     "pace": {
+      "status": "behind",
+      "reservePercentPoints": 11.3867,
+      "burnMultiple": 0.4914
+     }
+    }
+   ],
+   "credits": {
+    "remaining": 0,
+    "unit": "credits"
+   },
+   "state": {
+    "status": "fresh",
+    "stale": false,
+    "authStatus": "usable"
+   },
+   "quotaSemantics": {
+    "status": "known",
+    "effectiveAvailability": [
+     {
+      "scope": "all_products",
+      "status": "known",
+      "effectivePercentRemaining": 89,
+      "boundedBy": [
+       "credits"
+      ],
+      "limitingWindowIds": [
+       "credits"
+      ],
+      "pace": {
+       "status": "behind",
+       "worstReservePercentPoints": 11.3867,
+       "worstReserveWindowId": "credits"
+      },
+      "runway": {
+       "status": "through_reset",
+       "projectionConfidence": "established"
+      },
+      "selection": {
+       "status": "known",
+       "spendPriority": 0.6553
+      }
+     },
+     {
+      "scope": "product:grok_build",
+      "status": "known",
+      "effectivePercentRemaining": 89,
+      "boundedBy": [
+       "credits",
+       "product:grok_build"
+      ],
+      "limitingWindowIds": [
+       "credits",
+       "product:grok_build"
+      ],
+      "pace": {
+       "status": "behind",
+       "worstReservePercentPoints": 11.3867,
+       "worstReserveWindowId": "credits"
+      },
+      "runway": {
+       "status": "through_reset",
+       "projectionConfidence": "established"
+      },
+      "selection": {
+       "status": "known",
+       "spendPriority": 0.6553
+      }
+     }
+    ]
+   },
+   "accountKeys": [
+    "default"
+   ]
+  },
+  {
+   "provider": "agy",
+   "windows": [
+    {
+     "id": "gemini_5h",
+     "label": "Gemini 5-hour",
+     "kind": "session",
+     "resetsAt": "2026-10-27T00:00:05.000Z",
+     "percentRemaining": 100,
+     "pace": {
+      "status": "on_pace",
+      "reservePercentPoints": 0.0055,
+      "burnMultiple": 0
+     }
+    },
+    {
+     "id": "gemini_weekly",
+     "label": "Gemini weekly",
+     "kind": "weekly",
+     "resetsAt": "2026-10-31T21:20:48.000Z",
+     "resetText": "You have used some of your weekly limit, it will fully refresh in 5 days, 2 hours.",
+     "percentRemaining": 94,
+     "pace": {
+      "status": "behind",
+      "reservePercentPoints": 21.1756,
+      "burnMultiple": 0.2208
+     }
+    },
+    {
+     "id": "gemini_weekly",
+     "label": "Gemini weekly",
+     "kind": "weekly",
+     "resetsAt": "2026-11-01T07:26:03.000Z",
+     "resetText": "You have used some of your weekly limit, it will fully refresh in 5 days, 12 hours.",
+     "percentRemaining": 79,
+     "pace": {
+      "status": "on_pace",
+      "reservePercentPoints": 0.1711,
+      "burnMultiple": 0.9919
+     }
+    },
+    {
+     "id": "claude_gpt_5h",
+     "label": "Claude/GPT 5-hour",
+     "kind": "session",
+     "resetsAt": "2026-10-26T21:09:55.000Z",
+     "resetText": "You have used some of your 5-hour limit, it will fully refresh in 2 hours, 9 minutes.",
+     "percentRemaining": 98,
+     "pace": {
+      "status": "behind",
+      "reservePercentPoints": 54.7278,
+      "burnMultiple": 0.0353
+     }
+    },
+    {
+     "id": "claude_gpt_weekly",
+     "label": "Claude/GPT weekly",
+     "kind": "weekly",
+     "resetsAt": "2026-10-31T21:17:59.000Z",
+     "resetText": "You have used some of your weekly limit, it will fully refresh in 5 days, 2 hours.",
+     "percentRemaining": 68,
+     "pace": {
+      "status": "ahead",
+      "reservePercentPoints": -4.7965,
+      "burnMultiple": 1.1763
+     }
+    }
+   ],
+   "state": {
+    "status": "fresh",
+    "stale": false
+   },
+   "quotaSemantics": {
+    "status": "known",
+    "effectiveAvailability": [
+     {
+      "scope": "gemini",
+      "status": "known",
+      "effectivePercentRemaining": 79,
+      "boundedBy": [
+       "gemini_5h",
+       "gemini_weekly",
+       "gemini_weekly"
+      ],
+      "limitingWindowIds": [
+       "gemini_weekly"
+      ],
+      "pace": {
+       "status": "behind",
+       "worstReservePercentPoints": 0.0055,
+       "worstReserveWindowId": "gemini_5h"
+      },
+      "runway": {
+       "status": "through_reset",
+       "projectionConfidence": "early"
+      },
+      "selection": {
+       "status": "known",
+       "spendPriority": 0.5469
+      }
+     },
+     {
+      "scope": "claude_gpt",
+      "status": "known",
+      "effectivePercentRemaining": 68,
+      "boundedBy": [
+       "claude_gpt_5h",
+       "claude_gpt_weekly"
+      ],
+      "limitingWindowIds": [
+       "claude_gpt_weekly"
+      ],
+      "pace": {
+       "status": "mixed",
+       "aheadWindowIds": [
+        "claude_gpt_weekly"
+       ],
+       "worstReservePercentPoints": -4.7965,
+       "worstReserveWindowId": "claude_gpt_weekly"
+      },
+      "runway": {
+       "status": "projected_exhaustion",
+       "usableRunwaySeconds": 349620,
+       "projectedExhaustedAt": "2026-10-30T20:07:05.871Z",
+       "limitingWindowId": "claude_gpt_weekly",
+       "projectionConfidence": "established"
+      },
+      "selection": {
+       "status": "known",
+       "spendPriority": -0.1708
+      }
+     }
+    ]
+   },
+   "accountKeys": [
+    "default"
+   ]
+  },
+  {
+   "provider": "opencode-go",
+   "plan": "OpenCode Go",
+   "windows": [
+    {
+     "id": "rolling",
+     "label": "rolling",
+     "kind": "unknown",
+     "percentRemaining": 100,
+     "resetsAt": "2026-10-26T22:31:30.000Z",
+     "pace": {
+      "status": "behind",
+      "reservePercentPoints": 29.5333,
+      "burnMultiple": 0
+     }
+    },
+    {
+     "id": "weekly",
+     "label": "weekly",
+     "kind": "weekly",
+     "percentRemaining": 100,
+     "resetsAt": "2026-11-02T00:00:00.000Z",
+     "pace": {
+      "status": "behind",
+      "reservePercentPoints": 11.3105,
+      "burnMultiple": 0
+     }
+    },
+    {
+     "id": "monthly",
+     "label": "monthly",
+     "kind": "monthly",
+     "percentRemaining": 0,
+     "resetsAt": "2026-11-04T23:54:20.000Z",
+     "pace": {
+      "status": "ahead",
+      "reservePercentPoints": -29.6914,
+      "burnMultiple": 1.4223
+     }
+    }
+   ],
+   "state": {
+    "status": "fresh",
+    "stale": false
+   },
+   "quotaSemantics": {
+    "status": "known",
+    "effectiveAvailability": [
+     {
+      "scope": "all_models",
+      "status": "known",
+      "effectivePercentRemaining": 0,
+      "boundedBy": [
+       "rolling",
+       "weekly",
+       "monthly"
+      ],
+      "limitingWindowIds": [
+       "monthly"
+      ],
+      "pace": {
+       "status": "mixed",
+       "aheadWindowIds": [
+        "monthly"
+       ],
+       "worstReservePercentPoints": -29.6914,
+       "worstReserveWindowId": "monthly"
+      },
+      "runway": {
+       "status": "exhausted_now",
+       "usableRunwaySeconds": 0,
+       "limitingWindowId": "monthly",
+       "projectedExhaustedAt": "2026-10-26T19:00:05.999Z"
+      },
+      "selection": {
+       "status": "known",
+       "spendPriority": -0.9397
+      }
+     }
+    ]
+   },
+   "accountKeys": [
+    "default"
+   ]
+  }
+ ]
+}

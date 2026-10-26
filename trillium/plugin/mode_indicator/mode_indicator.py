@@ -47,6 +47,12 @@ mod.setting(
     desc="If true the mode indicator is shown",
 )
 mod.setting(
+    "mode_indicator_show_usage",
+    type=bool,
+    default=True,
+    desc="If true the Claude usage text and 5-hour gauges are shown in the bar",
+)
+mod.setting(
     "mode_indicator_show_mic_name",
     type=bool,
     default=False,
@@ -358,9 +364,10 @@ def on_draw(c: SkiaCanvas):
         c.draw_text(opp_display, text_col1_x, text_y_bottom)
 
     # Draw usage + week info (column 2)
-    if static_text:
-        c.draw_text(static_text, text_col2_x, text_y_top)
-    c.draw_text(week_text, text_col2_x, text_y_bottom)
+    if settings.get("user.mode_indicator_show_usage"):
+        if static_text:
+            c.draw_text(static_text, text_col2_x, text_y_top)
+        c.draw_text(week_text, text_col2_x, text_y_bottom)
 
     # --- Draw system monitor bar graph (CPU bars + memory line) ---
     draw_graph(
