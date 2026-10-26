@@ -14,3 +14,11 @@ Say a Herdr tab's label ("mayor", "fixer") to focus that tab and bring WezTerm f
 ## Next / previous tab (local Herdr)
 
 "herdr tab next" / "herdr tab previous" (any app) and plain "tab next" / "tab previous" (in WezTerm) run `herdr tab focus` against this MacBook's Herdr, so they work even when the focused pane is an ssh session into a mini. Order is `herdr tab list` order within the focused workspace (not `number`), wrapping at the ends; no keystrokes, no ssh.
+
+## Remote tabs and the Goto picker
+
+The Herdr client's selected machine is UI-only state, so a remote tab (or any tab while the client is viewing a remote machine) is reached through the Goto picker: `ctrl-b g`, `/`, search text, Enter (`herdr_tabs.goto_steps`, driven by `user.herdr_tab_focus`).
+
+The search text is the tab's **raw label with its emoji** (`herdr_tabs.picker_query`), not the cleaned spoken text. The picker matches machine names, workspace names and terminal rows, and a machine or workspace hit pulls in every terminal under it, so typing `zephyr` matches the machine `mini0-zephyr` and Enter opens that machine's first terminal (`fm-advisor`) instead of the Zephyr tab. Labels with emoji (`💎0️⃣ Zephyr`) match only their own tab's rows. Multi-word queries match only inside a single row/header, so you cannot combine a machine name with a tab name. A plain label with no emoji that is a substring of a machine or workspace name would still collide.
+
+This supersedes the uncommitted copy of these files in the live `~/.talon/user/trillium_talon` checkout.

@@ -298,14 +298,38 @@ PREFIX_KEY = "ctrl-b"
 GOTO_KEY = "g"
 
 
-def goto_steps(label):
+def picker_query(label, hosts=None):
+    """Text typed into the Goto picker's search for the tab spoken as `label`.
+
+    The picker matches a query against machine names, workspace names and
+    terminal rows, and a machine/workspace hit pulls in every terminal under it
+    (verified in a Herdr lab, 0.9.5): "zephyr" matches the machine
+    "mini0-zephyr", so Enter lands on that machine's first terminal instead of
+    the Zephyr tab. The tab's raw label keeps its emoji ("💎0️⃣ Zephyr"), which
+    machine and workspace names never contain, so only that tab's rows match.
+    Falls back to the cleaned label when the tab is not in the cache. Cache
+    only; never runs a subprocess."""
+    try:
+        matches = [
+            t for _, t in merge_tabs(hosts) if _norm(t.get("label")) == _norm(label)
+        ]
+        if len(matches) == 1:
+            raw = " ".join(str(matches[0].get("label") or "").split())
+            if raw:
+                return raw
+    except Exception as e:
+        print(f"[herdr_tabs] picker_query failed: {e}")
+    return clean_label(label)
+
+
+def goto_steps(label, hosts=None):
     """Ordered key steps that drive the Goto picker to `label`:
-    [("key", "ctrl-b"), ("key", "g"), ("key", "/"), ("insert", "zephyr"), ("key", "enter")]."""
+    [("key", "ctrl-b"), ("key", "g"), ("key", "/"), ("insert", "💎0️⃣ Zephyr"), ("key", "enter")]."""
     return [
         ("key", PREFIX_KEY),
         ("key", GOTO_KEY),
         ("key", "/"),
-        ("insert", clean_label(label)),
+        ("insert", picker_query(label, hosts)),
         ("key", "enter"),
     ]
 

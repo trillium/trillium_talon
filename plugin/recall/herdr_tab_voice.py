@@ -79,7 +79,11 @@ class Actions:
         # wrong machine is invisible. Use the Goto picker whenever the target is
         # remote OR the client is currently viewing a remote machine.
         if herdr_tabs.remote_target(label) or _viewing_remote():
-            subprocess.run(["open", "-a", herdr_tabs.HOST_APP], check=False, timeout=herdr_tabs.TIMEOUT)
+            subprocess.run(
+                ["open", "-a", herdr_tabs.HOST_APP],
+                check=False,
+                timeout=herdr_tabs.TIMEOUT,
+            )
             actions.sleep("300ms")
             print(f"[herdr_tab_voice] goto picker for {label!r}")
             for kind, value in herdr_tabs.goto_steps(label):
