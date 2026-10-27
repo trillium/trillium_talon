@@ -22,6 +22,17 @@ _overlay_ctx = Context()
 _active_overlays: list = []
 
 
+def focused_screen() -> Screen:
+    """Screen holding the focused window, else the main screen."""
+    try:
+        screen = ui.active_window().screen
+        if screen is not None:
+            return screen
+    except Exception:
+        pass
+    return ui.main_screen()
+
+
 def draw_rounded_rect(c: SkiaCanvas, rect: Rect, radius: float):
     """Draw a rounded rectangle using a Skia path."""
     r = min(radius, rect.width / 2, rect.height / 2)
@@ -123,6 +134,7 @@ class DismissibleOverlay:
         close_hint_color: str = "aaaaaaff",
         on_hide: Optional[Callable] = None,
         blocks_mouse: bool = True,
+        follow_focus: bool = False,
     ):
         self._user_on_draw = on_draw
         self._auto_hide = auto_hide
@@ -131,6 +143,8 @@ class DismissibleOverlay:
         self._close_hint_color = close_hint_color
         self._on_hide = on_hide
         self._blocks_mouse = blocks_mouse
+        self._follow_focus = follow_focus
+        self._screen: Optional[Screen] = None
         self._canvas: Canvas = None
         self._hide_job = None
         self._panel_rect: Rect = None
@@ -139,6 +153,11 @@ class DismissibleOverlay:
     @property
     def is_showing(self) -> bool:
         return self._canvas is not None
+
+    @property
+    def screen(self) -> Screen:
+        """Screen the overlay is drawn on (chosen at show(); main screen before)."""
+        return self._screen or ui.main_screen()
 
     def set_panel_rect(self, rect: Rect):
         """Call from on_draw to set the panel rect for click-outside detection."""
@@ -192,7 +211,8 @@ class DismissibleOverlay:
         if self._canvas:
             self._teardown()
 
-        screen: Screen = ui.main_screen()
+        screen: Screen = focused_screen() if self._follow_focus else ui.main_screen()
+        self._screen = screen
         self._canvas = Canvas.from_screen(screen)
         self._canvas.blocks_mouse = self._blocks_mouse
         self._canvas.register("draw", self._on_draw)

@@ -9,7 +9,6 @@ latest scan of the tab. No auto-hide. Uses DismissibleOverlay for lifecycle.
 
 import time
 
-from talon import ui
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
@@ -66,7 +65,7 @@ def _fit(c: SkiaCanvas, text: str, max_w: float) -> str:
 
 
 def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
-    sr = ui.main_screen().rect
+    sr = overlay.screen.rect
     draw_dim_backdrop(c, sr, DIM_BG)
 
     start, end = links_data.page_bounds(_page, len(_rows))
@@ -171,7 +170,10 @@ def _on_overlay_hide():
 
 
 _overlay = DismissibleOverlay(
-    on_draw=_on_draw, auto_hide=None, on_hide=_on_overlay_hide
+    on_draw=_on_draw,
+    auto_hide=None,
+    on_hide=_on_overlay_hide,
+    follow_focus=True,
 )
 
 
