@@ -327,6 +327,17 @@ def on_post_phrase(j):
         f"on_post_phrase: last_cmd={last_cmd.trigger if last_cmd else 'None'}, should_track={should_track_command(last_cmd.trigger) if last_cmd else 'N/A'}",
     )
     if last_cmd and should_track_command(last_cmd.trigger):
+        # Just after a pop-submit, a stray command must neither wipe the armed
+        # submit nor become the repeat fallback: the next pop presses Enter.
+        if override_repeat_action == (
+            "user",
+            "click_submit_now",
+            (),
+        ) and actions.user.click_submit_grace_active():
+            actions.user.boolean_print(
+                "repeater", "Keeping armed submit (pop-submit grace window)"
+            )
+            return
         # Clear any programmatic overrides when a new trackable command is spoken
         if override_repeat_action or override_opposite_action:
             actions.user.boolean_print(

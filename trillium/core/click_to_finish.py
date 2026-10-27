@@ -24,6 +24,8 @@ NATIVE "line up the next action" facility, not a custom state machine:
     tag-gated override kept losing the tongue-click to repeater's repeat.
 """
 
+import time
+
 from talon import Module, Context, actions, cron, scope
 
 mod = Module()
@@ -43,6 +45,11 @@ _submit_key = DEFAULT_SUBMIT_KEY
 
 # Debounce so an accidental fast double tongue-click can't double-submit.
 SUBMIT_DEBOUNCE_S = 1.0
+
+# For this long after a pop-submit finish, a stray recognised command must not
+# wipe the armed submit (else the next pop replays e.g. "nuke left" instead).
+FINISH_GRACE_S = 1.5
+_finish_at = None  # time.monotonic() of the last pop-submit finish
 
 # State
 enabled = False
@@ -149,6 +156,11 @@ class Actions:
             actions.key(_submit_key)
             print(f"[click] submit -> key({_submit_key})")
 
+    def click_submit_grace_active() -> bool:
+        """True for ~1.5s after a pop-submit finish; repeater keeps the armed
+        submit through a stray command heard in that window."""
+        return _finish_at is not None and time.monotonic() - _finish_at < FINISH_GRACE_S
+
     def click_submit_key_set(keys: str):
         """Set what the follow-up click submits (Talon key sequence, e.g. 'enter')"""
         global _submit_key
@@ -204,9 +216,11 @@ def _submit_and_exit():
     The dictated text is now in the input box (SuperWhisper submit lands text but
     does NOT submit the form).
     """
+    global _finish_at
     _submit_superwhisper()
     disable()
     _arm_followups()
+    _finish_at = time.monotonic()
 
 
 @noise_ctx.action_class("user")

@@ -77,3 +77,46 @@ if hasattr(talon, "test_mode"):
         click_to_finish.enable()
         click_to_finish.disable()
         assert click_to_finish._entered_from_sleep is False
+
+    # --- pop-submit grace: a stray command must not wipe the armed Enter ---
+
+    def _stray_command(talon_actions, monkeypatch, trigger="nuke left"):
+        from trillium.plugin.repeater import repeater
+
+        cmd = MagicMock()
+        cmd.trigger = trigger
+        talon_actions.register_test_action(
+            "core", "last_command", lambda: (cmd, None)
+        )
+        monkeypatch.setattr(repeater, "should_track_command", lambda t: True)
+        monkeypatch.setattr(
+            repeater, "update_mode_indicator_with_last_command", lambda *a: None
+        )
+        talon.scope.update({"mode": {"command"}})
+        repeater.on_post_phrase(None)
+        return repeater
+
+    @pytest.fixture
+    def armed_after_finish(talon_actions, pondering_harness):
+        talon_actions.user.clear_repeat_overrides()
+        talon_actions.register_test_action("user", "boolean_print", MagicMock())
+        talon_actions.register_test_action("user", "set_next_opposite_action", MagicMock())
+        talon_actions.register_test_action("speech", "enable", MagicMock())
+        talon_actions.register_test_action("key", "", MagicMock())
+        click_to_finish._submit_and_exit()
+        yield
+        click_to_finish._finish_at = None
+        talon_actions.user.clear_repeat_overrides()
+
+    def test_stray_command_inside_grace_keeps_submit_armed(
+        talon_actions, armed_after_finish, monkeypatch
+    ):
+        repeater = _stray_command(talon_actions, monkeypatch)
+        assert repeater.override_repeat_action == ("user", "click_submit_now", ())
+
+    def test_stray_command_after_grace_clears_submit(
+        talon_actions, armed_after_finish, monkeypatch
+    ):
+        click_to_finish._finish_at -= click_to_finish.FINISH_GRACE_S + 0.1
+        repeater = _stray_command(talon_actions, monkeypatch)
+        assert repeater.override_repeat_action is None
