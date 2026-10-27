@@ -8,11 +8,7 @@ import sqlite3
 from pathlib import Path
 
 DB_PATH = (
-    Path.home()
-    / "Library"
-    / "Application Support"
-    / "com.pais.handy"
-    / "history.db"
+    Path.home() / "Library" / "Application Support" / "com.pais.handy" / "history.db"
 )
 
 

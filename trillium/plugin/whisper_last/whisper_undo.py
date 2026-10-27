@@ -78,6 +78,8 @@ def _resolve_trailing_insert(transcription: str) -> str:
     if clipboard_text == transcription:
         return ""
     return TRAILING_INSERT_FALLBACK
+
+
 # -----------------------------------------------------------------------------
 
 # Watch the DB's PARENT directory, not the file itself: SQLite WAL commits land
