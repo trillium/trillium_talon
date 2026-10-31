@@ -1,0 +1,20 @@
+platform darwin -- Python 3.13.1, pytest-8.4.2, pluggy-1.6.0 -- /Users/trilliumsmith/.pyenv/versions/3.13.1/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/trilliumsmith/.treehouse/trillium_talon-721b08/7/trillium_talon
+configfile: pyproject.toml
+plugins: anyio-4.15.1, mock-3.15.1, cov-7.0.0, xonsh-0.22.7
+collecting ... collected 11 items
+
+.tests/test_smooth_scroll_sounds.py::test_unarmed_falls_through PASSED   [  9%]
+.tests/test_smooth_scroll_sounds.py::test_demo_down_arms_hiss_down_and_shh_up PASSED [ 18%]
+.tests/test_smooth_scroll_sounds.py::test_demo_up_also_arms PASSED       [ 27%]
+.tests/test_smooth_scroll_sounds.py::test_other_commands_do_not_arm[downer] PASSED [ 36%]
+.tests/test_smooth_scroll_sounds.py::test_other_commands_do_not_arm[demo flat down] PASSED [ 45%]
+.tests/test_smooth_scroll_sounds.py::test_other_commands_do_not_arm[wheel down] PASSED [ 54%]
+.tests/test_smooth_scroll_sounds.py::test_other_commands_do_not_arm[None] PASSED [ 63%]
+.tests/test_smooth_scroll_sounds.py::test_next_command_disarms PASSED    [ 72%]
+.tests/test_smooth_scroll_sounds.py::test_expires_after_20_seconds PASSED [ 81%]
+.tests/test_smooth_scroll_sounds.py::test_debounce_swallows_rapid_repeats_without_falling_through PASSED [ 90%]
+.tests/test_smooth_scroll_sounds.py::test_sounds_do_not_extend_the_window PASSED [100%]
+
+============================== 11 passed in 0.05s ==============================
