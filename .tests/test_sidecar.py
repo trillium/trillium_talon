@@ -160,8 +160,9 @@ def test_decorate_panes_names_and_current():
 
 def test_footer_lists_bound_commands():
     f = cli.footer_text("panes", 4)
-    assert "air to pick A" in f and "sidecar pane air" in f
-    assert "sidecar help" in f and "sidecar close" in f
+    assert "air to pick A" in f and "pane air" in f
+    assert "sidecar" not in f  # live short forms only
+    assert "help" in f and "close" in f
     assert "air" not in cli.footer_text("help", 5)
     assert "air" not in cli.footer_text("panes", 0)
 
@@ -197,5 +198,18 @@ def test_command_table_matches_talon_files():
 
 def test_help_rows_cover_every_command():
     rows = cli.help_rows()
-    assert [r["name"] for r in rows] == [s for s, _, _ in cli.COMMANDS]
-    assert all(r["detail"] for r in rows)
+    heads = [r["name"] for r in rows if r.get("header")]
+    assert heads == ["Any time", "When the list is open"]
+    body = [r["name"] for r in rows if not r.get("header")]
+    assert sorted(body) == sorted(s for s, _, _ in cli.COMMANDS)
+    assert all(r["detail"] for r in rows if not r.get("header"))
+
+
+def test_bare_letter_rule_only_in_active_tag_file():
+    live = (_DIR / "sidecar_list_active.talon").read_text()
+    assert live.startswith("tag: user.sidecar_list_active")
+    assert "^<user.overlay_select>$" in live and "^pane <user.overlay_select>$" in live
+    always = (_DIR / "sidecar.talon").read_text()
+    assert "tag:" not in always
+    assert not any(l.startswith(("<user.overlay_select>", "^<user")) for l in always.splitlines())
+    assert "sidecar pane <user.overlay_select>" in always

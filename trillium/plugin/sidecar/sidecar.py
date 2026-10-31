@@ -25,6 +25,7 @@ ctx.lists["user.sidecar_view"] = VIEWS
 _pane = cli.DEFAULT_PANE
 _kind = ""
 _rows: list[dict] = []
+_last_panes: list[dict] = []
 
 
 def _pane_name(pane_id: str) -> str:
@@ -85,6 +86,8 @@ class Actions:
             rows = cli.parse_rows(kind, out) if code == 0 else []
             if kind == "panes":
                 rows = cli.decorate_panes(rows, PANES, _pane)
+                global _last_panes
+                _last_panes = rows
             cron.after("0ms", lambda: _open_list(kind, f"Sidecar {kind}", rows))
 
         cli.run(argv, done)
@@ -98,12 +101,19 @@ class Actions:
         """Open a modal listing every Sidecar voice command"""
         _open_list("help", "Sidecar help", cli.help_rows())
 
+    def sidecar_pane_index(index: int):
+        """Make pane N of the last panes list the default; opens the list if none"""
+        if 0 <= index < len(_last_panes):
+            actions.user.sidecar_set_pane(_last_panes[index]["id"])
+        else:
+            actions.user.sidecar_list("panes")
+
     def sidecar_pick(index: int):
         """Act on a row of the open Sidecar list modal (0-based)"""
         if not 0 <= index < len(_rows):
             return
         row, kind = _rows[index], _kind
-        if kind == "help":
+        if kind == "help" or row.get("header"):
             return
         _close_list()
         if kind == "panes":

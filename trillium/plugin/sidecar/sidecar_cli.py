@@ -50,19 +50,23 @@ COMMANDS: list[tuple[str, str, str]] = [
     ("sidecar controls", "List the current pane's controls", "global"),
     ("sidecar requests", "List open requests", "global"),
     ("sidecar help", "List every sidecar voice command", "global"),
+    ("sidecar pane <N>", "Choose pane by letter word or number from the last list", "global"),
     ("<N>", "Choose a row by its letter word (air = A) or number", "modal"),
+    ("pane <N>", "Choose a row, spoken as pane air", "modal"),
     ("pick <N>", "Same, with the word pick first", "modal"),
-    ("sidecar pane <N>", "Choose a pane by letter word or number", "modal"),
+    ("close", "Close the open list", "modal"),
+    ("help", "List every sidecar voice command", "modal"),
     ("sidecar close", "Close the open list", "modal"),
+    ("sidecar help", "List every sidecar voice command", "modal"),
 ]
 
 # Modal commands that make sense per list kind, in footer order.
 _FOOTER = {
-    "panes": ["<N>", "sidecar pane <N>", "sidecar help", "sidecar close"],
-    "views": ["<N>", "sidecar help", "sidecar close"],
-    "controls": ["<N>", "sidecar help", "sidecar close"],
-    "requests": ["<N>", "sidecar help", "sidecar close"],
-    "help": ["sidecar close"],
+    "panes": ["<N>", "pane <N>", "help", "close"],
+    "views": ["<N>", "help", "close"],
+    "controls": ["<N>", "help", "close"],
+    "requests": ["<N>", "help", "close"],
+    "help": ["close"],
 }
 
 # Spoken alphabet words, as bound by <user.letter>.
@@ -92,7 +96,16 @@ def footer_text(kind: str, count: int) -> str:
 
 
 def help_rows() -> list[dict]:
-    return [{"id": "", "name": s, "detail": d} for s, d, _ in COMMANDS]
+    """Two labelled groups: any time (global), then when the list is open (modal)."""
+    rows = []
+    for scope, head in (("global", "Any time"), ("modal", "When the list is open")):
+        rows.append({"id": "", "name": head, "detail": "", "header": True})
+        rows += [
+            {"id": "", "name": s, "detail": d}
+            for s, d, sc in COMMANDS
+            if sc == scope
+        ]
+    return rows
 
 
 def friendly_pane_name(pane: dict, aliases: dict[str, str]) -> str:
