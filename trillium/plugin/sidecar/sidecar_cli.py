@@ -23,8 +23,8 @@ TOKEN_FILE = Path.home() / ".config" / "sidecar" / "token"
 # Spoken verb -> argv tail after the CLI name; "{pane}" is filled in.
 # Today: pdf-next/pdf-prev via invoke, scrolling via invoke --direction.
 VERBS: dict[str, list[str]] = {
-    "next": ["invoke", "{pane}", "pdf-next"],
-    "previous": ["invoke", "{pane}", "pdf-prev"],
+    "next": ["invoke", "{pane}", "app.pdf-next"],
+    "previous": ["invoke", "{pane}", "app.pdf-prev"],
     "up": ["invoke", "{pane}", "scroll", "--direction", "up"],
     "down": ["invoke", "{pane}", "scroll", "--direction", "down"],
     "top": ["invoke", "{pane}", "scroll", "--direction", "top"],
