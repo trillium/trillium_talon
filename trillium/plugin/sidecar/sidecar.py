@@ -27,11 +27,20 @@ _kind = ""
 _rows: list[dict] = []
 
 
+def _pane_name(pane_id: str) -> str:
+    for alias, pid in PANES.items():
+        if pid == pane_id:
+            return f"{alias.capitalize()} pane"
+    return pane_id
+
+
 def _open_list(kind: str, title: str, rows: list[dict]):
     global _kind, _rows
     _kind, _rows = kind, rows
     ctx.tags = ["user.sidecar_list_active"]
-    overlay.show(title, rows)
+    overlay.show(
+        f"{title} · {_pane_name(_pane)}", rows, cli.footer_text(kind, len(rows))
+    )
 
 
 def _close_list():
@@ -74,6 +83,8 @@ class Actions:
 
         def done(code: int, out: str):
             rows = cli.parse_rows(kind, out) if code == 0 else []
+            if kind == "panes":
+                rows = cli.decorate_panes(rows, PANES, _pane)
             cron.after("0ms", lambda: _open_list(kind, f"Sidecar {kind}", rows))
 
         cli.run(argv, done)
@@ -83,11 +94,17 @@ class Actions:
         rows = [{"id": v, "name": n, "detail": v} for n, v in sorted(VIEWS.items())]
         _open_list("views", "Sidecar views", rows)
 
+    def sidecar_help():
+        """Open a modal listing every Sidecar voice command"""
+        _open_list("help", "Sidecar help", cli.help_rows())
+
     def sidecar_pick(index: int):
         """Act on a row of the open Sidecar list modal (0-based)"""
         if not 0 <= index < len(_rows):
             return
         row, kind = _rows[index], _kind
+        if kind == "help":
+            return
         _close_list()
         if kind == "panes":
             actions.user.sidecar_set_pane(row["id"])
