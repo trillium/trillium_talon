@@ -33,8 +33,14 @@ VERBS: dict[str, list[str]] = {
 
 _env = os.environ.copy()
 _env["PATH"] = ":".join(
-    ["/opt/homebrew/bin", str(Path.home() / ".local" / "bin"), "/usr/local/bin",
-     "/usr/bin", "/bin", _env.get("PATH", "")]
+    [
+        "/opt/homebrew/bin",
+        str(Path.home() / ".local" / "bin"),
+        "/usr/local/bin",
+        "/usr/bin",
+        "/bin",
+        _env.get("PATH", ""),
+    ]
 )
 
 
@@ -81,7 +87,9 @@ def run(argv: list[str], on_done: Optional[Callable[[int, str], None]] = None):
             )
             code, out = p.returncode, p.stdout
             if code:
-                log.warning("sidecar %s exit %s: %s", argv[1:3], code, p.stderr.strip()[:300])
+                log.warning(
+                    "sidecar %s exit %s: %s", argv[1:3], code, p.stderr.strip()[:300]
+                )
         except subprocess.TimeoutExpired:
             log.warning("sidecar %s timed out after %ss", argv[1:3], TIMEOUT_S)
         except Exception as e:  # missing binary, permissions: log, don't raise
@@ -116,8 +124,11 @@ def parse_rows(kind: str, raw: str) -> list[dict]:
             continue
         ident = str(item.get("id") or item.get("device") or item.get("name") or "")
         name = str(
-            item.get("label") or item.get("title") or item.get("question")
-            or item.get("name") or ident
+            item.get("label")
+            or item.get("title")
+            or item.get("question")
+            or item.get("name")
+            or ident
         )
         detail = str(item.get("app") or item.get("kind") or item.get("status") or "")
         if ident or name:

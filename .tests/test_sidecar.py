@@ -57,14 +57,24 @@ def test_token_file_attached_when_present(tmp_path, monkeypatch):
     t.write_text("x")
     monkeypatch.setattr(cli, "TOKEN_FILE", t)
     assert cli.show_argv("a.pdf", "dev-1") == [
-        "sidecar", "show", "a.pdf", "--pane", "dev-1", "--token-file", str(t),
+        "sidecar",
+        "show",
+        "a.pdf",
+        "--pane",
+        "dev-1",
+        "--token-file",
+        str(t),
     ]
 
 
 def test_back_and_list_argv():
     assert cli.back_argv("p") == ["sidecar", "show", "--back", "--pane", "p"]
     assert cli.list_argv("controls", "p") == [
-        "sidecar", "affordances", "p", "--usable", "--json",
+        "sidecar",
+        "affordances",
+        "p",
+        "--usable",
+        "--json",
     ]
     assert cli.list_argv("nope", "p") is None
 
@@ -72,7 +82,8 @@ def test_back_and_list_argv():
 def test_run_reports_output(monkeypatch):
     got = []
     monkeypatch.setattr(
-        cli.subprocess, "run",
+        cli.subprocess,
+        "run",
         lambda *a, **k: subprocess.CompletedProcess(a[0], 0, stdout="hi", stderr=""),
     )
     cli.run(["sidecar"], lambda c, o: got.append((c, o)))
@@ -100,9 +111,9 @@ def test_parse_rows_variants():
     assert cli.parse_rows("panes", raw) == [
         {"id": "dev-1", "name": "dev-1", "detail": "pdf"}
     ]
-    assert cli.parse_rows("controls", json.dumps([{"id": "pdf-next", "label": "Next"}])) == [
-        {"id": "pdf-next", "name": "Next", "detail": ""}
-    ]
+    assert cli.parse_rows(
+        "controls", json.dumps([{"id": "pdf-next", "label": "Next"}])
+    ) == [{"id": "pdf-next", "name": "Next", "detail": ""}]
 
 
 @pytest.mark.parametrize("raw", ["", "not json", "{}", "3", None])
