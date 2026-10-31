@@ -36,8 +36,8 @@ def wait(pred):
 @pytest.mark.parametrize(
     "verb, tail",
     [
-        ("next", ["invoke", "dev-1", "pdf-next"]),
-        ("previous", ["invoke", "dev-1", "pdf-prev"]),
+        ("next", ["invoke", "dev-1", "app.pdf-next"]),
+        ("previous", ["invoke", "dev-1", "app.pdf-prev"]),
         ("down", ["invoke", "dev-1", "scroll", "--direction", "down"]),
         ("up", ["invoke", "dev-1", "scroll", "--direction", "up"]),
         ("top", ["invoke", "dev-1", "scroll", "--direction", "top"]),
