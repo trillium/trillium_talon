@@ -186,7 +186,10 @@ def test_command_table_matches_talon_files():
         rule = re.sub(r"\{user\.sidecar_pane\}", "<name>", rule)
         return re.sub(r"<user\.overlay_select>", "<N>", rule)
 
-    for scope, fname in (("global", "sidecar.talon"), ("modal", "sidecar_list_active.talon")):
+    for scope, fname in (
+        ("global", "sidecar.talon"),
+        ("modal", "sidecar_list_active.talon"),
+    ):
         table = sorted(s for s, _, sc in cli.COMMANDS if sc == scope)
         bound = sorted(norm(r) for r in _rules(fname) if not r.startswith("key("))
         assert table == bound

@@ -108,7 +108,9 @@ def friendly_pane_name(pane: dict, aliases: dict[str, str]) -> str:
     return f"{app.replace('-', ' ').capitalize()} pane"
 
 
-def decorate_panes(rows: list[dict], aliases: dict[str, str], current: str) -> list[dict]:
+def decorate_panes(
+    rows: list[dict], aliases: dict[str, str], current: str
+) -> list[dict]:
     """Panes rows: friendly name first, raw id as the small detail, current marked."""
     out = []
     for r in rows:
