@@ -211,5 +211,7 @@ def test_bare_letter_rule_only_in_active_tag_file():
     assert "^<user.overlay_select>$" in live and "^pane <user.overlay_select>$" in live
     always = (_DIR / "sidecar.talon").read_text()
     assert "tag:" not in always
-    assert not any(l.startswith(("<user.overlay_select>", "^<user")) for l in always.splitlines())
+    assert not any(
+        l.startswith(("<user.overlay_select>", "^<user")) for l in always.splitlines()
+    )
     assert "sidecar pane <user.overlay_select>" in always

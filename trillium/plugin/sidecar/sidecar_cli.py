@@ -50,7 +50,11 @@ COMMANDS: list[tuple[str, str, str]] = [
     ("sidecar controls", "List the current pane's controls", "global"),
     ("sidecar requests", "List open requests", "global"),
     ("sidecar help", "List every sidecar voice command", "global"),
-    ("sidecar pane <N>", "Choose pane by letter word or number from the last list", "global"),
+    (
+        "sidecar pane <N>",
+        "Choose pane by letter word or number from the last list",
+        "global",
+    ),
     ("<N>", "Choose a row by its letter word (air = A) or number", "modal"),
     ("pane <N>", "Choose a row, spoken as pane air", "modal"),
     ("pick <N>", "Same, with the word pick first", "modal"),
@@ -101,9 +105,7 @@ def help_rows() -> list[dict]:
     for scope, head in (("global", "Any time"), ("modal", "When the list is open")):
         rows.append({"id": "", "name": head, "detail": "", "header": True})
         rows += [
-            {"id": "", "name": s, "detail": d}
-            for s, d, sc in COMMANDS
-            if sc == scope
+            {"id": "", "name": s, "detail": d} for s, d, sc in COMMANDS if sc == scope
         ]
     return rows
 
