@@ -50,31 +50,44 @@ COMMANDS: list[tuple[str, str, str]] = [
     ("sidecar controls", "List the current pane's controls", "global"),
     ("sidecar requests", "List open requests", "global"),
     ("sidecar help", "List every sidecar voice command", "global"),
-    ("pick <N>", "Choose row N of the open list", "modal"),
-    ("sidecar pane <N>", "Choose pane N of the open list", "modal"),
+    ("<N>", "Choose a row by its letter word (air = A) or number", "modal"),
+    ("pick <N>", "Same, with the word pick first", "modal"),
+    ("sidecar pane <N>", "Choose a pane by letter word or number", "modal"),
     ("sidecar close", "Close the open list", "modal"),
 ]
 
 # Modal commands that make sense per list kind, in footer order.
 _FOOTER = {
-    "panes": ["pick <N>", "sidecar pane <N>", "sidecar help", "sidecar close"],
-    "views": ["pick <N>", "sidecar help", "sidecar close"],
-    "controls": ["pick <N>", "sidecar help", "sidecar close"],
-    "requests": ["pick <N>", "sidecar help", "sidecar close"],
+    "panes": ["<N>", "sidecar pane <N>", "sidecar help", "sidecar close"],
+    "views": ["<N>", "sidecar help", "sidecar close"],
+    "controls": ["<N>", "sidecar help", "sidecar close"],
+    "requests": ["<N>", "sidecar help", "sidecar close"],
     "help": ["sidecar close"],
 }
 
+# Spoken alphabet words, as bound by <user.letter>.
+LETTER_WORDS = (
+    "air bat cap drum each fine gust harp sit jury crunch look made near odd "
+    "pit quench red sun trap urge vest whale plex yank zip"
+).split()
+
 
 def footer_text(kind: str, count: int) -> str:
-    """Spoken commands valid right now, e.g. 'Say: pick 2 · sidecar pane 2 · ...'."""
+    """Spoken commands valid right now, e.g. 'Say: air to pick A ...'."""
     known = {spoken for spoken, _, _ in COMMANDS}
-    n = "1" if count <= 1 else f"1-{min(count, 9)}"
     parts = []
     for spoken in _FOOTER.get(kind, ["sidecar close"]):
         assert spoken in known, spoken
-        if "<N>" in spoken and not count:
-            continue
-        parts.append(spoken.replace("<N>", n))
+        if "<N>" in spoken:
+            if not count:
+                continue
+            w = LETTER_WORDS[0]
+            spoken = spoken.replace("<N>", w)
+            if spoken == w:
+                spoken = f"{w} to pick A (or 1)"
+            else:
+                spoken += " (or 1)"
+        parts.append(spoken)
     return "Say: " + "  ·  ".join(parts)
 
 

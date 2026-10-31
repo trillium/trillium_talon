@@ -160,10 +160,14 @@ def test_decorate_panes_names_and_current():
 
 def test_footer_lists_bound_commands():
     f = cli.footer_text("panes", 4)
-    assert "pick 1-4" in f and "sidecar pane 1-4" in f
+    assert "air to pick A" in f and "sidecar pane air" in f
     assert "sidecar help" in f and "sidecar close" in f
-    assert "pick" not in cli.footer_text("help", 5)
-    assert "pick" not in cli.footer_text("panes", 0)
+    assert "air" not in cli.footer_text("help", 5)
+    assert "air" not in cli.footer_text("panes", 0)
+
+
+def test_letter_words_cover_alphabet():
+    assert len(cli.LETTER_WORDS) == 26 and cli.LETTER_WORDS[1] == "bat"
 
 
 def _rules(name):
@@ -180,7 +184,7 @@ def test_command_table_matches_talon_files():
     def norm(rule):
         rule = re.sub(r"\{user\.sidecar_view\}", "<view>", rule)
         rule = re.sub(r"\{user\.sidecar_pane\}", "<name>", rule)
-        return re.sub(r"<user\.overlay_select>|<number_small>", "<N>", rule)
+        return re.sub(r"<user\.overlay_select>", "<N>", rule)
 
     for scope, fname in (("global", "sidecar.talon"), ("modal", "sidecar_list_active.talon")):
         table = sorted(s for s, _, sc in cli.COMMANDS if sc == scope)

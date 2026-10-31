@@ -45,9 +45,9 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     if not _rows:
         c.paint.color = DIM_COLOR
         c.draw_text("Nothing to show.", x, y + 18)
-    for label, row in zip(overlay_labels(len(_rows)), _rows):
+    for label, row in zip(overlay_labels(len(_rows), "letter"), _rows):
         c.paint.color = ACCENT
-        c.draw_text(f"{label}.", x, y + 18)
+        c.draw_text(f"{label.upper()}.", x, y + 18)
         c.paint.color = TEXT_COLOR
         c.draw_text(row["name"], x + 40, y + 18)
         if row.get("current"):
