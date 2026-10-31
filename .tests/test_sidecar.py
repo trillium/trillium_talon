@@ -109,7 +109,7 @@ def test_run_swallows_errors(monkeypatch, exc):
 def test_parse_rows_variants():
     raw = json.dumps({"panes": [{"id": "dev-1", "app": "pdf"}, "junk"]})
     assert cli.parse_rows("panes", raw) == [
-        {"id": "dev-1", "name": "dev-1", "detail": "pdf"}
+        {"id": "dev-1", "name": "dev-1", "detail": "pdf", "app": "pdf", "mode": ""}
     ]
     assert cli.parse_rows(
         "controls", json.dumps([{"id": "pdf-next", "label": "Next"}])
@@ -126,3 +126,92 @@ def test_talon_files_do_not_shadow_smooth_scroll():
     for word in ("downer", "upper", "hiss", "shh"):
         assert word not in spoken
     assert all(l.startswith("sidecar ") for l in spoken.splitlines()[1:])
+
+
+ALIASES = {"main": "dev-f5cf8b", "chrome": "dev-c49599"}
+
+
+def _panes():
+    raw = json.dumps(
+        {
+            "panes": [
+                {"id": "dev-adc9d8", "mode": "default", "app": ""},
+                {"id": "dev-c49599", "mode": "app", "app": "show-dev-c49599-16"},
+                {"id": "dev-f5cf8b", "mode": "app", "app": "show-dev-f5cf8b-36"},
+                {"id": "t1", "mode": "app", "app": "clock"},
+            ]
+        }
+    )
+    return cli.parse_rows("panes", raw)
+
+
+def test_decorate_panes_names_and_current():
+    rows = cli.decorate_panes(_panes(), ALIASES, "dev-f5cf8b")
+    assert [r["name"] for r in rows] == [
+        "Idle pane",
+        "Chrome pane",
+        "Main pane",
+        "Clock pane",
+    ]
+    assert [r["id"] for r in rows][0] == "dev-adc9d8"
+    assert rows[1]["detail"] == "dev-c49599"
+    assert [r["current"] for r in rows] == [False, False, True, False]
+
+
+def test_footer_lists_bound_commands():
+    f = cli.footer_text("panes", 4)
+    assert "air to pick A" in f and "pane air" in f
+    assert "sidecar" not in f  # live short forms only
+    assert "help" in f and "close" in f
+    assert "air" not in cli.footer_text("help", 5)
+    assert "air" not in cli.footer_text("panes", 0)
+
+
+def test_letter_words_cover_alphabet():
+    assert len(cli.LETTER_WORDS) == 26 and cli.LETTER_WORDS[1] == "bat"
+
+
+def _rules(name):
+    out = []
+    for line in (_DIR / name).read_text().splitlines():
+        if ":" in line and not line.startswith(("tag", "-", "#")):
+            out.append(line.split(":", 1)[0].strip().lstrip("^").rstrip("$"))
+    return out
+
+
+def test_command_table_matches_talon_files():
+    import re
+
+    def norm(rule):
+        rule = re.sub(r"\{user\.sidecar_view\}", "<view>", rule)
+        rule = re.sub(r"\{user\.sidecar_pane\}", "<name>", rule)
+        return re.sub(r"<user\.overlay_select>", "<N>", rule)
+
+    for scope, fname in (
+        ("global", "sidecar.talon"),
+        ("modal", "sidecar_list_active.talon"),
+    ):
+        table = sorted(s for s, _, sc in cli.COMMANDS if sc == scope)
+        bound = sorted(norm(r) for r in _rules(fname) if not r.startswith("key("))
+        assert table == bound
+
+
+def test_help_rows_cover_every_command():
+    rows = cli.help_rows()
+    heads = [r["name"] for r in rows if r.get("header")]
+    assert heads == ["Any time", "When the list is open"]
+    body = [r["name"] for r in rows if not r.get("header")]
+    assert sorted(body) == sorted(s for s, _, _ in cli.COMMANDS)
+    assert all(r["detail"] for r in rows if not r.get("header"))
+
+
+def test_bare_letter_rule_only_in_active_tag_file():
+    live = (_DIR / "sidecar_list_active.talon").read_text()
+    assert live.startswith("tag: user.sidecar_list_active")
+    assert "^<user.overlay_select>$" in live and "^pane <user.overlay_select>$" in live
+    always = (_DIR / "sidecar.talon").read_text()
+    assert "tag:" not in always
+    assert not any(
+        l.startswith(("<user.overlay_select>", "^<user")) for l in always.splitlines()
+    )
+    assert "sidecar pane <user.overlay_select>" in always

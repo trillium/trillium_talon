@@ -31,6 +31,116 @@ VERBS: dict[str, list[str]] = {
     "bottom": ["invoke", "{pane}", "scroll", "--direction", "bottom"],
 }
 
+# Every spoken command: (spoken form, one-line description, scope). "global" rules
+# live in sidecar.talon, "modal" rules in sidecar_list_active.talon (only while a
+# list modal is open). The footer, the help modal and the .talon-drift test all
+# read this table. Spoken forms use <...> for slots, e.g. "pick <N>".
+COMMANDS: list[tuple[str, str, str]] = [
+    ("sidecar next", "Next page on the current pane", "global"),
+    ("sidecar previous", "Previous page on the current pane", "global"),
+    ("sidecar up", "Scroll up", "global"),
+    ("sidecar down", "Scroll down", "global"),
+    ("sidecar top", "Jump to the top", "global"),
+    ("sidecar bottom", "Jump to the bottom", "global"),
+    ("sidecar show <view>", "Show a named view on the current pane", "global"),
+    ("sidecar back", "Restore what the pane showed before", "global"),
+    ("sidecar pane <name>", "Choose the current pane by name (main, chrome)", "global"),
+    ("sidecar list", "List panes; say a number to choose one", "global"),
+    ("sidecar views", "List the named views you can show", "global"),
+    ("sidecar controls", "List the current pane's controls", "global"),
+    ("sidecar requests", "List open requests", "global"),
+    ("sidecar help", "List every sidecar voice command", "global"),
+    (
+        "sidecar pane <N>",
+        "Choose pane by letter word or number from the last list",
+        "global",
+    ),
+    ("<N>", "Choose a row by its letter word (air = A) or number", "modal"),
+    ("pane <N>", "Choose a row, spoken as pane air", "modal"),
+    ("pick <N>", "Same, with the word pick first", "modal"),
+    ("close", "Close the open list", "modal"),
+    ("help", "List every sidecar voice command", "modal"),
+    ("sidecar close", "Close the open list", "modal"),
+    ("sidecar help", "List every sidecar voice command", "modal"),
+]
+
+# Modal commands that make sense per list kind, in footer order.
+_FOOTER = {
+    "panes": ["<N>", "pane <N>", "help", "close"],
+    "views": ["<N>", "help", "close"],
+    "controls": ["<N>", "help", "close"],
+    "requests": ["<N>", "help", "close"],
+    "help": ["close"],
+}
+
+# Spoken alphabet words, as bound by <user.letter>.
+LETTER_WORDS = (
+    "air bat cap drum each fine gust harp sit jury crunch look made near odd "
+    "pit quench red sun trap urge vest whale plex yank zip"
+).split()
+
+
+def footer_text(kind: str, count: int) -> str:
+    """Spoken commands valid right now, e.g. 'Say: air to pick A ...'."""
+    known = {spoken for spoken, _, _ in COMMANDS}
+    parts = []
+    for spoken in _FOOTER.get(kind, ["sidecar close"]):
+        assert spoken in known, spoken
+        if "<N>" in spoken:
+            if not count:
+                continue
+            w = LETTER_WORDS[0]
+            spoken = spoken.replace("<N>", w)
+            if spoken == w:
+                spoken = f"{w} to pick A (or 1)"
+            else:
+                spoken += " (or 1)"
+        parts.append(spoken)
+    return "Say: " + "  ·  ".join(parts)
+
+
+def help_rows() -> list[dict]:
+    """Two labelled groups: any time (global), then when the list is open (modal)."""
+    rows = []
+    for scope, head in (("global", "Any time"), ("modal", "When the list is open")):
+        rows.append({"id": "", "name": head, "detail": "", "header": True})
+        rows += [
+            {"id": "", "name": s, "detail": d} for s, d, sc in COMMANDS if sc == scope
+        ]
+    return rows
+
+
+def friendly_pane_name(pane: dict, aliases: dict[str, str]) -> str:
+    """Human name for a pane: spoken alias, else what it is showing."""
+    for alias, pid in aliases.items():
+        if pid == pane.get("id"):
+            return f"{alias.capitalize()} pane"
+    app = str(pane.get("app") or "")
+    if not app:
+        return "Idle pane" if pane.get("mode") in ("", "default", None) else "Pane"
+    if app.startswith("show-"):
+        return "Showing a page"
+    return f"{app.replace('-', ' ').capitalize()} pane"
+
+
+def decorate_panes(
+    rows: list[dict], aliases: dict[str, str], current: str
+) -> list[dict]:
+    """Panes rows: friendly name first, raw id as the small detail, current marked."""
+    out = []
+    for r in rows:
+        pane = {"id": r["id"], "app": r.get("app", ""), "mode": r.get("mode", "")}
+        out.append(
+            {
+                "id": r["id"],
+                "name": friendly_pane_name(pane, aliases),
+                "detail": r["id"],
+                "current": r["id"] == current,
+            }
+        )
+    return out
+
+
 _env = os.environ.copy()
 _env["PATH"] = ":".join(
     [
@@ -132,5 +242,9 @@ def parse_rows(kind: str, raw: str) -> list[dict]:
         )
         detail = str(item.get("app") or item.get("kind") or item.get("status") or "")
         if ident or name:
-            rows.append({"id": ident, "name": name, "detail": detail})
+            row = {"id": ident, "name": name, "detail": detail}
+            if kind == "panes":
+                row["app"] = str(item.get("app") or "")
+                row["mode"] = str(item.get("mode") or "")
+            rows.append(row)
     return rows
