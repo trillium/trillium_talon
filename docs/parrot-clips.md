@@ -10,7 +10,7 @@ Code: `trillium/plugin/parrot/parrot_clips.py` (logic, no Talon imports), `parro
 - **Sound events** (frame power >= `user.parrot_clips_power_floor`, 20) save a ~1 s source window plus sidecar, whether or
   not a pattern fired, so rejected near-misses (throttled, or waiting on `detect_after`) are kept.
 - **`parrot missed`** / **`parrot missed <sound>`** (e.g. `parrot missed click`) pulls the last
-  `user.parrot_clips_missed_seconds` (5) out of RAM and saves it as the sound you *intended*, even if the model never
+  `user.parrot_clips_missed_seconds` (5) out of RAM and saves it as the sound you _intended_, even if the model never
   registered anything. Sounds: click, tongue click, kitty, pop, lip pop, hiss, shh, oink, clap (folder = model label).
 - `parrot clips off` / `parrot clips on`, or `user.parrot_clips_enabled`, is the kill switch. Off frees the ring.
 

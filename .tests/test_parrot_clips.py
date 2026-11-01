@@ -12,7 +12,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-_FILE = Path(__file__).resolve().parent.parent / "trillium/plugin/parrot/parrot_clips.py"
+_FILE = (
+    Path(__file__).resolve().parent.parent / "trillium/plugin/parrot/parrot_clips.py"
+)
 SR = 16000
 
 
@@ -61,7 +63,9 @@ def read_wav(p):
 
 
 def metas(tmp_path):
-    return [json.loads(p.read_text()) for p in (tmp_path / "pc" / "_meta").glob("*.json")]
+    return [
+        json.loads(p.read_text()) for p in (tmp_path / "pc" / "_meta").glob("*.json")
+    ]
 
 
 def test_ring_wraps_and_snapshot_is_the_latest(clips):
@@ -206,7 +210,13 @@ def test_full_queue_drops_instead_of_blocking(clips, tmp_path):
     svc = make_service(clips, tmp_path)
     svc.queue.put = lambda *a, **k: pytest.fail("must not use blocking put")
     svc.queue = type(
-        "Q", (), {"put_nowait": lambda self, j: (_ for _ in ()).throw(__import__("queue").Full())}
+        "Q",
+        (),
+        {
+            "put_nowait": lambda self, j: (_ for _ in ()).throw(
+                __import__("queue").Full()
+            )
+        },
     )()
     t0 = time.perf_counter()
     assert [svc._submit({"kind": "x"}) for _ in range(50)] == [False] * 50
@@ -250,7 +260,9 @@ def test_callback_errors_never_escape(clips, tmp_path):
 def test_install_audio_tap_feeds_ring_and_calls_original(clips, tmp_path):
     svc = make_service(clips, tmp_path)
     seen = []
-    system = types.SimpleNamespace(on_audio=lambda sid, ts, a: seen.append(len(a)) or "orig")
+    system = types.SimpleNamespace(
+        on_audio=lambda sid, ts, a: seen.append(len(a)) or "orig"
+    )
     assert clips.install_audio_tap(system, svc)
     assert system.on_audio(1, 2, np.zeros(160, dtype=np.float32)) == "orig"
     assert seen == [160] and svc.ring.total == 160
@@ -272,5 +284,7 @@ def test_callback_overhead_microbenchmark(clips, tmp_path, capsys):
         svc.frame(fr, set(), None)
     tick_us = (time.perf_counter() - t0) / n * 1e6
     with capsys.disabled():
-        print(f"\nparrot_clips per-callback: feed(100ms chunk)={feed_us:.1f}us tick+frame={tick_us:.1f}us")
+        print(
+            f"\nparrot_clips per-callback: feed(100ms chunk)={feed_us:.1f}us tick+frame={tick_us:.1f}us"
+        )
     assert feed_us < 500 and tick_us < 200

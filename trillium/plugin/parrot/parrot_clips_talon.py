@@ -15,15 +15,48 @@ mod.setting(
     default=True,
     desc="Kill switch: keep a short RAM audio buffer and save clips around mouth sounds",
 )
-mod.setting("parrot_clips_dir", type=str, default="", desc="Clip folder; empty = ~/.talon/parrot_clips")
-mod.setting("parrot_clips_buffer_seconds", type=float, default=5.0, desc="RAM-only rolling buffer length")
-mod.setting("parrot_clips_missed_seconds", type=float, default=5.0, desc="Audio saved by 'parrot missed'")
-mod.setting("parrot_clips_power_floor", type=float, default=20.0, desc="Frame power that counts as a sound event")
-mod.setting("parrot_clips_max_mb", type=float, default=200.0, desc="Clip folder size cap; oldest auto clips go first")
-mod.setting("parrot_clips_max_age_days", type=float, default=30.0, desc="Clips older than this are pruned")
+mod.setting(
+    "parrot_clips_dir",
+    type=str,
+    default="",
+    desc="Clip folder; empty = ~/.talon/parrot_clips",
+)
+mod.setting(
+    "parrot_clips_buffer_seconds",
+    type=float,
+    default=5.0,
+    desc="RAM-only rolling buffer length",
+)
+mod.setting(
+    "parrot_clips_missed_seconds",
+    type=float,
+    default=5.0,
+    desc="Audio saved by 'parrot missed'",
+)
+mod.setting(
+    "parrot_clips_power_floor",
+    type=float,
+    default=20.0,
+    desc="Frame power that counts as a sound event",
+)
+mod.setting(
+    "parrot_clips_max_mb",
+    type=float,
+    default=200.0,
+    desc="Clip folder size cap; oldest auto clips go first",
+)
+mod.setting(
+    "parrot_clips_max_age_days",
+    type=float,
+    default=30.0,
+    desc="Clips older than this are pruned",
+)
 mod.setting("parrot_clips_max_clips", type=int, default=2000, desc="Clip count cap")
 
-mod.list("parrot_missed_sound", desc="Spoken sound names -> parrot model labels (clip folder names)")
+mod.list(
+    "parrot_missed_sound",
+    desc="Spoken sound names -> parrot model labels (clip folder names)",
+)
 
 SOUNDS = {
     "click": "alviolar_tongue_click",
@@ -46,9 +79,12 @@ def apply_settings(*_args) -> None:
     from pathlib import Path
 
     try:
-        root = settings.get("user.parrot_clips_dir") or str(Path.home() / ".talon" / "parrot_clips")
+        root = settings.get("user.parrot_clips_dir") or str(
+            Path.home() / ".talon" / "parrot_clips"
+        )
         service.configure(
-            enabled=bool(settings.get("user.parrot_clips_enabled")) and not _runtime_off[0],
+            enabled=bool(settings.get("user.parrot_clips_enabled"))
+            and not _runtime_off[0],
             root=root,
             sample_rate=_sample_rate[0],
             buffer_seconds=settings.get("user.parrot_clips_buffer_seconds"),
@@ -78,7 +114,12 @@ class Actions:
             return
         ok = service.mark_missed(sound or None)
         actions.user.notify(
-            f"kept {sound or 'unlabeled'}" if ok else "nothing to keep (queue full or no audio yet)", 1
+            (
+                f"kept {sound or 'unlabeled'}"
+                if ok
+                else "nothing to keep (queue full or no audio yet)"
+            ),
+            1,
         )
 
     def parrot_clips_on():

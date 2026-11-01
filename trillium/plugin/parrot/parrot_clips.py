@@ -241,7 +241,9 @@ class ClipStore:
             except (OSError, ValueError):
                 continue
             files = [mp] + [
-                self.root / meta[k] for k in ("source_wav", "segment_wav") if meta.get(k)
+                self.root / meta[k]
+                for k in ("source_wav", "segment_wav")
+                if meta.get(k)
             ]
             size = 0
             for f in files:
@@ -397,7 +399,9 @@ class ClipService:
 
     def _close_event(self, ring: AudioRing) -> None:
         self._ev_open = False
-        end = self._ev_start_sample + int((self.EVENT_S - self.PRE_S) * ring.sample_rate)
+        end = self._ev_start_sample + int(
+            (self.EVENT_S - self.PRE_S) * ring.sample_rate
+        )
         job = {
             "kind": "auto",
             "end_sample": min(end, ring.total),
@@ -452,7 +456,10 @@ class ClipService:
         if ms <= self._last_ident_ms:
             ms = self._last_ident_ms + 1
         self._last_ident_ms = ms
-        return datetime.fromtimestamp(ms / 1000).strftime("%Y%m%d-%H%M%S-") + f"{ms % 1000:03d}"
+        return (
+            datetime.fromtimestamp(ms / 1000).strftime("%Y%m%d-%H%M%S-")
+            + f"{ms % 1000:03d}"
+        )
 
     def _process(self, job: dict) -> None:
         ring, store = self.ring, self.store
