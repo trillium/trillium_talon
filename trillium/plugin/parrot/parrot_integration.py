@@ -13,6 +13,9 @@ from talon import Module, actions, events, resource
 from talon.debug import log_exception
 from talon.experimental.parrot import ParrotDelegate, ParrotFrame, ParrotSystem
 
+from . import parrot_clips
+from .parrot_clips import service as clips
+
 PARROT_HOME = Path(os.path.dirname(os.path.realpath(__file__)))
 # PARROT_HOME = TALON_HOME / 'user' / 'spiteless_knausj_talon' / 'plugin' / 'parrot'
 pattern_path = str(PARROT_HOME / "patterns.json")
@@ -408,6 +411,8 @@ class Delegate(ParrotDelegate):
     def power_threshold(self, power: float) -> bool:
         silence_power_threshold = self.calculate_silence_threshold()
 
+        clips.tick(power)
+
         # Reset all the duration timeouts if we are transitioning to silence
         should_forwardpass = power > silence_power_threshold
         if self.last_frame_was_forwardpass and not should_forwardpass:
@@ -439,7 +444,22 @@ class Delegate(ParrotDelegate):
                 actions.user.notify(confidence_msg, 1)
                 self.throttle_patterns(pattern.get_throttles(), frame.ts)
 
+        clips.frame(frame, active, self.probe_patterns)
         return active
+
+    def probe_patterns(self, frame: ParrotFrame, active: set[str]) -> dict[str, str]:
+        """Patterns that matched this frame's thresholds but did not fire, and why"""
+        out: dict[str, str] = {}
+        for name, pattern in self.patterns.items():
+            if name in active:
+                continue
+            if not pattern.is_active(frame.ts):
+                out[name] = "throttled"
+            elif pattern.match_pattern(
+                pattern, frame, pattern.timestamps.graceperiod_until
+            ):
+                out[name] = "waiting_detect_after"
+        return out
 
 
 # Global variable to store the last detected parrot confidence score
@@ -449,6 +469,15 @@ parrot_delegate = Delegate(debug=True)
 logging.info(f"[parrot] Creating ParrotSystem with model: {model_path}")
 system = ParrotSystem(model_path, parrot_delegate)
 logging.info(f"[parrot] ParrotSystem created: {system}")
+
+# Copy raw frames into a RAM ring for parrot clips (no IO on this path)
+try:
+    parrot_clips.install_audio_tap(system, clips)
+    from . import parrot_clips_talon
+
+    parrot_clips_talon.start(getattr(system, "sample_rate", 16000))
+except Exception:
+    logging.exception("[parrot] parrot clips setup failed; detection unaffected")
 
 
 @resource.watch(pattern_path)
