@@ -25,7 +25,9 @@ def pct(monkeypatch):
     mod._retries[0] = 0
     mod.service.configure(enabled=False, root="/nonexistent")
     registered = []
-    monkeypatch.setattr(talon.app, "register", staticmethod(lambda e, cb: registered.append((e, cb))))
+    monkeypatch.setattr(
+        talon.app, "register", staticmethod(lambda e, cb: registered.append((e, cb)))
+    )
     mod.registered = registered
     yield mod
     mod.service.configure(enabled=False, root="/nonexistent")
@@ -41,7 +43,10 @@ class Settings:
         self.reads += 1
         if not self.ready:
             raise KeyError(name)
-        return {"user.parrot_clips_dir": "/tmp/pc-test", "user.parrot_clips_power_floor": 33.0}.get(name)
+        return {
+            "user.parrot_clips_dir": "/tmp/pc-test",
+            "user.parrot_clips_power_floor": 33.0,
+        }.get(name)
 
     def register(self, name, cb):
         if not self.ready:
