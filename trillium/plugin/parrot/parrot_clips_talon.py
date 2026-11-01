@@ -2,7 +2,7 @@
 
 import logging
 
-from talon import Context, Module, actions, settings
+from talon import Context, Module, actions, app, cron, settings
 
 from .parrot_clips import service
 
@@ -75,40 +75,102 @@ _runtime_off = [False]  # voice kill switch, on top of the setting
 _sample_rate = [16000]
 
 
+DEFAULTS = {
+    "user.parrot_clips_enabled": True,
+    "user.parrot_clips_dir": "",
+    "user.parrot_clips_buffer_seconds": 5.0,
+    "user.parrot_clips_missed_seconds": 5.0,
+    "user.parrot_clips_power_floor": 20.0,
+    "user.parrot_clips_max_mb": 200.0,
+    "user.parrot_clips_max_age_days": 30.0,
+    "user.parrot_clips_max_clips": 2000,
+}
+
+_configured = [False]  # True once every setting was read for real
+_hooked = [False]
+_retries = [0]
+
+
+def _get(name: str):
+    """A setting, or its default. Talon raises KeyError before the module that
+    declares it has finished loading."""
+    try:
+        value = settings.get(name)
+    except Exception:
+        _configured[0] = False
+        return DEFAULTS[name]
+    return DEFAULTS[name] if value is None else value
+
+
 def apply_settings(*_args) -> None:
+    """Configure the clip service. Safe to call any time, any number of times."""
     from pathlib import Path
 
     try:
-        root = settings.get("user.parrot_clips_dir") or str(
+        _configured[0] = True  # _get() clears this if any read falls back
+        root = _get("user.parrot_clips_dir") or str(
             Path.home() / ".talon" / "parrot_clips"
         )
         service.configure(
-            enabled=bool(settings.get("user.parrot_clips_enabled"))
-            and not _runtime_off[0],
+            enabled=bool(_get("user.parrot_clips_enabled")) and not _runtime_off[0],
             root=root,
             sample_rate=_sample_rate[0],
-            buffer_seconds=settings.get("user.parrot_clips_buffer_seconds"),
-            power_floor=settings.get("user.parrot_clips_power_floor"),
-            max_mb=settings.get("user.parrot_clips_max_mb"),
-            max_age_days=settings.get("user.parrot_clips_max_age_days"),
-            max_clips=settings.get("user.parrot_clips_max_clips"),
-            missed_seconds=settings.get("user.parrot_clips_missed_seconds"),
+            buffer_seconds=_get("user.parrot_clips_buffer_seconds"),
+            power_floor=_get("user.parrot_clips_power_floor"),
+            max_mb=_get("user.parrot_clips_max_mb"),
+            max_age_days=_get("user.parrot_clips_max_age_days"),
+            max_clips=_get("user.parrot_clips_max_clips"),
+            missed_seconds=_get("user.parrot_clips_missed_seconds"),
         )
     except Exception:
+        _configured[0] = False
         logging.exception("[parrot_clips] configure failed")
 
 
+def ensure_configured() -> None:
+    """Lazy, retry-safe: configure with real settings if that has not worked yet."""
+    if not _configured[0]:
+        apply_settings()
+
+
+def _hook_settings(*_args) -> None:
+    """Runs once Talon is ready (or on the first retry): settings now exist."""
+    ensure_configured()
+    if _hooked[0] or not _configured[0]:
+        return
+    try:
+        settings.register("user.parrot_clips_enabled", apply_settings)
+        _hooked[0] = True
+    except Exception:
+        logging.exception("[parrot_clips] could not watch settings")
+
+
+def _retry() -> None:
+    _hook_settings()
+    if not (_configured[0] and _hooked[0]) and _retries[0] < 10:
+        _retries[0] += 1
+        try:
+            cron.after("2s", _retry)
+        except Exception:
+            pass
+
+
 def start(sample_rate: int) -> None:
-    """Called by parrot_integration once the ParrotSystem exists."""
+    """Called by parrot_integration at import. Reads no settings: they do not
+    exist until this module has finished loading."""
     _sample_rate[0] = int(sample_rate)
-    apply_settings()
-    settings.register("user.parrot_clips_enabled", apply_settings)
+    try:
+        app.register("ready", _hook_settings)
+        cron.after("2s", _retry)
+    except Exception:
+        logging.exception("[parrot_clips] could not defer configure")
 
 
 @mod.action_class
 class Actions:
     def parrot_missed(sound: str = ""):
         """Save the last few seconds of mic audio from RAM as a sound that should have registered"""
+        ensure_configured()
         if not service.enabled:
             actions.user.notify("parrot clips are off", 1)
             return
