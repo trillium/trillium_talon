@@ -174,6 +174,7 @@ def on_pacer_draw(c):
 
 
 _hooked_canvas = None  # Track which canvas we've registered on
+_tick_job = None  # cron.interval handle; None when pacer is off
 
 
 def _ensure_hooked():
@@ -182,6 +183,21 @@ def _ensure_hooked():
     if mi.canvas and mi.canvas is not _hooked_canvas:
         mi.canvas.register("draw", on_pacer_draw)
         _hooked_canvas = mi.canvas
+
+
+def _start_tick():
+    """Begin the 16ms animation ticker. Idempotent."""
+    global _tick_job
+    if _tick_job is None:
+        _tick_job = cron.interval("16ms", _tick)
+
+
+def _stop_tick():
+    """Stop the 16ms animation ticker. Idempotent."""
+    global _tick_job
+    if _tick_job is not None:
+        cron.cancel(_tick_job)
+        _tick_job = None
 
 
 @mod.action_class
@@ -193,6 +209,7 @@ class PacerActions:
         _save_pacer_state()
         global _animator
         _animator = PacerAnimator(_pacer_state["pacer_spm"])
+        _start_tick()
         # Trigger redraw
         if mi.canvas:
             mi.canvas.freeze()
@@ -201,6 +218,7 @@ class PacerActions:
         """Stop the rowing pacer"""
         _pacer_state["pacer_active"] = False
         _save_pacer_state()
+        _stop_tick()
         if mi.canvas:
             mi.canvas.freeze()
 
@@ -219,6 +237,10 @@ class PacerActions:
         """Toggle pacer on/off"""
         _pacer_state["pacer_active"] = not _pacer_state.get("pacer_active", False)
         _save_pacer_state()
+        if _pacer_state["pacer_active"]:
+            _start_tick()
+        else:
+            _stop_tick()
         if mi.canvas:
             mi.canvas.freeze()
 
@@ -231,9 +253,12 @@ def _tick():
 
 
 def on_ready():
-    """Initialize pacer on app ready."""
+    """Initialize pacer on app ready. Only start the 16ms ticker if state
+    on disk says the pacer was active when Talon last shut down — otherwise
+    the ticker stays unregistered and costs nothing."""
     _load_pacer_state()
-    cron.interval("16ms", _tick)
+    if _pacer_state.get("pacer_active"):
+        _start_tick()
 
 
 app.register("ready", on_ready)
