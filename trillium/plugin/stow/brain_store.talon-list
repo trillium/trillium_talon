@@ -1,0 +1,19 @@
+list: user.brain_store
+-
+brain: brain
+ideas: ideas
+idea: ideas
+robots: robots
+robot: robots
+decisions: decisions
+decision: decisions
+questions: questions
+question: questions
+inbox: inbox
+projects: projects
+project: projects
+life: life
+people: person
+person: person
+handoff: handoff
+dump: dump
