@@ -5,14 +5,22 @@ Reads the speak SQLite history database directly (read-only) and presents
 paginated entries via overlay. Supports caller filtering and replay.
 """
 
+import json
 import os
-import sqlite3
 import subprocess
+import sys as _sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 from talon import Context, Module, actions, cron
 
 from . import speak_history_overlay as overlay
+from ...utils.overlay_selector import shape_to_index, letter_to_index
+
+_SPEAK_LIB = os.path.expanduser("~/code/speak/lib")
+if _SPEAK_LIB not in _sys.path:
+    _sys.path.insert(0, _SPEAK_LIB)
+from speakd.text import split_clauses
 
 mod = Module()
 
@@ -22,7 +30,6 @@ mod.list("speak_history_caller", desc="Caller name mappings for speak history fi
 history_ctx = Context()
 
 SPEAK = "/Users/trilliumsmith/code/speak/bin/speak"
-DB_PATH = f"/tmp/speak-{os.environ.get('USER', 'trilliumsmith')}-history.db"
 PAGE_SIZE = 8
 
 _env = os.environ.copy()
@@ -44,7 +51,12 @@ _page: int = 0
 _caller_filter: str = ""
 _entries: list[dict] = []
 _total_count: int = 0
+_playing_history_id: int | None = None
+_playing_clause_idx: int | None = None
 _poll_job = None
+_selected_shape: str | None = None
+_selected_shape_idx: int | None = None
+_last_refresh_key: tuple = ()  # (entries_ids_tuple, total, playing_history_id, clause_idx) — skip freeze when unchanged
 POLL_INTERVAL = "3s"
 
 
@@ -69,55 +81,61 @@ def _relative_time(iso_str: str) -> str:
         return ""
 
 
+def _fetch_entries(count: int, offset: int) -> tuple[list[dict], int]:
+    """Call the speak CLI and return (entries, total). Enriches entries with relative_time."""
+    if _caller_filter:
+        args = [SPEAK, "--caller-history", _caller_filter, str(count), "--offset", str(offset)]
+    else:
+        args = [SPEAK, "--history", str(count), "--offset", str(offset)]
+    result = subprocess.run(args, capture_output=True, text=True, timeout=2, env=_env)
+    data = json.loads(result.stdout)
+    entries = data.get("entries", [])
+    total = data.get("total", 0)
+    for entry in entries:
+        entry["relative_time"] = _relative_time(entry.get("spoken_at", ""))
+    for entry in entries:
+        try:
+            entry["clauses"] = split_clauses(entry.get("text", ""))
+        except Exception:
+            entry["clauses"] = []
+    return entries, total
+
+
+def _fetch_playing_id() -> tuple[int | None, int | None]:
+    """Call speak --queue and return (history_id, clause_idx) of currently playing entry, or (None, None)."""
+    try:
+        result = subprocess.run(
+            [SPEAK, "--queue"],
+            capture_output=True, text=True, timeout=0.5, env=_env,
+        )
+        data = json.loads(result.stdout)
+        playing = data.get("playing", {})
+        return playing.get("history_id"), playing.get("clause_idx")
+    except Exception:
+        return None, None
+
+
 def _query_entries() -> tuple[list[dict], int]:
-    """Query the history database for the current page and filter."""
+    """Query the speak CLI for the current page and filter."""
     try:
-        conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-        conn.row_factory = sqlite3.Row
-    except sqlite3.OperationalError:
+        return _fetch_entries(PAGE_SIZE, _page * PAGE_SIZE)
+    except Exception as e:
+        print(f"speak_history: query failed: {e}")
         return [], 0
-
-    try:
-        if _caller_filter:
-            count_row = conn.execute(
-                "SELECT COUNT(*) FROM history WHERE caller = ?",
-                (_caller_filter,),
-            ).fetchone()
-            total = count_row[0]
-
-            rows = conn.execute(
-                "SELECT id, text, spoken_at, caller FROM history "
-                "WHERE caller = ? ORDER BY id DESC LIMIT ? OFFSET ?",
-                (_caller_filter, PAGE_SIZE, _page * PAGE_SIZE),
-            ).fetchall()
-        else:
-            count_row = conn.execute("SELECT COUNT(*) FROM history").fetchone()
-            total = count_row[0]
-
-            rows = conn.execute(
-                "SELECT id, text, spoken_at, caller FROM history "
-                "ORDER BY id DESC LIMIT ? OFFSET ?",
-                (PAGE_SIZE, _page * PAGE_SIZE),
-            ).fetchall()
-
-        entries = [
-            {
-                "id": row["id"],
-                "text": row["text"],
-                "caller": row["caller"],
-                "relative_time": _relative_time(row["spoken_at"]),
-            }
-            for row in rows
-        ]
-        return entries, total
-    finally:
-        conn.close()
 
 
 def _refresh():
-    """Re-query and update the overlay."""
-    global _entries, _total_count
-    _entries, _total_count = _query_entries()
+    """Re-query and update the overlay. Skips canvas freeze when data is unchanged."""
+    global _entries, _total_count, _playing_history_id, _playing_clause_idx, _last_refresh_key
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_entries = ex.submit(_query_entries)
+        f_playing = ex.submit(_fetch_playing_id)
+        (entries, total), (playing_id, clause_idx) = f_entries.result(), f_playing.result()
+    refresh_key = (tuple(e["id"] for e in entries), total, playing_id, clause_idx, _selected_shape)
+    if refresh_key == _last_refresh_key:
+        return
+    _entries, _total_count, _playing_history_id, _playing_clause_idx = entries, total, playing_id, clause_idx
+    _last_refresh_key = refresh_key
     total_pages = max(1, (_total_count + PAGE_SIZE - 1) // PAGE_SIZE)
     overlay.update(
         entries=_entries,
@@ -125,6 +143,10 @@ def _refresh():
         total_pages=total_pages,
         total_count=_total_count,
         caller_filter=_caller_filter,
+        playing_history_id=_playing_history_id,
+        playing_clause_idx=_playing_clause_idx,
+        selected_shape=_selected_shape,
+        selected_shape_idx=_selected_shape_idx,
     )
 
 
@@ -155,28 +177,34 @@ class Actions:
 
     def speak_history_stop():
         """Close the speak history overlay"""
-        global _page, _caller_filter, _entries, _total_count
+        global _page, _caller_filter, _entries, _total_count, _selected_shape, _selected_shape_idx
         _page = 0
         _caller_filter = ""
         _entries = []
         _total_count = 0
+        _selected_shape = None
+        _selected_shape_idx = None
         _stop_polling()
         history_ctx.tags = []
         overlay.hide()
 
     def speak_history_next():
         """Go to the next page of history"""
-        global _page
+        global _page, _selected_shape, _selected_shape_idx
         total_pages = max(1, (_total_count + PAGE_SIZE - 1) // PAGE_SIZE)
         if _page < total_pages - 1:
             _page += 1
+            _selected_shape = None
+            _selected_shape_idx = None
             _refresh()
 
     def speak_history_previous():
         """Go to the previous page of history"""
-        global _page
+        global _page, _selected_shape, _selected_shape_idx
         if _page > 0:
             _page -= 1
+            _selected_shape = None
+            _selected_shape_idx = None
             _refresh()
 
     def speak_history_replay(row_number: int):
@@ -204,6 +232,22 @@ class Actions:
         _page = 0
         _caller_filter = ""
         _refresh()
+
+    def speak_history_pause():
+        """Toggle pause/resume on speak playback"""
+        subprocess.Popen(
+            [SPEAK, "--pause"],
+            start_new_session=True,
+            env=_env,
+        )
+
+    def speak_history_resume():
+        """Explicitly resume paused speak playback"""
+        subprocess.Popen(
+            [SPEAK, "--resume"],
+            start_new_session=True,
+            env=_env,
+        )
 
     def speak_history_skip():
         """Skip the currently playing speak entry"""
@@ -236,31 +280,72 @@ class Actions:
 
     def speak_history_replay_last(count: int):
         """Replay the last N history entries in chronological order"""
-        try:
-            conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-            conn.row_factory = sqlite3.Row
-        except sqlite3.OperationalError:
-            return
-
-        try:
-            if _caller_filter:
-                rows = conn.execute(
-                    "SELECT id FROM history WHERE caller = ? "
-                    "ORDER BY id DESC LIMIT ?",
-                    (_caller_filter, count),
-                ).fetchall()
-            else:
-                rows = conn.execute(
-                    "SELECT id FROM history ORDER BY id DESC LIMIT ?",
-                    (count,),
-                ).fetchall()
-        finally:
-            conn.close()
+        # Short-circuit: if count fits in the current page (already fetched), skip the subprocess
+        if count <= len(_entries) and _page == 0:
+            entries = _entries[-count:]
+        else:
+            try:
+                entries, _ = _fetch_entries(count, 0)
+            except Exception as e:
+                print(f"speak_history: replay_last fetch failed: {e}")
+                return
 
         # Reverse so they play oldest-first (chronological order)
-        for row in reversed(rows):
+        for entry in reversed(entries):
             subprocess.Popen(
-                [SPEAK, "--replay-id", str(row["id"])],
+                [SPEAK, "--replay-id", str(entry["id"])],
                 start_new_session=True,
                 env=_env,
             )
+
+    def speak_history_select_shape(shape: str):
+        """Select a shape entry — highlights entry and shows clause letters"""
+        global _selected_shape, _selected_shape_idx
+        idx = shape_to_index(shape)
+        if idx < 0 or idx >= len(_entries):
+            return
+        _selected_shape = shape
+        _selected_shape_idx = idx
+        _refresh()
+
+    def speak_history_select_clause(letter: str):
+        """Play a clause within the currently shape-selected entry"""
+        global _selected_shape, _selected_shape_idx
+        if _selected_shape_idx is None or _selected_shape_idx >= len(_entries):
+            return
+        clause_idx = letter_to_index(letter)
+        if clause_idx < 0:
+            return
+        entry = _entries[_selected_shape_idx]
+        clauses = entry.get("clauses", [])
+        if clause_idx >= len(clauses):
+            return
+        row_id = str(entry["id"])
+        subprocess.Popen(
+            [SPEAK, "--replay-id", row_id, "--clause", str(clause_idx)],
+            start_new_session=True,
+            env=_env,
+        )
+
+    def speak_history_shape_clause(shape: str, letter: str):
+        """Combined one-breath command: select shape and play clause"""
+        global _selected_shape, _selected_shape_idx
+        idx = shape_to_index(shape)
+        if idx < 0 or idx >= len(_entries):
+            return
+        _selected_shape = shape
+        _selected_shape_idx = idx
+        clause_idx = letter_to_index(letter)
+        if clause_idx < 0:
+            return
+        entry = _entries[idx]
+        clauses = entry.get("clauses", [])
+        if clause_idx >= len(clauses):
+            return
+        row_id = str(entry["id"])
+        subprocess.Popen(
+            [SPEAK, "--replay-id", row_id, "--clause", str(clause_idx)],
+            start_new_session=True,
+            env=_env,
+        )
+        _refresh()
