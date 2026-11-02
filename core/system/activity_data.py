@@ -80,8 +80,19 @@ def _get_listening_ports() -> dict[int, list[int]]:
     return pid_ports
 
 
-def _get_processes() -> list[ProcessRow]:
-    """Get top processes by CPU, joined with listening port data."""
+def _combined_score(r: ProcessRow) -> float:
+    """Score combining CPU% and memory — normalizes both to comparable scales.
+
+    CPU is 0-100+ (per core), memory is in KB.  We treat 1% CPU ≈ 100MB RAM
+    so both dimensions contribute meaningfully.
+    """
+    cpu_norm = r.cpu  # already a percentage
+    mem_norm = r.mem_rss / 102400  # 100MB → ~1.0, same scale as 1% CPU
+    return cpu_norm + mem_norm
+
+
+def _get_processes(sort_by: str = "cpu") -> list[ProcessRow]:
+    """Get top processes sorted by *sort_by* ('cpu', 'mem', or 'combined')."""
     pid_ports = _get_listening_ports()
 
     try:
@@ -114,7 +125,20 @@ def _get_processes() -> list[ProcessRow]:
         ports = pid_ports.get(pid, [])
         rows.append(ProcessRow(pid, name, cpu, rss, ports))
 
-    # Separate dev-port processes from the rest
+    # Sort key based on mode
+    if sort_by == "mem":
+        sort_key = lambda r: r.mem_rss
+    elif sort_by == "combined":
+        sort_key = _combined_score
+    else:
+        sort_key = lambda r: r.cpu
+
+    if sort_by in ("mem", "combined"):
+        # Pure resource sort — no dev-port priority
+        rows.sort(key=sort_key, reverse=True)
+        return rows[:MAX_ROWS]
+
+    # CPU mode: dev-port processes get priority placement
     dev_port_rows = []
     other_rows = []
     for r in rows:
@@ -124,15 +148,12 @@ def _get_processes() -> list[ProcessRow]:
         else:
             other_rows.append(r)
 
-    # Sort each group by CPU descending
-    dev_port_rows.sort(key=lambda r: r.cpu, reverse=True)
-    other_rows.sort(key=lambda r: r.cpu, reverse=True)
+    dev_port_rows.sort(key=sort_key, reverse=True)
+    other_rows.sort(key=sort_key, reverse=True)
 
-    # Take dev-port rows first, fill remaining slots with top CPU
     result = dev_port_rows[:MAX_ROWS]
     remaining = MAX_ROWS - len(result)
     if remaining > 0:
-        # Avoid duplicates
         dev_pids = {r.pid for r in result}
         for r in other_rows:
             if r.pid not in dev_pids:
