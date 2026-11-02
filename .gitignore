@@ -39,3 +39,24 @@ usage_log.csv
 # writes its cache to node_modules/.cache/prettier/, which otherwise shows up as
 # untracked junk after `pre-commit run --all-files`.
 node_modules/
+
+# Rust build output
+target/
+
+# smooth_scroll runtime state and recordings
+plugin/smooth_scroll/hold.touch
+plugin/smooth_scroll/*.json
+plugin/smooth_scroll/*.jsonl
+
+# per-host path lists (machine-local)
+core/system_paths-*
+
+# mode_indicator personal/machine-local state
+trillium/plugin/mode_indicator/subscription_end.json
+trillium/plugin/mode_indicator/subscription_override.json
+trillium/plugin/mode_indicator/subscription_status_log.csv
+trillium/plugin/mode_indicator/accounts.json
+trillium/plugin/mode_indicator/interceptor-screenshot-*.png
+
+# external symlink
+trillium/plugin/prose_overlay
