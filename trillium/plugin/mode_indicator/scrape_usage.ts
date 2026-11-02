@@ -27,9 +27,7 @@ function run(cmd: string): string {
     return execSync(cmd, { encoding: "utf-8", timeout: 30000 }).trim();
 }
 
-function parseUsagePage(
-    text: string,
-): {
+function parseUsagePage(text: string): {
     sessionPct: number;
     weekPct: number;
     sessionResetsIn: string;
