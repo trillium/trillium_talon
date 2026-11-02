@@ -94,6 +94,9 @@
 ^recall auto <user.saved_window_names>$:
     user.recall_auto_assign(saved_window_names)
 
+^recall border[s] switch$:
+    user.recall_borders_switch()
+
 ^recall border$:
     user.recall_toggle_border()
 

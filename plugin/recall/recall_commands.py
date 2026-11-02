@@ -13,7 +13,12 @@ from .recall_state import ctx
 
 
 def find_window_by_id(window_id: int) -> ui.Window:
-    """Find a window by its ID across all apps"""
+    """Find a window by its ID across all apps.
+
+    Kept for single-lookup callers (click handlers, revive). The persistent
+    overlay hot path must NOT call this per-pill — use
+    snapshot_windows_by_id() once per draw instead (39 pills x full AX scan
+    per draw was the dominant cron/canvas stall)."""
     if window_id is None:
         return None
     for a in ui.apps(background=False):
@@ -21,6 +26,29 @@ def find_window_by_id(window_id: int) -> ui.Window:
             if window.id == window_id:
                 return window
     return None
+
+
+def snapshot_windows_by_id() -> dict:
+    """Single-pass id -> window snapshot for the overlay hot path.
+
+    One ui.apps() traversal per draw instead of one per pill. Skips
+    dead/unnamed apps defensively; never raises into the draw callback."""
+    by_id = {}
+    try:
+        apps = ui.apps(background=False)
+    except Exception:
+        return by_id
+    for a in apps:
+        try:
+            wins = a.windows()
+        except Exception:
+            continue
+        for w in wins:
+            try:
+                by_id[w.id] = w
+            except Exception:
+                continue
+    return by_id
 
 
 def rematch_window(info: dict) -> ui.Window:

@@ -25,7 +25,28 @@ CACHE_TTL = 10.0
 TIMEOUT = 5
 
 # Remote hosts whose tabs join the spoken list (ssh aliases). Edit this list.
-HOSTS = ["mini0", "mini1"]
+SSH_HOSTS = ["mini0", "mini1"]
+
+
+def _machine_labels(ssh_hosts):
+    """Map ssh aliases to their saved herdr machine labels (labels can be
+    renamed, e.g. mini1 -> mini1-yonder; `--machine` takes the label). Falls
+    back to the alias itself. Never raises."""
+    try:
+        out = subprocess.run(
+            [HERDR, "machine", "list"], capture_output=True, text=True, timeout=TIMEOUT
+        ).stdout
+        by_host = {}
+        for line in out.splitlines():
+            cols = line.split("\t")
+            if len(cols) >= 3:
+                by_host.setdefault(cols[2], cols[1])
+        return [by_host.get(h, h) for h in ssh_hosts]
+    except Exception:
+        return list(ssh_hosts)
+
+
+HOSTS = _machine_labels(SSH_HOSTS)
 # Spoken list skips transient worker tabs whose cleaned label starts with one
 # of these; EXTRA_ALLOWED re-admits specific labels (e.g. "fm-advisor").
 FM_PREFIXES = ("fm-",)
