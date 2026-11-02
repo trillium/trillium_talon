@@ -350,7 +350,11 @@ class Actions:
 
     def switcher_focus(name: str):
         """Focus a new application by name"""
-        app = actions.user.get_running_app(name)
+        try:
+            app = actions.user.get_running_app(name)
+        except RuntimeError:
+            actions.user.mode_indicator_flash_failure(f"App not running: {name}")
+            return
 
         # TODO: Re-enable when OBS/trillium_obs is installed
         # actions.user.obs_get_blurry()
