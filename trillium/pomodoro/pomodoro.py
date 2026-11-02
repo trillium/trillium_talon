@@ -1,7 +1,9 @@
 import datetime
+import json
 import math
 import threading
 import time
+from pathlib import Path
 from typing import Optional, Union
 
 from talon import Module, actions, app, cron, ui
@@ -23,6 +25,56 @@ cancel_job = None
 
 _canvas = None
 _redraw_job = None
+
+# Persisted wall-clock state for external readers (e.g. row.sh `row pomodoro`).
+# Contract: {"active": bool, "end_iso": ISO8601, "end_epoch": int, "paused": bool}
+# active=false when nothing is running. Rewritten on every state change.
+STATE_FILE = Path.home() / ".talon" / "pomodoro-state.json"
+
+
+def _write_state():
+    """Persist the current pomodoro state to STATE_FILE (atomic write).
+
+    The timer runs on time.monotonic() in-memory; here we convert the remaining
+    duration into a wall-clock end time so external tools can read when it ends.
+    Call OUTSIDE the module `lock` (it acquires the lock itself) — callers must
+    not already hold it, or this deadlocks.
+    """
+    with lock:
+        active = (
+            pomodoro_type is not None
+            and start_time is not None
+            and current_duration is not None
+        )
+        paused = bool(pause_time)
+        if active:
+            ref = pause_time if pause_time else time.monotonic()
+            remaining = current_duration - (ref - start_time)
+            if remaining < 0:
+                remaining = 0
+            end_utc = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+                seconds=remaining
+            )
+            end_iso = end_utc.astimezone().replace(microsecond=0).isoformat()
+            end_epoch = int(end_utc.timestamp())
+        else:
+            end_iso = ""
+            end_epoch = 0
+
+    state = {
+        "active": active,
+        "end_iso": end_iso,
+        "end_epoch": end_epoch,
+        "paused": paused,
+    }
+    try:
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = STATE_FILE.with_name(STATE_FILE.name + ".tmp")
+        tmp.write_text(json.dumps(state))
+        tmp.replace(STATE_FILE)
+    except Exception as e:
+        print(f"[pomodoro] failed to write {STATE_FILE}: {e}")
+
 
 # Style — matches window_focus_announcer pill but offset to the right
 FONT_SIZE = 13
@@ -227,6 +279,7 @@ class Actions:
 
         _show_canvas()
         _redraw_job = cron.interval("1s", _redraw)
+        _write_state()
 
     def pomodoro_pause():
         """Pause the active pomodoro."""
@@ -234,14 +287,18 @@ class Actions:
         with lock:
             if not pause_time:
                 pause_time = time.monotonic()
+        _write_state()
 
     def pomodoro_unpause():
         """Unpause the active pomodoro."""
-        global pause_time, current_time
+        global pause_time, start_time
         with lock:
             if pause_time:
-                current_time -= pause_time - time.monotonic()
+                # Shift start_time forward by the paused span so `remaining`
+                # (current_duration - (now - start_time)) is unchanged on resume.
+                start_time += time.monotonic() - pause_time
                 pause_time = None
+        _write_state()
 
     def pomodoro_cancel():
         """Cancel the active pomodoro."""
@@ -255,6 +312,7 @@ class Actions:
             pause_time = None
             current_duration = None
         _hide_canvas()
+        _write_state()
 
     def pomodoro_get_end_time(fmt: str = None) -> str:
         """Return the end time of the pomodoro"""

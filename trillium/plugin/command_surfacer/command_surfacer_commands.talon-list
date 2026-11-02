@@ -1,0 +1,13 @@
+list: user.command_surfacer_commands
+-
+prose overlay: open buffered dictation editor with hat editing
+chuck <hat>: delete a word by its hat letter
+chuck past <hat>: delete from start through hat word
+speak: read prose overlay buffer aloud via TTS
+mouse clock: activate clock-face mouse overlay
+what commands: show a random voice command reminder
+next command: cycle to next command in surfacer
+hide commands: dismiss the command surfacer panel
+ticket: open ticket management overlay
+recall <name>: jump to a saved window by name
+cancel recall: cancel in-flight phrase

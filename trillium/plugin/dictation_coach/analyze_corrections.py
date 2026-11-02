@@ -2,19 +2,18 @@
 """
 Analyze command logs to find misrecognition correction patterns.
 
-Scans ~/.talon/recordings/commands/ for sequences like:
+Scans ~/.talon/recordings/command_history.jsonl for sequences like:
   dictation -> destroy/clear_left -> dictation
 where both dictation phrases are short and similar enough to suggest
 the user was correcting a misrecognition rather than changing their mind.
 """
 
 import json
-import sys
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
-COMMANDS_DIR = Path.home() / ".talon" / "recordings" / "commands"
+COMMANDS_JSONL = Path.home() / ".talon" / "recordings" / "command_history.jsonl"
 
 # Max seconds between events in a correction sequence
 MAX_GAP_SECONDS = 15
@@ -54,12 +53,20 @@ def is_dictation(trigger):
 
 def extract_dictated_text(record):
     """Pull the actual dictated words from a command record."""
-    phrase = record.get("phrase", {})
-    words = phrase.get("words", [])
-    if words and isinstance(words[0], str):
-        raw = words[0] if len(words) == 1 else " ".join(words)
+    phrase = record.get("phrase", "")
+
+    # v2.x: phrase is a string
+    if isinstance(phrase, str):
+        raw = phrase
+    # v1.x: phrase is an object with words/text
+    elif isinstance(phrase, dict):
+        words = phrase.get("words", [])
+        if words and isinstance(words[0], str):
+            raw = words[0] if len(words) == 1 else " ".join(words)
+        else:
+            raw = phrase.get("text", "") or ""
     else:
-        raw = phrase.get("text", "") or ""
+        raw = ""
 
     # Remove known command prefixes (prose formatters)
     for prefix in ["say ", "sentence ", "title ", "word ", "NOOP "]:
@@ -119,23 +126,39 @@ def similar_enough(heard, meant):
     return False
 
 
+def get_trigger(record):
+    """Extract command trigger, handling v1.x and v2.x schemas."""
+    # v2.x: commands array
+    cmds = record.get("commands")
+    if cmds and isinstance(cmds, list) and len(cmds) > 0:
+        return cmds[0].get("rule", "") or cmds[0].get("phrase", "")
+    # v1.x: command object
+    cmd = record.get("command", {})
+    return cmd.get("trigger", "")
+
+
 def get_window_id(record):
     return record.get("context", {}).get("window", {}).get("id")
 
 
 def load_all_commands():
-    """Load all command log files, sorted by timestamp."""
+    """Load all commands from JSONL, sorted by timestamp."""
     records = []
-    for f in COMMANDS_DIR.iterdir():
-        if f.suffix != ".json":
-            continue
-        try:
-            with open(f) as fh:
-                data = json.load(fh)
-            data["_ts"] = datetime.fromisoformat(data["timestamp"])
-            records.append(data)
-        except Exception:
-            continue
+    if not COMMANDS_JSONL.exists():
+        return records
+
+    with open(COMMANDS_JSONL) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                data = json.loads(line)
+                data["_ts"] = datetime.fromisoformat(data["timestamp"])
+                records.append(data)
+            except Exception:
+                continue
+
     records.sort(key=lambda r: r["_ts"])
     return records
 
@@ -146,7 +169,7 @@ def find_correction_sequences(records):
     i = 0
     while i < len(records) - 2:
         r1 = records[i]
-        trigger1 = r1.get("command", {}).get("trigger", "")
+        trigger1 = get_trigger(r1)
 
         if not is_dictation(trigger1):
             i += 1
@@ -163,7 +186,7 @@ def find_correction_sequences(records):
                 break
 
             r2 = records[j]
-            trigger2 = r2.get("command", {}).get("trigger", "")
+            trigger2 = get_trigger(r2)
 
             if is_correction(trigger2):
                 # Must be same window
@@ -179,7 +202,7 @@ def find_correction_sequences(records):
                         break
 
                     r3 = records[k]
-                    trigger3 = r3.get("command", {}).get("trigger", "")
+                    trigger3 = get_trigger(r3)
 
                     if is_dictation(trigger3) and get_window_id(r3) == window1:
                         text_before = extract_dictated_text(r1)
@@ -234,7 +257,7 @@ def find_correction_sequences(records):
 
 
 def main():
-    print(f"Loading commands from {COMMANDS_DIR}...")
+    print(f"Loading commands from {COMMANDS_JSONL}...")
     records = load_all_commands()
     print(f"Loaded {len(records)} command records")
 

@@ -110,11 +110,22 @@ def _on_draw(c: SkiaCanvas):
     bar_x = rect.left + (rect.width - bar_w) / 2
     bar_y = rect.top + BAR_Y
 
-    # Bar background
+    # Bar background (SVG: Path.add_rounded_rect is gone on new builds)
     c.paint.color = BG_COLOR
     bar_rect = Rect(bar_x, bar_y, bar_w, BAR_HEIGHT)
-    path = skia.Path()
-    path.add_rounded_rect(bar_rect, PILL_RADIUS, PILL_RADIUS, skia.Path.Direction.CW)
+    br = min(PILL_RADIUS, bar_rect.width / 2, bar_rect.height / 2)
+    bx, by, bw, bh = bar_rect.x, bar_rect.y, bar_rect.width, bar_rect.height
+    path = skia.Path.from_svg(
+        f"M {bx + br} {by} "
+        f"L {bx + bw - br} {by} "
+        f"A {br} {br} 0 0 1 {bx + bw} {by + br} "
+        f"L {bx + bw} {by + bh - br} "
+        f"A {br} {br} 0 0 1 {bx + bw - br} {by + bh} "
+        f"L {bx + br} {by + bh} "
+        f"A {br} {br} 0 0 1 {bx} {by + bh - br} "
+        f"L {bx} {by + br} "
+        f"A {br} {br} 0 0 1 {bx + br} {by} Z"
+    )
     c.draw_path(path)
 
     # Draw each item
@@ -126,9 +137,18 @@ def _on_draw(c: SkiaCanvas):
         if is_active:
             c.paint.color = ACTIVE_BG
             pill_rect = Rect(x, pill_y, pill_w, FONT_SIZE + PILL_V_PAD * 2)
-            pill_path = skia.Path()
-            pill_path.add_rounded_rect(
-                pill_rect, PILL_RADIUS, PILL_RADIUS, skia.Path.Direction.CW
+            pr_ = min(PILL_RADIUS, pill_rect.width / 2, pill_rect.height / 2)
+            px, py, pw, ph = pill_rect.x, pill_rect.y, pill_rect.width, pill_rect.height
+            pill_path = skia.Path.from_svg(
+                f"M {px + pr_} {py} "
+                f"L {px + pw - pr_} {py} "
+                f"A {pr_} {pr_} 0 0 1 {px + pw} {py + pr_} "
+                f"L {px + pw} {py + ph - pr_} "
+                f"A {pr_} {pr_} 0 0 1 {px + pw - pr_} {py + ph} "
+                f"L {px + pr_} {py + ph} "
+                f"A {pr_} {pr_} 0 0 1 {px} {py + ph - pr_} "
+                f"L {px} {py + pr_} "
+                f"A {pr_} {pr_} 0 0 1 {px + pr_} {py} Z"
             )
             c.draw_path(pill_path)
             c.paint.color = ACTIVE_TEXT

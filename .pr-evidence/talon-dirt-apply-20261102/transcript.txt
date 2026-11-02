@@ -1,0 +1,45 @@
+# git log (branch vs origin main)
+a7f0dd0d docs: add trillium/CHANGELOG.md and SPEC.md
+28fd360d refactor(friction): friction overlay and state changes
+138c23db feat: anki, command_surfacer, contexthud, goto, grab, stow, editor plugins
+fc24e718 feat: cursorless scope support, registry and scope probes
+4c0d2106 feat: assorted voice-command, repeater, parrot, speak_history and window_history edits
+8503910a feat(logs): system logs overlay and activity overlay updates
+2720f9ca feat(herder): herder panel/nav/composer plugin
+26c3ba6b feat(whisper_last): last-dictation, whisper-show and undo plugin
+a1b98d1e feat(smooth_scroll): smooth scroll plugin, Rust helper/recorder sources, sounds
+fddc6d9a feat(mode_indicator): subscription tracking helpers and scrape scripts
+c3353ef0 feat(recall): herdr agents/panels/pill colours, session state
+2c196bc1 fix(core): small tweaks to app_switcher, formatters, vocabulary, edit nav, rpc client, displayd_apps, media, pomodoro
+7e8c7edd feat(overlay_kit): shared overlay lifecycle/primitives/styling
+0bcb132c chore(tests): add remaining tests under .tests/ (dot-prefixed so Talon does not load them)
+22bf710c chore: gitignore build output, runtime state and machine-local files
+
+# pytest
+1390 passed, 1 skipped in 6.41s
+
+# not committed (held back, 3-way conflicts with newer main; patches kept outside repo)
+CHANGELOG.md - 3-way conflict
+core/system/activity_draw.py - 3-way conflict
+plugin/recall/recall.py - 3-way conflict
+plugin/recall/recall_terminal.py - 3-way conflict
+pyproject.toml - 3-way conflict
+trillium/_boolean_print/debug_ignore_tags.csv - 3-way conflict
+trillium/clear_text_commands.py - 3-way conflict
+trillium/core/on_phrase/command_logger/command_logger.py - 3-way conflict
+trillium/core/on_phrase/command_logger/schema.py - 3-way conflict
+trillium/friction/context.py - 3-way conflict
+trillium/microphone/change_mic.py - 3-way conflict
+trillium/mode_indicator/mode_indicator-macbookpro.lan.talon - 3-way conflict
+trillium/mode_indicator/mode_indicator.talon - 3-way conflict
+trillium/plugin/mode_indicator/mode_indicator.py - 3-way conflict
+trillium/plugin/mode_indicator/mode_indicator_state.py - 3-way conflict
+trillium/plugin/mode_indicator/poll_usage.py - 3-way conflict
+trillium/plugin/mode_indicator/sysmon_graph.py - 3-way conflict
+trillium/plugin/repeater/opposite_mappings.py - 3-way conflict
+trillium/plugin/speak_history/speak_history_overlay.py - 3-way conflict
+trillium/presentation_files/presentation.py - 3-way conflict
+trillium/settings.talon - 3-way conflict
+trillium/utils/_wav.py - 3-way conflict
+plugin/recall/herdr_tab.talon - exists in HEAD, not in base
+trillium/herdr_links/links_overlay.py - exists in HEAD, not in base

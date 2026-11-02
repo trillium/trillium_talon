@@ -2,8 +2,9 @@
 
 import os
 import signal
+import string
 
-from talon import cron
+from talon import cron, storage
 from talon.skia.canvas import Canvas as SkiaCanvas
 
 from ...trillium.utils.overlay_kit import DismissibleOverlay
@@ -15,14 +16,45 @@ _rows: list[ProcessRow] = []
 _killed_index: int | None = None
 _kill_message: str | None = None
 _kill_clear_job = None
-_sort_mode: str = "cpu"  # "cpu", "mem", or "combined"
+_sort_mode: str = storage.get(
+    "activity-sort-mode", "cpu"
+)  # "cpu", "mem", or "combined"
 _auto_refresh_job = None
+
+# ── Stable letter selectors ──
+_LETTER_POOL = list(string.ascii_lowercase)
+_pid_to_letter: dict[int, str] = {}
+
+
+def _assign_letters(rows: list[ProcessRow]):
+    """Assign stable letters to PIDs, recycling when processes disappear."""
+    global _pid_to_letter
+    current_pids = {r.pid for r in rows}
+    # Remove letters for dead PIDs
+    _pid_to_letter = {
+        pid: letter for pid, letter in _pid_to_letter.items() if pid in current_pids
+    }
+    # Assign letters to new PIDs
+    used = set(_pid_to_letter.values())
+    for r in rows:
+        if r.pid not in _pid_to_letter:
+            for letter in _LETTER_POOL:
+                if letter not in used:
+                    _pid_to_letter[r.pid] = letter
+                    used.add(letter)
+                    break
+
+
+def get_row_labels() -> list[str]:
+    """Return the letter label for each row, in row order."""
+    return [_pid_to_letter.get(r.pid, "?") for r in _rows]
 
 
 def gather():
     """Gather fresh process data."""
     global _rows, _killed_index, _kill_message
     _rows = _get_processes(sort_by=_sort_mode)
+    _assign_letters(_rows)
     _killed_index = None
     _kill_message = None
 
@@ -39,6 +71,7 @@ def set_sort_mode(mode: str):
     """Set sort mode to 'cpu', 'mem', or 'combined' and refresh."""
     global _sort_mode
     _sort_mode = mode
+    storage.set("activity-sort-mode", mode)
     gather()
     _overlay.freeze()
 
@@ -61,11 +94,24 @@ def _clear_kill_and_refresh():
 
 
 def kill_by_index(n: int) -> tuple[bool, str]:
-    """Kill the process at row index n (0-based). Returns (success, message)."""
+    """Kill the process selected by letter (n = 0-based letter index).
+
+    Resolves the letter back to the correct row via PID mapping,
+    so stable selectors work even after sort/reorder.
+    """
     global _killed_index, _kill_message, _kill_clear_job
-    if n < 0 or n >= len(_rows):
-        return False, f"No process at row {n + 1}"
-    row = _rows[n]
+    target_letter = chr(ord("a") + n) if 0 <= n < 26 else None
+    row = None
+    row_index = None
+    if target_letter:
+        for i, r in enumerate(_rows):
+            if _pid_to_letter.get(r.pid) == target_letter:
+                row = r
+                row_index = i
+                break
+    if row is None:
+        label = target_letter or str(n + 1)
+        return False, f"No process for selector '{label}'"
     try:
         os.kill(row.pid, signal.SIGTERM)
         msg = f"Killed {row.name} (PID {row.pid})"
@@ -76,7 +122,7 @@ def kill_by_index(n: int) -> tuple[bool, str]:
     except PermissionError:
         msg = f"Permission denied: {row.name} (PID {row.pid})"
         success = False
-    _killed_index = n
+    _killed_index = row_index
     _kill_message = msg
     _overlay.freeze()
     if _kill_clear_job:
@@ -89,7 +135,8 @@ def kill_by_index(n: int) -> tuple[bool, str]:
 
 
 def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
-    draw_panel(c, overlay, _rows, _sort_mode, _killed_index, _kill_message)
+    labels = get_row_labels()
+    draw_panel(c, overlay, _rows, _sort_mode, _killed_index, _kill_message, labels)
 
 
 # ── Overlay instance ──

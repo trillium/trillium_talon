@@ -150,3 +150,25 @@ def _cancel_pending():
     _pending_mode = ""
     _pending_name = ""
     pending_ctx.tags = []
+
+
+# Auto-load window data on every import so hot-reloads restore state without
+# waiting for on_ready(). update_window_list() may fail at initial startup
+# (actions not yet ready) — the inner except silences that; on_ready() will
+# call load_saved_windows() again with actions available.
+try:
+    if STORAGE_FILE.exists():
+        with open(STORAGE_FILE, "r") as f:
+            _init_data = json.load(f)
+        _init_settings = _init_data.pop("_settings", {})
+        _persistent_highlight_enabled = _init_settings.get(
+            "persistent_highlight", False
+        )
+        archived_windows.update(_init_data.pop("_archive", {}))
+        saved_windows.update(_init_data)
+        try:
+            update_window_list()
+        except Exception:
+            pass  # actions not ready yet at initial startup; on_ready() will retry
+except Exception:
+    pass

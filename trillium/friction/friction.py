@@ -2,7 +2,7 @@
 
 from talon import Context, Module, actions, cron
 
-from . import ops, state
+from . import friction_overlay, ops, state
 from .context import build_context_notes
 
 mod = Module()
@@ -23,11 +23,12 @@ def _start_timeout():
     state.timeout_job = cron.after(f"{state.FRICTION_TIMEOUT_MS}ms", _friction_timeout)
 
 
-def _enter_friction_mode():
-    """Enter friction mode with visual indicator."""
+def _enter_friction_mode(scope: str = ""):
+    """Enter friction mode with visual indicator and overlay."""
     state.friction_active = True
     ctx.tags = ["user.friction_mode"]
     actions.user.mode_indicator_set_color("ff0000")
+    friction_overlay.show(scope)
     _start_timeout()
 
 
@@ -36,6 +37,7 @@ def _exit_friction_mode():
     state.reset_state()
     ctx.tags = []
     actions.user.mode_indicator_clear_color()
+    friction_overlay.hide()
     if state.timeout_job:
         cron.cancel(state.timeout_job)
         state.timeout_job = None
@@ -62,7 +64,7 @@ class Actions:
         state.current_issue_id = None
 
         # Enter friction mode immediately (visual feedback first)
-        _enter_friction_mode()
+        _enter_friction_mode(scope)
 
         # Build context in background so we never block the main thread
         def _build_context():
@@ -91,6 +93,7 @@ class Actions:
         else:
             return
 
+        friction_overlay.append_line(text)
         _start_timeout()
 
     def friction_end():
@@ -108,7 +111,8 @@ class Actions:
 
         ops.append_to_issue(state.last_issue_id, text)
         state.current_issue_id = state.last_issue_id
-        _enter_friction_mode()
+        friction_overlay.append_line(text)
+        _enter_friction_mode("continued")
 
     def friction_get_last_id() -> str:
         """Get the ID of the last friction ticket."""

@@ -34,10 +34,27 @@ def focused_screen() -> Screen:
 
 
 def draw_rounded_rect(c: SkiaCanvas, rect: Rect, radius: float):
-    """Draw a rounded rectangle using a Skia path."""
+    """Draw a rounded rectangle using a Skia path.
+
+    Newer Talon builds removed the Path builder methods (add_rounded_rect,
+    move_to, ...), so the shape is built as an SVG path instead.
+    """
     r = min(radius, rect.width / 2, rect.height / 2)
-    path = skia.Path()
-    path.add_rounded_rect(rect, r, r, skia.Path.Direction.CW)
+    x, y, w, h = rect.x, rect.y, rect.width, rect.height
+    if r <= 0:
+        c.draw_rect(rect)
+        return
+    path = skia.Path.from_svg(
+        f"M {x + r} {y} "
+        f"L {x + w - r} {y} "
+        f"A {r} {r} 0 0 1 {x + w} {y + r} "
+        f"L {x + w} {y + h - r} "
+        f"A {r} {r} 0 0 1 {x + w - r} {y + h} "
+        f"L {x + r} {y + h} "
+        f"A {r} {r} 0 0 1 {x} {y + h - r} "
+        f"L {x} {y + r} "
+        f"A {r} {r} 0 0 1 {x + r} {y} Z"
+    )
     c.draw_path(path)
 
 
@@ -259,6 +276,47 @@ class DismissibleOverlay:
         _update_overlay_tag()
         if was_showing and self._on_hide:
             self._on_hide()
+
+
+# ── Semantic highlight palette ──────────────────────────────────
+# Import these instead of defining locally per-panel.
+
+HIGHLIGHT_PLAYING = "5ab5a0"  # teal  — currently playing / system-active
+HIGHLIGHT_PLAYING_FILL = "1A6B5C59"  # teal ~35% alpha — playing row background
+HIGHLIGHT_SELECTED = "f5c518"  # amber — user-selected / focused
+HIGHLIGHT_SELECTED_FILL = "f5c51820"  # amber ~12% alpha — selected row background
+HIGHLIGHT_CURRENT = "44cc66"  # green — system current (mic, mode)
+
+
+def draw_left_bar(c, x: float, y: float, h: float, color: str, width: int = 4):
+    """Colored left-border bar — signals playing or active state."""
+    c.paint.color = color
+    c.paint.style = c.paint.Style.FILL
+    c.draw_rect(Rect(x, y, width, h))
+
+
+def draw_row_highlight(
+    c,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    bar_color: str = None,
+    fill_color: str = None,
+    bar_width: int = 4,
+):
+    """Highlight a row with optional background fill and/or left bar.
+
+    playing  → bar_color=HIGHLIGHT_PLAYING,  fill_color=HIGHLIGHT_PLAYING_FILL
+    selected → bar_color=HIGHLIGHT_SELECTED, fill_color=HIGHLIGHT_SELECTED_FILL
+    current  → bar_color=HIGHLIGHT_CURRENT,  no fill
+    """
+    if fill_color:
+        c.paint.color = fill_color
+        c.paint.style = c.paint.Style.FILL
+        c.draw_rect(Rect(x, y, w, h))
+    if bar_color:
+        draw_left_bar(c, x, y, h, bar_color, bar_width)
 
 
 @mod.action_class

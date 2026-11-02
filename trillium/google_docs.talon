@@ -1,4 +1,4 @@
-and os: mac
+os: mac
 and browser.host: docs.google.com
 -
 ^please [<user.text>]$:

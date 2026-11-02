@@ -27,6 +27,9 @@ mode: dictation
 ^destroy right <user.text>$:
     user.clear_right_by_text(text)
 
+^(restore destroy | destroy undo)$:
+    user.restore_destroy()
+
 ^go left <user.text>$:
     user.go_left_by_text(text)
 

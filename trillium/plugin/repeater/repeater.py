@@ -684,7 +684,6 @@ class UserActions:
         capture_to_log = last_repeatable_capture
         confidence = get_parrot_confidence()
 
-        actions.user.notify("tongue pop")
         repeat_last_repeatable(cmd_to_log, capture_to_log, confidence)
 
     def noise_cmere():
@@ -693,8 +692,7 @@ class UserActions:
         capture_to_log = last_repeatable_capture
         confidence = get_parrot_confidence()
 
-        actions.user.notify("kitty cmere")
         opposite(cmd_to_log, capture_to_log, confidence)
 
     def noise_lip_pop():
-        actions.user.notify("lip pop")
+        pass

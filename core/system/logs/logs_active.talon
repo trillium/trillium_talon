@@ -1,0 +1,16 @@
+tag: user.logs_active
+-
+^logs close$: user.logs_hide()
+^(log | logs) refresh$: user.logs_refresh()
+^filter all$: user.logs_filter_level("DEBUG")
+^filter debug$: user.logs_filter_level("DEBUG")
+^filter io$: user.logs_filter_level("IO")
+^filter warning$: user.logs_filter_level("WARNING")
+^filter error$: user.logs_filter_level("ERROR")
+^filter clear$: user.logs_filter_clear()
+^search <phrase>$: user.logs_filter_search(phrase)
+^ignore <user.overlay_select>$: user.logs_ignore(overlay_select)
+^view <user.overlay_select>$: user.logs_view(overlay_select)
+^copy <user.overlay_select>$: user.logs_copy(overlay_select)
+^copy <number_small> logs <user.overlay_select>$: user.logs_copy_range(number_small, overlay_select)
+^ignore view$: user.logs_ignore_view()

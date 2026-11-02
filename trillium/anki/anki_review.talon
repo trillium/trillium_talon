@@ -1,0 +1,17 @@
+tag: user.anki_active
+-
+show answer: user.anki_show_answer()
+flip: user.anki_show_answer()
+anki again: user.anki_answer(1)
+anki hard: user.anki_answer(2)
+anki good: user.anki_answer(3)
+anki easy: user.anki_answer(4)
+again: user.anki_answer(1)
+hard: user.anki_answer(2)
+good: user.anki_answer(3)
+easy: user.anki_answer(4)
+anki skip: user.anki_skip()
+anki undo: user.anki_undo()
+anki close: user.anki_close()
+rotate: user.anki_select_next()
+pick: user.anki_confirm_selected()
