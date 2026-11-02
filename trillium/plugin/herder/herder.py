@@ -89,14 +89,17 @@ def _refresh() -> None:
     Spawns `herdr agent list` via Popen (returns instantly), then polls proc.poll() in
     short cron ticks (each an instant, non-blocking check) until it finishes and reads the
     already-buffered output. No blocking subprocess.run, no raw threading.Thread (which
-    Talon warns about). This is the pattern for ALL these tools: zero cron stall, ever."""
+    Talon warns about). This is the pattern for ALL these tools: zero cron stall, ever.
+    """
     global _pending_proc
     if _pending_proc is not None:
         return  # a refresh is already in flight; don't stack them
     try:
         _pending_proc = subprocess.Popen(
             [_HERDR, "agent", "list"],
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
         )
     except Exception:
         _pending_proc = None
@@ -132,7 +135,9 @@ def _poll_refresh() -> None:
 class Actions:
     def herder_focus(target: str):
         """Focus a herdr agent pane by name."""
-        actions.user.system_command_nb(_ENV + f"herdr agent focus {shlex.quote(target)}")
+        actions.user.system_command_nb(
+            _ENV + f"herdr agent focus {shlex.quote(target)}"
+        )
 
     def herder_send(target: str, text: str):
         """Send prose to a herdr agent pane (does not submit)."""

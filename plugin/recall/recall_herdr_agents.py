@@ -26,7 +26,9 @@ def _fetch_agents():
     try:
         out = subprocess.run(
             [HERDR, "agent", "list"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         ).stdout
         agents = json.loads(out).get("result", {}).get("agents", [])
         return agents if isinstance(agents, list) else []
@@ -54,14 +56,16 @@ def get_agent_tabs():
             if not pane_id and not name:
                 continue
             label = name or pane_id
-            tabs.append({
-                "key": f"agent:{name or pane_id}",
-                "label": str(label)[:16],
-                "pane_id": pane_id,
-                "tab_id": a.get("tab_id") or "",
-                "focused": bool(a.get("focused")),
-                "status": a.get("agent_status") or "",
-            })
+            tabs.append(
+                {
+                    "key": f"agent:{name or pane_id}",
+                    "label": str(label)[:16],
+                    "pane_id": pane_id,
+                    "tab_id": a.get("tab_id") or "",
+                    "focused": bool(a.get("focused")),
+                    "status": a.get("agent_status") or "",
+                }
+            )
         _cache = {"at": now, "tabs": tabs}
         return list(tabs)
     except Exception as e:

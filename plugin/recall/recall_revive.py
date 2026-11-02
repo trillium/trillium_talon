@@ -4,15 +4,19 @@ Recall Revive - Archive, revive, restore, number, mimic, and dictate actions.
 
 import os
 import time
+
 from talon import actions, ui
-from . import recall_overlay
-from . import recall_state
-from .recall_state import (
-    mod, saved_windows, archived_windows,
-    save_to_disk, update_window_list,
-)
-from .recall_terminal import is_terminal, _launch_terminal
+
+from . import recall_overlay, recall_state
 from .recall_commands import _resolve_command, _run_when_ready
+from .recall_state import (
+    archived_windows,
+    mod,
+    save_to_disk,
+    saved_windows,
+    update_window_list,
+)
+from .recall_terminal import _launch_terminal, is_terminal
 
 
 @mod.action_class
@@ -111,6 +115,7 @@ class Actions:
 
         if app_name == "Code" and path:
             import subprocess
+
             if not os.path.isdir(path):
                 print(f"[recall] restore: VS Code path no longer exists: {path}")
                 actions.user.recall_window(name)
@@ -183,7 +188,7 @@ class Actions:
             return
         saved_windows[name]["id"] = None
         save_to_disk()
-        recall_overlay.flash(f'{name}: detached')
+        recall_overlay.flash(f"{name}: detached")
 
     def recall_number(name: str, number: int):
         """Focus a saved window and press a number key"""

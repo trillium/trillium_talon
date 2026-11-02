@@ -11,7 +11,7 @@ from ....trillium.utils.overlay_kit import (  # 4 dots: logs -> system -> core -
     draw_separator,
 )
 from ....trillium.utils.overlay_selector import overlay_labels
-from .logs_data import LogEntry, MAX_ROWS
+from .logs_data import MAX_ROWS, LogEntry
 
 # ── Colors ──
 DIM_BG = "000000cc"
@@ -46,9 +46,9 @@ HINT_SIZE = 14
 
 # ── Column widths ──
 LABEL_COL_W = 40
-TIME_COL_W = 80     # HH:MM:SS
-LEVEL_COL_W = 50    # 4-char padded level
-CAT_COL_W = 110     # category
+TIME_COL_W = 80  # HH:MM:SS
+LEVEL_COL_W = 50  # 4-char padded level
+CAT_COL_W = 110  # category
 # message gets the rest
 
 PANEL_W = 900
@@ -121,8 +121,12 @@ def _word_wrap(text: str, c: SkiaCanvas, max_width: float) -> list[str]:
 
 
 def draw_row(
-    c: SkiaCanvas, entry: LogEntry, label: str,
-    cx: float, cy: float, content_w: float,
+    c: SkiaCanvas,
+    entry: LogEntry,
+    label: str,
+    cx: float,
+    cy: float,
+    content_w: float,
 ):
     """Draw a single log entry row at the given y position."""
     col_x = cx
@@ -164,8 +168,10 @@ def draw_row(
 
 
 def _build_subtitle(
-    count: int, filter_level: str,
-    filter_category: str | None, filter_search: str | None,
+    count: int,
+    filter_level: str,
+    filter_category: str | None,
+    filter_search: str | None,
 ) -> str:
     """Build the subtitle string showing current filter state."""
     parts = [f"{count} entries"]
@@ -185,7 +191,8 @@ def _build_subtitle(
 
 
 def draw_panel(
-    c: SkiaCanvas, overlay: DismissibleOverlay,
+    c: SkiaCanvas,
+    overlay: DismissibleOverlay,
     entries: list[LogEntry],
     filter_level: str,
     filter_category: str | None,
@@ -206,10 +213,16 @@ def draw_panel(
 
     panel_w = PANEL_W
     panel_h = (
-        PANEL_PAD + HEADER_SIZE + 8 + SUBTITLE_SIZE + 16
+        PANEL_PAD
+        + HEADER_SIZE
+        + 8
+        + SUBTITLE_SIZE
+        + 16
         + ROW_HEIGHT  # column headers
         + ROW_HEIGHT * max(row_count, 1)
-        + 16 + HINT_SIZE + PANEL_PAD
+        + 16
+        + HINT_SIZE
+        + PANEL_PAD
     )
     panel_x = sr.x + (sr.width - panel_w) / 2
     panel_y = sr.y + (sr.height - panel_h) / 2
@@ -231,7 +244,9 @@ def draw_panel(
     cy += HEADER_SIZE + 8
 
     # Subtitle
-    subtitle = _build_subtitle(len(entries), filter_level, filter_category, filter_search)
+    subtitle = _build_subtitle(
+        len(entries), filter_level, filter_category, filter_search
+    )
     c.paint.textsize = SUBTITLE_SIZE
     c.paint.color = DIM_COLOR
     c.draw_text(subtitle, cx, cy + SUBTITLE_SIZE)
@@ -272,8 +287,11 @@ def draw_panel(
 
 
 def draw_detail_panel(
-    c: SkiaCanvas, overlay: DismissibleOverlay,
-    title: str, lines: list[str], selectable: bool = False,
+    c: SkiaCanvas,
+    overlay: DismissibleOverlay,
+    title: str,
+    lines: list[str],
+    selectable: bool = False,
 ):
     """Draw a narrower detail panel centered on screen.
 
@@ -301,10 +319,15 @@ def draw_detail_panel(
     block_gaps = max(len(wrapped_blocks) - 1, 0) * 4
 
     panel_h = (
-        PANEL_PAD + HEADER_SIZE + 16
-        + FONT_SIZE * total_text_lines + 4 * max(total_text_lines - 1, 0)
+        PANEL_PAD
+        + HEADER_SIZE
+        + 16
+        + FONT_SIZE * total_text_lines
+        + 4 * max(total_text_lines - 1, 0)
         + block_gaps
-        + 16 + HINT_SIZE + PANEL_PAD
+        + 16
+        + HINT_SIZE
+        + PANEL_PAD
     )
     # Clamp to screen
     panel_h = min(panel_h, sr.height - 80)

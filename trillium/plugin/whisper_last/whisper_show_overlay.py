@@ -51,6 +51,7 @@ def pick_by_index(n: int) -> tuple[bool, str]:
 
 # ── Drawing callback ──
 
+
 def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     labels = overlay_labels(len(_rows), mode="letter")
     draw_panel(c, overlay, _rows, labels)
@@ -66,7 +67,9 @@ def _on_overlay_hide():
         _on_hide_callback()
 
 
-_overlay = DismissibleOverlay(on_draw=_on_draw, auto_hide="30s", on_hide=_on_overlay_hide)
+_overlay = DismissibleOverlay(
+    on_draw=_on_draw, auto_hide="30s", on_hide=_on_overlay_hide
+)
 
 
 def set_on_hide(callback):
@@ -76,6 +79,7 @@ def set_on_hide(callback):
 
 
 # ── Public API ──
+
 
 def show():
     gather()

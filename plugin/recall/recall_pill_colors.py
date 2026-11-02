@@ -6,10 +6,10 @@ STATUS_CHURNING = "churning"  # 2+ concurrent agents
 STATUS_UNKNOWN = "unknown"
 
 COLOR_MAP = {
-    STATUS_IDLE:     "22aa44",  # green
-    STATUS_ACTIVE:   "4488ff",  # blue
+    STATUS_IDLE: "22aa44",  # green
+    STATUS_ACTIVE: "4488ff",  # blue
     STATUS_CHURNING: "ff4444",  # red
-    STATUS_UNKNOWN:  "666666",  # gray
+    STATUS_UNKNOWN: "666666",  # gray
 }
 
 

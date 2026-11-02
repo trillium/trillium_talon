@@ -3,11 +3,12 @@ Recall Meta - Command, auto-assign, and border toggle actions.
 """
 
 from pathlib import Path
+
 from talon import actions
-from . import recall_overlay
-from . import recall_state
-from .recall_state import mod, saved_windows, save_to_disk
+
+from . import recall_overlay, recall_state
 from .recall_commands import _resolve_command
+from .recall_state import mod, save_to_disk, saved_windows
 
 
 @mod.action_class
@@ -22,7 +23,7 @@ class Actions:
         shell_cmd = _resolve_command(command_name)
         path = saved_windows[name].get("path", "~")
         subtitle = f"cd {path} && {shell_cmd}" if shell_cmd else ""
-        recall_overlay.flash(f'{name}: command = {command_name}', subtitle)
+        recall_overlay.flash(f"{name}: command = {command_name}", subtitle)
 
     def recall_clear_command(name: str):
         """Remove the default command from a saved window"""
@@ -30,7 +31,7 @@ class Actions:
             return
         saved_windows[name].pop("command", None)
         save_to_disk()
-        recall_overlay.flash(f'{name}: command cleared')
+        recall_overlay.flash(f"{name}: command cleared")
 
     def recall_edit_commands():
         """Open the recall commands list in the default editor"""
@@ -46,7 +47,7 @@ class Actions:
         saved_windows[name]["auto_assign"] = not current
         save_to_disk()
         state = "ON" if not current else "OFF"
-        recall_overlay.flash(f'{name}: auto-assign {state}')
+        recall_overlay.flash(f"{name}: auto-assign {state}")
 
     def recall_get_rect(name: str) -> dict:
         """Return the stored rect for a saved window, or an empty dict if unknown.
@@ -56,12 +57,14 @@ class Actions:
     def recall_raise_overlay():
         """Bring the recall persistent overlay canvas to front (above mode indicator)."""
         from .recall_overlay_persistent import _persistent_canvas
+
         if _persistent_canvas:
             _persistent_canvas.freeze()
 
     def recall_borders_switch():
         """Switch recall borders on/off (kill switch; default off)"""
         from . import recall_overlay_persistent as rop
+
         if rop._BORDERS_ALLOWED_FLAG.exists():
             rop._BORDERS_ALLOWED_FLAG.unlink()
             rop.DISABLE_PERSISTENT_BORDERS = True
@@ -73,18 +76,23 @@ class Actions:
             recall_state._persistent_highlight_enabled = True
             save_to_disk()
             from .recall import _activate_persistent_highlight
+
             _activate_persistent_highlight()
             recall_overlay.flash("recall borders: ON")
 
     def recall_toggle_border():
         """Toggle the persistent window border on/off"""
-        recall_state._persistent_highlight_enabled = not recall_state._persistent_highlight_enabled
+        recall_state._persistent_highlight_enabled = (
+            not recall_state._persistent_highlight_enabled
+        )
         save_to_disk()
         if recall_state._persistent_highlight_enabled:
             from .recall import _activate_persistent_highlight
+
             _activate_persistent_highlight()
             recall_overlay.flash("recall border: ON")
         else:
             from .recall import _deactivate_persistent_highlight
+
             _deactivate_persistent_highlight()
             recall_overlay.flash("recall border: OFF")

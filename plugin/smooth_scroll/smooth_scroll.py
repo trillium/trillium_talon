@@ -45,13 +45,21 @@ mod.setting(
 )
 
 
-HELPER = Path(__file__).parent / "helper-rs" / "target" / "release" / "smooth-scroll-helper"
+HELPER = (
+    Path(__file__).parent / "helper-rs" / "target" / "release" / "smooth-scroll-helper"
+)
 RESULT_FILE = Path(__file__).with_name("last_run.json")
-RECORDER = Path(__file__).parent / "recorder-rs" / "target" / "release" / "scroll-recorder"
+RECORDER = (
+    Path(__file__).parent / "recorder-rs" / "target" / "release" / "scroll-recorder"
+)
 RECORDING_FILE = Path(__file__).with_name("recording.jsonl")
-HOLD_CONTROL = Path(__file__).with_name("hold.touch")  # touched while the sound continues
+HOLD_CONTROL = Path(__file__).with_name(
+    "hold.touch"
+)  # touched while the sound continues
 HOLD_RESULT = Path(__file__).with_name("hold_run.json")
-PROFILE_FILE = Path(__file__).with_name("profile.jsonl")  # the captain's own short scroll
+PROFILE_FILE = Path(__file__).with_name(
+    "profile.jsonl"
+)  # the captain's own short scroll
 
 _last_run: dict = {}
 _poll_job = None
@@ -155,6 +163,8 @@ def _summary() -> str:
         f"distance {_get('pixels')}px x {_get('frames')} frames, "
         f"glide decay {float(_get('decay')):.2f}, event every {_get('frame_ms')}ms"
     )
+
+
 _job = None
 
 
@@ -165,7 +175,11 @@ def _park_prepare(old_procs, park: bool) -> list:
     so the next one inherits the origin instead of reading the already-parked pointer.
     """
     global _park_proc, _park_origin
-    carrying = _park_proc is not None and _park_proc.poll() is None and _park_origin is not None
+    carrying = (
+        _park_proc is not None
+        and _park_proc.poll() is None
+        and _park_origin is not None
+    )
     if not park:
         if carrying:  # a killed parked helper left the pointer over the window
             ctrl.mouse_move(*_park_origin)
@@ -175,7 +189,10 @@ def _park_prepare(old_procs, park: bool) -> list:
         _park_origin = ctrl.mouse_pos()
     rect = ui.active_window().rect
     target = (rect.x + rect.width / 2, rect.y + rect.height / 2)
-    return ["--park", f"{target[0]:.1f},{target[1]:.1f},{_park_origin[0]:.1f},{_park_origin[1]:.1f}"]
+    return [
+        "--park",
+        f"{target[0]:.1f},{target[1]:.1f},{_park_origin[0]:.1f},{_park_origin[1]:.1f}",
+    ]
 
 
 @mod.action_class
@@ -187,7 +204,9 @@ class Actions:
             app.notify("smooth scroll demo is macOS only")
             return
         if not HELPER.exists():
-            app.notify("smooth scroll: build the helper (cargo build --release in helper-rs)")
+            app.notify(
+                "smooth scroll: build the helper (cargo build --release in helper-rs)"
+            )
             return
         args = [
             direction,
@@ -245,7 +264,9 @@ class Actions:
     def smooth_scroll_record(seconds: int):
         """Record real scroll events for a few seconds into recording.jsonl, then stop by itself"""
         if not RECORDER.exists():
-            app.notify("smooth scroll: build the recorder (cargo build --release in recorder-rs)")
+            app.notify(
+                "smooth scroll: build the recorder (cargo build --release in recorder-rs)"
+            )
             return
         subprocess.Popen(
             [str(RECORDER), str(seconds), str(RECORDING_FILE)],
@@ -260,7 +281,9 @@ class Actions:
         """Replay one gesture from recording.jsonl (0 = first) with its original timing"""
         global _poll_job
         if not HELPER.exists() or not RECORDING_FILE.exists():
-            app.notify("smooth scroll: need the helper and a recording (say 'demo record')")
+            app.notify(
+                "smooth scroll: need the helper and a recording (say 'demo record')"
+            )
             return
         subprocess.Popen(
             [str(HELPER), "replay", str(RECORDING_FILE), str(index), str(RESULT_FILE)],
@@ -311,7 +334,9 @@ def _mimic(direction: str, park: bool):
     if not HELPER.exists() or not PROFILE_FILE.exists():
         app.notify("smooth scroll: need the helper and profile.jsonl")
         return
-    scale = _get("pixels") / 11  # 11 px/frame is the default, so 1.0 plays the recording as-is
+    scale = (
+        _get("pixels") / 11
+    )  # 11 px/frame is the default, so 1.0 plays the recording as-is
     # Decide the pointer's origin while any parked helper is still alive.
     park_args = _park_prepare((_proc, _hold_proc), park)
     # A newer call replaces a gesture still playing: whatever the old one
@@ -324,8 +349,17 @@ def _mimic(direction: str, park: bool):
             interrupted = True
     stretch = float(_overrides.get("stretch", 1.0))
     _proc = _spawn(
-        ["replay", str(PROFILE_FILE), "0", str(RESULT_FILE), direction,
-         f"{scale:.3f}", f"{stretch:.3f}"] + (["cancel"] if interrupted else []) + park_args
+        [
+            "replay",
+            str(PROFILE_FILE),
+            "0",
+            str(RESULT_FILE),
+            direction,
+            f"{scale:.3f}",
+            f"{stretch:.3f}",
+        ]
+        + (["cancel"] if interrupted else [])
+        + park_args
     )
     _park_proc = _proc if park else None
     started = time.time()
@@ -340,7 +374,9 @@ def _hold(direction: str, park: bool):
         app.notify("smooth scroll: build the helper")
         return
     HOLD_CONTROL.touch()
-    same = _hold_proc is not None and _hold_proc.poll() is None and _hold_dir == direction
+    same = (
+        _hold_proc is not None and _hold_proc.poll() is None and _hold_dir == direction
+    )
     if same and (_park_proc is _hold_proc) == park:
         return  # already running; the touch keeps it going
     park_args = _park_prepare((_hold_proc, _proc), park)
@@ -352,8 +388,17 @@ def _hold(direction: str, park: bool):
             interrupted = True
     _hold_dir = direction
     _hold_proc = _spawn(
-        ["hold", direction, str(_get("pixels")), str(_get("frame_ms")),
-         str(float(_get("decay"))), str(float(_get("min_pixels"))),
-         str(HOLD_CONTROL), str(HOLD_RESULT)] + (["cancel"] if interrupted else []) + park_args
+        [
+            "hold",
+            direction,
+            str(_get("pixels")),
+            str(_get("frame_ms")),
+            str(float(_get("decay"))),
+            str(float(_get("min_pixels"))),
+            str(HOLD_CONTROL),
+            str(HOLD_RESULT),
+        ]
+        + (["cancel"] if interrupted else [])
+        + park_args
     )
     _park_proc = _hold_proc if park else None

@@ -51,8 +51,8 @@ RESYNC = "60s"
 
 def comm_dir():
     """Tmp comm dir for this protocol (bridge + Talon agree here)."""
-    suffix = "-%s" % os.getuid() if hasattr(os, "getuid") else ""
-    path = os.path.join(tempfile.gettempdir(), "displayd-apps%s" % suffix)
+    suffix = f"-{os.getuid()}" if hasattr(os, "getuid") else ""
+    path = os.path.join(tempfile.gettempdir(), f"displayd-apps{suffix}")
     try:
         os.makedirs(path, exist_ok=True)
     except Exception:
@@ -80,8 +80,7 @@ def build_state_doc(names, focused):
     # Sorted: the OS order is arbitrary, and stable rows keep panel
     # tap targets from jumping around between ticks.
     apps.sort(key=str.casefold)
-    return {"ts": time.time(), "apps": apps,
-            "focused": clean_name(focused)}
+    return {"ts": time.time(), "apps": apps, "focused": clean_name(focused)}
 
 
 def _atomic_write(path, doc):
@@ -119,8 +118,7 @@ def handle_focus_doc(doc, focus):
     try:
         focus(name)
     except Exception as exc:
-        return {"id": req_id, "ok": False,
-                "error": str(exc)[:120]}
+        return {"id": req_id, "ok": False, "error": str(exc)[:120]}
     return {"id": req_id, "ok": True, "focused": name}
 
 
@@ -167,13 +165,11 @@ def handle_capture_doc(doc, rect_of, shoot, image_path):
     try:
         rect = rect_of(*nums)
     except Exception as exc:
-        return {"id": req_id, "ok": False,
-                "error": str(exc)[:120]}
+        return {"id": req_id, "ok": False, "error": str(exc)[:120]}
     try:
         shoot(rect, image_path)
     except Exception as exc:
-        return {"id": req_id, "ok": False,
-                "error": str(exc)[:120]}
+        return {"id": req_id, "ok": False, "error": str(exc)[:120]}
     return {"id": req_id, "ok": True}
 
 
@@ -193,10 +189,12 @@ try:
         try:
             names = [a.name for a in ui.apps(background=False)]
             active = ui.active_app()
-            _atomic_write(_STATE, build_state_doc(
-                names, active.name if active is not None else ""))
+            _atomic_write(
+                _STATE,
+                build_state_doc(names, active.name if active is not None else ""),
+            )
         except Exception as exc:
-            print("displayd_apps state write failed: %s" % exc)
+            print(f"displayd_apps state write failed: {exc}")
 
     def _consume(path):
         """Unlink-on-read one request file; None when absent/unreadable."""
@@ -220,7 +218,7 @@ try:
             try:
                 _atomic_write(_RESPONSE, resp)
             except Exception as exc:
-                print("displayd_apps response write failed: %s" % exc)
+                print(f"displayd_apps response write failed: {exc}")
         cap_doc = _consume(_CAPTURE_REQUEST)
         if cap_doc is None:
             return
@@ -228,12 +226,11 @@ try:
         def _shoot(rect, path):
             screen.capture_rect(rect).write_file(path)
 
-        cap_resp = handle_capture_doc(cap_doc, ui.Rect, _shoot,
-                                      _CAPTURE_IMAGE)
+        cap_resp = handle_capture_doc(cap_doc, ui.Rect, _shoot, _CAPTURE_IMAGE)
         try:
             _atomic_write(_CAPTURE_RESPONSE, cap_resp)
         except Exception as exc:
-            print("displayd_apps capture write failed: %s" % exc)
+            print(f"displayd_apps capture write failed: {exc}")
 
     def _on_ready():
         _write_state()

@@ -77,6 +77,7 @@ mod = Module()
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 def _focused() -> dict:
     try:
         a = ui.active_app()
@@ -234,11 +235,15 @@ def _registered_tags_snapshot() -> dict:
     except Exception as e:
         return {"err": str(e)}
     try:
-        names = sorted(list(tags.keys())) if hasattr(tags, "keys") else sorted(list(tags))
+        names = (
+            sorted(list(tags.keys())) if hasattr(tags, "keys") else sorted(list(tags))
+        )
     except Exception as e:
         return {"err": str(e)}
     out["count"] = len(names)
-    out["names_sample"] = [n for n in names if "prose_overlay" in n or "cursorless" in n][:40]
+    out["names_sample"] = [
+        n for n in names if "prose_overlay" in n or "cursorless" in n
+    ][:40]
     return out
 
 
@@ -246,11 +251,11 @@ def _po_introspection() -> dict:
     """Mirror of scope_probe's prose_overlay-instance introspection so a
     registry_probe snapshot stands on its own as a diagnostic."""
     import sys
+
     out: dict = {}
     try:
         candidate_names = [
-            n for n in sys.modules
-            if n.endswith("prose_overlay_instance")
+            n for n in sys.modules if n.endswith("prose_overlay_instance")
         ]
         out["candidate_modules"] = candidate_names
         per_module = []
@@ -262,9 +267,19 @@ def _po_introspection() -> dict:
                 ctx = getattr(inst, "ctx", None)
                 ctx_auto = getattr(inst, "ctx_auto", None)
                 canvas = getattr(inst, "canvas", None)
-                entry["ctx_tags"] = list(getattr(ctx, "tags", None) or []) if ctx is not None else None
-                entry["ctx_auto_tags"] = list(getattr(ctx_auto, "tags", None) or []) if ctx_auto is not None else None
-                entry["canvas_is_showing"] = bool(getattr(canvas, "is_showing", False)) if canvas is not None else None
+                entry["ctx_tags"] = (
+                    list(getattr(ctx, "tags", None) or []) if ctx is not None else None
+                )
+                entry["ctx_auto_tags"] = (
+                    list(getattr(ctx_auto, "tags", None) or [])
+                    if ctx_auto is not None
+                    else None
+                )
+                entry["canvas_is_showing"] = (
+                    bool(getattr(canvas, "is_showing", False))
+                    if canvas is not None
+                    else None
+                )
                 entry["auto_dictation"] = bool(getattr(inst, "auto_dictation", False))
             per_module.append(entry)
         out["per_module"] = per_module
@@ -285,6 +300,7 @@ def _emit(record: dict) -> None:
 # ---------------------------------------------------------------------------
 # Public action surface
 # ---------------------------------------------------------------------------
+
 
 @mod.action_class
 class Actions:

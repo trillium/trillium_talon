@@ -34,10 +34,12 @@ mod.list("brain_store", desc="Clean spoken store names -> federation store CLI")
 class Actions:
     def store_capture(store: str, text: str):
         """Capture text to a federation store as a new entry (background)."""
-        actions.user.system_command_nb(_ENV + f"{shlex.quote(store)} create {shlex.quote(text)}")
+        actions.user.system_command_nb(
+            _ENV + f"{shlex.quote(store)} create {shlex.quote(text)}"
+        )
         app.notify("stowed", f"→ {store}: {text}")
 
     def store_fetch(store: str, text: str):
         """Type a store search into the focused terminal so results are visible."""
-        actions.insert(f'{store} search {shlex.quote(text)}')
+        actions.insert(f"{store} search {shlex.quote(text)}")
         actions.key("enter")

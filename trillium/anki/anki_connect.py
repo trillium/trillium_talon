@@ -1,7 +1,8 @@
 """AnkiConnect HTTP client — no Talon imports, pure stdlib."""
+
 import json
-import urllib.request
 import urllib.error
+import urllib.request
 
 ANKI_CONNECT_URL = "http://localhost:8765"
 VERSION = 6

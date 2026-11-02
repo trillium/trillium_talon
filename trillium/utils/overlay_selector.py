@@ -20,7 +20,9 @@ SHAPES = ["bolt", "cross", "curve", "ex", "eye", "fox", "frame", "hole", "play",
 _SHAPE_TO_INDEX = {s: i for i, s in enumerate(SHAPES)}
 
 # Talon list for shape selection in speak history
-mod.list("speak_history_shape", desc="Hat shape names for speak history entry selection")
+mod.list(
+    "speak_history_shape", desc="Hat shape names for speak history entry selection"
+)
 ctx.lists["user.speak_history_shape"] = {s: s for s in SHAPES}
 
 

@@ -161,7 +161,9 @@ try:
         with open(STORAGE_FILE, "r") as f:
             _init_data = json.load(f)
         _init_settings = _init_data.pop("_settings", {})
-        _persistent_highlight_enabled = _init_settings.get("persistent_highlight", False)
+        _persistent_highlight_enabled = _init_settings.get(
+            "persistent_highlight", False
+        )
         archived_windows.update(_init_data.pop("_archive", {}))
         saved_windows.update(_init_data)
         try:

@@ -73,8 +73,10 @@ def draw_row(c: SkiaCanvas, row: WhisperRow, label: str, cx: float, cy: float):
 
 
 def draw_panel(
-    c: SkiaCanvas, overlay: DismissibleOverlay,
-    rows: list[WhisperRow], labels: list[str] | None = None,
+    c: SkiaCanvas,
+    overlay: DismissibleOverlay,
+    rows: list[WhisperRow],
+    labels: list[str] | None = None,
 ):
     """Draw the full whisper transcription picker panel."""
     screen = ui.main_screen()
@@ -85,9 +87,16 @@ def draw_panel(
 
     panel_w = PANEL_PAD * 2 + LABEL_COL_W + TIME_COL_W + TRANSCRIPT_COL_W
     panel_h = (
-        PANEL_PAD + HEADER_SIZE + 8 + SUBTITLE_SIZE + 16
-        + ROW_HEIGHT + ROW_HEIGHT * max(row_count, 1)
-        + 16 + HINT_SIZE + PANEL_PAD
+        PANEL_PAD
+        + HEADER_SIZE
+        + 8
+        + SUBTITLE_SIZE
+        + 16
+        + ROW_HEIGHT
+        + ROW_HEIGHT * max(row_count, 1)
+        + 16
+        + HINT_SIZE
+        + PANEL_PAD
     )
     panel_x = sr.x + (sr.width - panel_w) / 2
     panel_y = sr.y + (sr.height - panel_h) / 2
@@ -112,7 +121,8 @@ def draw_panel(
     c.paint.color = DIM_COLOR
     c.draw_text(
         f'{row_count} recent  ·  "pick <letter>" to paste',
-        cx, cy + SUBTITLE_SIZE,
+        cx,
+        cy + SUBTITLE_SIZE,
     )
     cy += SUBTITLE_SIZE + 16
 

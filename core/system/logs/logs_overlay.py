@@ -6,9 +6,11 @@ import os
 from talon import cron
 from talon.skia.canvas import Canvas as SkiaCanvas
 
-from ....trillium.utils.overlay_kit import DismissibleOverlay  # 4 dots: logs -> system -> core -> trillium_talon
-from .logs_data import LogEntry, parse_talon_log, filter_entries, MAX_ROWS
-from .logs_draw import draw_panel, draw_detail_panel
+from ....trillium.utils.overlay_kit import (
+    DismissibleOverlay,  # 4 dots: logs -> system -> core -> trillium_talon
+)
+from .logs_data import MAX_ROWS, LogEntry, filter_entries, parse_talon_log
+from .logs_draw import draw_detail_panel, draw_panel
 
 # ── Log file path ──
 _LOG_PATH = "/Users/trilliumsmith/.talon/talon.log"
@@ -25,7 +27,7 @@ _auto_refresh_job = None
 
 # ── Detail overlay state ──
 _detail_entry: LogEntry | None = None
-_detail_mode: str = "entry"   # "entry" | "ignores"
+_detail_mode: str = "entry"  # "entry" | "ignores"
 _detail_on_hide_callback = None
 
 
@@ -151,10 +153,15 @@ def _auto_refresh_tick():
 
 # ── Main panel drawing callback ──
 
+
 def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     draw_panel(
-        c, overlay, _visible_entries,
-        _filter_level, _filter_category, _filter_search,
+        c,
+        overlay,
+        _visible_entries,
+        _filter_level,
+        _filter_category,
+        _filter_search,
     )
 
 
@@ -169,7 +176,9 @@ def _on_overlay_hide():
         _on_hide_callback()
 
 
-_overlay = DismissibleOverlay(on_draw=_on_draw, auto_hide="60s", on_hide=_on_overlay_hide)
+_overlay = DismissibleOverlay(
+    on_draw=_on_draw, auto_hide="60s", on_hide=_on_overlay_hide
+)
 
 
 def set_on_hide(callback):
@@ -179,6 +188,7 @@ def set_on_hide(callback):
 
 
 # ── Detail overlay drawing callback ──
+
 
 def _on_detail_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     if _detail_mode == "entry" and _detail_entry is not None:
@@ -191,7 +201,9 @@ def _on_detail_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
         draw_detail_panel(c, overlay, "Log Entry", lines, selectable=False)
     elif _detail_mode == "ignores":
         lines = list(_ignore_patterns) if _ignore_patterns else ["(no ignore patterns)"]
-        draw_detail_panel(c, overlay, "Ignored Patterns", lines, selectable=bool(_ignore_patterns))
+        draw_detail_panel(
+            c, overlay, "Ignored Patterns", lines, selectable=bool(_ignore_patterns)
+        )
 
 
 def _on_detail_hide():
@@ -199,7 +211,9 @@ def _on_detail_hide():
         _detail_on_hide_callback()
 
 
-_detail_overlay = DismissibleOverlay(on_draw=_on_detail_draw, auto_hide=None, on_hide=_on_detail_hide)
+_detail_overlay = DismissibleOverlay(
+    on_draw=_on_detail_draw, auto_hide=None, on_hide=_on_detail_hide
+)
 
 
 def set_detail_on_hide(callback):
@@ -266,6 +280,7 @@ def get_detail_mode() -> str:
 
 # ── Auto-refresh ──
 
+
 def _start_auto_refresh():
     global _auto_refresh_job
     if _auto_refresh_job is None:
@@ -281,10 +296,12 @@ def _stop_auto_refresh():
 
 # ── Public API ──
 
+
 def show():
     gather()
     _overlay.show()
     _start_auto_refresh()
+
 
 def hide():
     _stop_auto_refresh()
@@ -292,9 +309,11 @@ def hide():
         _detail_overlay.hide()
     _overlay.hide()
 
+
 def refresh():
     gather()
     _overlay.freeze()
+
 
 def is_showing() -> bool:
     return _overlay.is_showing

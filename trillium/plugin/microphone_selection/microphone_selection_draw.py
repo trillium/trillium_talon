@@ -4,7 +4,12 @@ from talon import ui
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
 
-from ...utils.overlay_kit import DismissibleOverlay, draw_panel_frame, draw_row_highlight, HIGHLIGHT_CURRENT
+from ...utils.overlay_kit import (
+    HIGHLIGHT_CURRENT,
+    DismissibleOverlay,
+    draw_panel_frame,
+    draw_row_highlight,
+)
 from ...utils.overlay_selector import overlay_labels
 
 # Styling constants
@@ -37,8 +42,9 @@ def _draw_mic_rows(c, mics, active, start_y, panel_x, num_w):
 
         # Draw green left bar for the active mic
         if is_current:
-            draw_row_highlight(c, col_x - 8, y, 0, ROW_HEIGHT,
-                               bar_color=HIGHLIGHT_CURRENT)
+            draw_row_highlight(
+                c, col_x - 8, y, 0, ROW_HEIGHT, bar_color=HIGHLIGHT_CURRENT
+            )
 
         c.paint.textsize = FONT_SIZE
         c.paint.color = CURRENT_COLOR if is_current else HEADER_COLOR

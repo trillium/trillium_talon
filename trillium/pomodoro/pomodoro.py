@@ -52,9 +52,9 @@ def _write_state():
             remaining = current_duration - (ref - start_time)
             if remaining < 0:
                 remaining = 0
-            end_utc = datetime.datetime.now(
-                datetime.timezone.utc
-            ) + datetime.timedelta(seconds=remaining)
+            end_utc = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+                seconds=remaining
+            )
             end_iso = end_utc.astimezone().replace(microsecond=0).isoformat()
             end_epoch = int(end_utc.timestamp())
         else:
@@ -74,6 +74,7 @@ def _write_state():
         tmp.replace(STATE_FILE)
     except Exception as e:
         print(f"[pomodoro] failed to write {STATE_FILE}: {e}")
+
 
 # Style — matches window_focus_announcer pill but offset to the right
 FONT_SIZE = 13

@@ -5,18 +5,22 @@ plus the archive_window and cleanup_closed_windows helpers.
 
 import subprocess
 import time
+
 from talon import actions, ui
-from . import recall_overlay
-from . import recall_state
+
+from . import recall_overlay, recall_state
+from .recall_commands import find_window_by_id
 from .recall_overlay_persistent import refresh_click_canvases
 from .recall_state import (
-    mod, saved_windows, archived_windows,
-    is_forbidden,
-    save_to_disk, update_window_list,
+    archived_windows,
     find_name_for_window_id,
+    is_forbidden,
+    mod,
+    save_to_disk,
+    saved_windows,
+    update_window_list,
 )
-from .recall_terminal import is_terminal, detect_terminal_path
-from .recall_commands import find_window_by_id
+from .recall_terminal import detect_terminal_path, is_terminal
 
 
 def archive_window(name: str, info: dict):
@@ -42,11 +46,26 @@ def cleanup_closed_windows(closed_window: ui.Window):
 
 def _get_terminal_tty(app_name: str) -> str | None:
     """Get TTY of the frontmost Terminal.app / iTerm2 window via AppleScript; else None."""
-    s = ('tell application "Terminal" to get tty of front window' if "Terminal" in app_name
-         else 'tell application "iTerm2" to get tty of current session of current window' if "iTerm" in app_name else None)
-    if not s: return None
-    try: return subprocess.run(["osascript","-e",s], capture_output=True, text=True, timeout=2).stdout.strip() or None
-    except Exception: return None
+    s = (
+        'tell application "Terminal" to get tty of front window'
+        if "Terminal" in app_name
+        else (
+            'tell application "iTerm2" to get tty of current session of current window'
+            if "iTerm" in app_name
+            else None
+        )
+    )
+    if not s:
+        return None
+    try:
+        return (
+            subprocess.run(
+                ["osascript", "-e", s], capture_output=True, text=True, timeout=2
+            ).stdout.strip()
+            or None
+        )
+    except Exception:
+        return None
 
 
 @mod.action_class
@@ -63,12 +82,16 @@ class Actions:
         app_name = window.app.name
 
         # DEBUG: log what window we're actually seeing
-        print(f"[recall-debug] save_window('{name}'): active window id={window.id}, app='{app_name}', title='{window.title[:80]}'")
+        print(
+            f"[recall-debug] save_window('{name}'): active window id={window.id}, app='{app_name}', title='{window.title[:80]}'"
+        )
 
         # Check if this window is already saved under a different name
         existing_name = find_name_for_window_id(window.id)
         if existing_name and existing_name != name:
-            print(f"[recall-debug]   -> found existing entry '{existing_name}' with same id, would alias")
+            print(
+                f"[recall-debug]   -> found existing entry '{existing_name}' with same id, would alias"
+            )
             # Add as alias instead of creating a duplicate
             aliases = saved_windows[existing_name].get("aliases", [])
             if name not in aliases:
@@ -76,7 +99,7 @@ class Actions:
                 saved_windows[existing_name]["aliases"] = aliases
                 save_to_disk()
                 update_window_list()
-                recall_overlay.flash(f'alias: {name} -> {existing_name}')
+                recall_overlay.flash(f"alias: {name} -> {existing_name}")
             return
 
         # Detect path for terminals and VS Code
@@ -86,6 +109,7 @@ class Actions:
         elif app_name == "Code":
             try:
                 from trillium.workspace.workspace import _get_current_workspace_path
+
                 path = _get_current_workspace_path()
             except Exception:
                 pass
@@ -111,9 +135,10 @@ class Actions:
         # Associate Claude session via TTY if available
         if is_terminal(app_name) and (tty := _get_terminal_tty(app_name)):
             from .recall_session_state import get_session_by_tty
-            saved_windows[name]['claude_tty'] = tty
-            if (session := get_session_by_tty(tty)):
-                saved_windows[name]['claude_session_id'] = session.get('session_id')
+
+            saved_windows[name]["claude_tty"] = tty
+            if session := get_session_by_tty(tty):
+                saved_windows[name]["claude_session_id"] = session.get("session_id")
         save_to_disk()
         update_window_list()
         refresh_click_canvases()

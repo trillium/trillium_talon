@@ -16,7 +16,9 @@ _rows: list[ProcessRow] = []
 _killed_index: int | None = None
 _kill_message: str | None = None
 _kill_clear_job = None
-_sort_mode: str = storage.get("activity-sort-mode", "cpu")  # "cpu", "mem", or "combined"
+_sort_mode: str = storage.get(
+    "activity-sort-mode", "cpu"
+)  # "cpu", "mem", or "combined"
 _auto_refresh_job = None
 
 # ── Stable letter selectors ──
@@ -30,8 +32,7 @@ def _assign_letters(rows: list[ProcessRow]):
     current_pids = {r.pid for r in rows}
     # Remove letters for dead PIDs
     _pid_to_letter = {
-        pid: letter for pid, letter in _pid_to_letter.items()
-        if pid in current_pids
+        pid: letter for pid, letter in _pid_to_letter.items() if pid in current_pids
     }
     # Assign letters to new PIDs
     used = set(_pid_to_letter.values())

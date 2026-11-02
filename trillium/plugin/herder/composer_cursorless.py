@@ -64,15 +64,20 @@ _ENV = 'PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH" '
 # did it build? A silent live failure with nothing in this log means
 # dispatch never reached this file - a Talon-grammar/context question, not a
 # bug in this bridge or in composer.py.
-_LOG_PATH = "/Users/trilliumsmith/.local/state/herdr/plugins/trillium.hello-panel/composer.log"
+_LOG_PATH = (
+    "/Users/trilliumsmith/.local/state/herdr/plugins/trillium.hello-panel/composer.log"
+)
 
 
 def _log(msg):
     try:
         with open(_LOG_PATH, "a") as f:
-            f.write(f"\n--- {time.strftime('%Y-%m-%d %H:%M:%S')} composer_cursorless: {msg}\n")
+            f.write(
+                f"\n--- {time.strftime('%Y-%m-%d %H:%M:%S')} composer_cursorless: {msg}\n"
+            )
     except Exception:
         pass
+
 
 # composer.py's HAT_TIERS order (index 0 = default, no suffix) — maps a
 # spoken cursorless hat color onto composer's numeric @-ref tier suffix.
@@ -126,8 +131,10 @@ def _type_target_ref(target, copy):
     the composer pane. `copy=True` appends the "!" marker (see
     try_live_resolve_word in composer.py) so composer.py puts the resolved
     text on the system clipboard instead of inserting it into its buffer."""
-    _log(f"fired copy={copy} mark={getattr(target, 'mark', None)!r} "
-         f"modifiers={getattr(target, 'modifiers', None)!r} elements={getattr(target, 'elements', None)!r}")
+    _log(
+        f"fired copy={copy} mark={getattr(target, 'mark', None)!r} "
+        f"modifiers={getattr(target, 'modifiers', None)!r} elements={getattr(target, 'elements', None)!r}"
+    )
     pane_id = _pane_current().get("pane_id")
     if not pane_id:
         _log("aborted: _pane_current() returned no pane_id")
@@ -143,7 +150,9 @@ def _type_target_ref(target, copy):
         # elements (a span, e.g. "token x past token z") still have no
         # single .mark either; _build_ref returns None for those and they're
         # skipped rather than crashing the whole list.
-        ref = "".join(r for r in (_build_ref(el, copy) for el in elements) if r is not None)
+        ref = "".join(
+            r for r in (_build_ref(el, copy) for el in elements) if r is not None
+        )
     else:
         ref = _build_ref(target, copy)
     if not ref:
@@ -185,7 +194,9 @@ def _poll_composer_focus():
     focus-change events would ever fire for."""
     global _focus_tag_active
     sentinel_pane_id = _read_focused_pane_sentinel()
-    should_be_active = bool(sentinel_pane_id) and sentinel_pane_id == _pane_current().get("pane_id")
+    should_be_active = bool(
+        sentinel_pane_id
+    ) and sentinel_pane_id == _pane_current().get("pane_id")
     if should_be_active != _focus_tag_active:
         _focus_tag_active = should_be_active
         _focus_ctx.tags = [FOCUS_TAG] if should_be_active else []

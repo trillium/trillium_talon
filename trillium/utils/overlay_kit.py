@@ -281,11 +281,11 @@ class DismissibleOverlay:
 # ── Semantic highlight palette ──────────────────────────────────
 # Import these instead of defining locally per-panel.
 
-HIGHLIGHT_PLAYING       = "5ab5a0"      # teal  — currently playing / system-active
-HIGHLIGHT_PLAYING_FILL  = "1A6B5C59"   # teal ~35% alpha — playing row background
-HIGHLIGHT_SELECTED      = "f5c518"     # amber — user-selected / focused
-HIGHLIGHT_SELECTED_FILL = "f5c51820"   # amber ~12% alpha — selected row background
-HIGHLIGHT_CURRENT       = "44cc66"     # green — system current (mic, mode)
+HIGHLIGHT_PLAYING = "5ab5a0"  # teal  — currently playing / system-active
+HIGHLIGHT_PLAYING_FILL = "1A6B5C59"  # teal ~35% alpha — playing row background
+HIGHLIGHT_SELECTED = "f5c518"  # amber — user-selected / focused
+HIGHLIGHT_SELECTED_FILL = "f5c51820"  # amber ~12% alpha — selected row background
+HIGHLIGHT_CURRENT = "44cc66"  # green — system current (mic, mode)
 
 
 def draw_left_bar(c, x: float, y: float, h: float, color: str, width: int = 4):
@@ -295,9 +295,16 @@ def draw_left_bar(c, x: float, y: float, h: float, color: str, width: int = 4):
     c.draw_rect(Rect(x, y, width, h))
 
 
-def draw_row_highlight(c, x: float, y: float, w: float, h: float,
-                       bar_color: str = None, fill_color: str = None,
-                       bar_width: int = 4):
+def draw_row_highlight(
+    c,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    bar_color: str = None,
+    fill_color: str = None,
+    bar_width: int = 4,
+):
     """Highlight a row with optional background fill and/or left bar.
 
     playing  → bar_color=HIGHLIGHT_PLAYING,  fill_color=HIGHLIGHT_PLAYING_FILL

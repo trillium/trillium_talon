@@ -11,7 +11,9 @@ _poll_job = None
 
 
 def editor_ui(props):
-    screen, div, text, textarea = actions.user.ui_elements(["screen", "div", "text", "textarea"])
+    screen, div, text, textarea = actions.user.ui_elements(
+        ["screen", "div", "text", "textarea"]
+    )
     state = actions.user.ui_elements("state")
 
     line_count, set_line_count = state.use("line_count", 1)
@@ -38,8 +40,10 @@ def editor_ui(props):
                 border_top_left_radius=12,
                 border_bottom_left_radius=12,
             )[
-                *[text(str(i), font_family=FONT, font_size=FONT_SIZE, color="555555")
-                  for i in range(first, min(last, line_count + 1))]
+                *[
+                    text(str(i), font_family=FONT, font_size=FONT_SIZE, color="555555")
+                    for i in range(first, min(last, line_count + 1))
+                ]
             ],
             textarea(
                 id="editor",

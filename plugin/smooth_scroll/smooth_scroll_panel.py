@@ -54,7 +54,9 @@ def _refresh():
     new = smooth_scroll.stats()
     if _current:
         _prev = _current
-        _changed_keys = {k for k, v in new.items() if _prev.get(k) != v and k != "overridden"}
+        _changed_keys = {
+            k for k, v in new.items() if _prev.get(k) != v and k != "overridden"
+        }
     _current = new
     if _overlay.is_showing:
         _overlay.freeze()
@@ -92,7 +94,14 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     screen = ui.main_screen().rect
     run = smooth_scroll.last_run()
     extra = (ROW_H * 3 + CHART_H + 40) if run else 0
-    h = PAD * 2 + TITLE_SIZE + 24 + ROW_H * (len(SETTING_ROWS) + len(RESULT_ROWS)) + 56 + extra
+    h = (
+        PAD * 2
+        + TITLE_SIZE
+        + 24
+        + ROW_H * (len(SETTING_ROWS) + len(RESULT_ROWS))
+        + 56
+        + extra
+    )
     rect = Rect(screen.x + screen.width - PANEL_W - 40, screen.y + 60, PANEL_W, h)
     overlay.set_panel_rect(rect)
     draw_panel_frame(c, rect, 16, PANEL_BG, PANEL_BORDER)
@@ -104,9 +113,7 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
     c.draw_text("Smooth scroll", x, y)
     c.paint.textsize = 13
     c.paint.color = DIM
-    c.draw_text(
-        "voice-set" if _current["overridden"] else "defaults", x + w - 70, y
-    )
+    c.draw_text("voice-set" if _current["overridden"] else "defaults", x + w - 70, y)
     y += 34
     y = _draw_rows(c, SETTING_ROWS, x, y, w)
     y += 6
@@ -142,7 +149,11 @@ def _on_draw(c: SkiaCanvas, overlay: DismissibleOverlay):
             c.draw_rect(Rect(bx, base - bh, max(2, w / len(events) - 1), bh))
         c.paint.textsize = 12
         c.paint.color = DIM
-        c.draw_text("teal = finger, amber = glide; bar height = pixels per event, x = real time", x, base + 18)
+        c.draw_text(
+            "teal = finger, amber = glide; bar height = pixels per event, x = real time",
+            x,
+            base + 18,
+        )
         y = base + 24
     c.paint.textsize = 13
     c.paint.color = ACCENT

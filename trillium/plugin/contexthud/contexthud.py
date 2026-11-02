@@ -50,7 +50,9 @@ TEXT_COLOR = "ffffffff"
 DIM_COLOR = "aaaaaa"
 LINE_COLOR = "4a4a6a"
 
-ACCENT_COLOR = "e879f9ee"  # muse pink — title accent (kit lets us set any per-draw color)
+ACCENT_COLOR = (
+    "e879f9ee"  # muse pink — title accent (kit lets us set any per-draw color)
+)
 
 HEADER_SIZE = 36
 PLUGIN_SIZE = 18
@@ -117,16 +119,16 @@ class _Hud:
         groups = _group(self._commands)
 
         # ── Pre-calculate panel height ──
-        panel_h = PANEL_PAD                         # top padding
-        panel_h += HEADER_SIZE + 20                 # header + gap
+        panel_h = PANEL_PAD  # top padding
+        panel_h += HEADER_SIZE + 20  # header + gap
         if groups:
             for cmds in groups.values():
-                panel_h += PLUGIN_SIZE + ROW_PAD    # plugin header
+                panel_h += PLUGIN_SIZE + ROW_PAD  # plugin header
                 panel_h += len(cmds) * (ROW_CMD_SIZE + ROW_PAD)
-                panel_h += GROUP_GAP                # gap after group
+                panel_h += GROUP_GAP  # gap after group
         else:
-            panel_h += ROW_CMD_SIZE + 20            # empty state
-        panel_h += PANEL_PAD                        # bottom padding
+            panel_h += ROW_CMD_SIZE + 20  # empty state
+        panel_h += PANEL_PAD  # bottom padding
 
         panel_w = sr.width * 0.50
 
@@ -158,8 +160,14 @@ class _Hud:
 
         # Close hint — kit helper: (c, text, size, color, panel_x, panel_y, panel_w, panel_pad)
         draw_close_hint(
-            c, '"hide keys" or Esc', HINT_SIZE, DIM_COLOR,
-            panel_x, panel_y, panel_w, PANEL_PAD,
+            c,
+            '"hide keys" or Esc',
+            HINT_SIZE,
+            DIM_COLOR,
+            panel_x,
+            panel_y,
+            panel_w,
+            PANEL_PAD,
         )
 
         cy += HEADER_SIZE + 20
@@ -167,7 +175,9 @@ class _Hud:
         if not groups:
             c.paint.textsize = ROW_CMD_SIZE
             c.paint.color = DIM_COLOR
-            c.draw_text("No commands found (voice-commands.ts --json).", cx, cy + ROW_CMD_SIZE)
+            c.draw_text(
+                "No commands found (voice-commands.ts --json).", cx, cy + ROW_CMD_SIZE
+            )
             c.restore()
             return
 

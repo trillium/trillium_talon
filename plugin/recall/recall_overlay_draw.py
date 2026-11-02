@@ -44,9 +44,16 @@ def _resolve_collisions(pill_rect, pill_w, pill_h, pill_y, placed, screen_w, bas
     return pill_rect
 
 
-def _draw_pill(c, pill_rect, tab_color, display_name, text_h,
-               is_active: bool = False, status_color: str | None = None,
-               badge_text: str = ""):
+def _draw_pill(
+    c,
+    pill_rect,
+    tab_color,
+    display_name,
+    text_h,
+    is_active: bool = False,
+    status_color: str | None = None,
+    badge_text: str = "",
+):
     """Draw a single pill: rounded-top rectangle background + label text.
 
     If status_color (6-char hex, no alpha) is provided and the pill is not
@@ -84,8 +91,11 @@ def _draw_pill(c, pill_rect, tab_color, display_name, text_h,
     c.paint.color = "ffffffff"
     c.paint.style = c.paint.Style.STROKE_AND_FILL
     c.paint.stroke_width = 0.8
-    c.draw_text(display_name, pill_x + PERSISTENT_LABEL_PAD_X,
-                pill_y + PERSISTENT_LABEL_PAD_Y + text_h)
+    c.draw_text(
+        display_name,
+        pill_x + PERSISTENT_LABEL_PAD_X,
+        pill_y + PERSISTENT_LABEL_PAD_Y + text_h,
+    )
     c.paint.style = c.paint.Style.FILL
     c.paint.stroke_width = 0
 
@@ -134,8 +144,13 @@ def _draw_herdr_strip(c: SkiaCanvas, pill_rect, herdr_map):
 
 
 # AI Added: herdr_map parameter threads the panel map into the pill draw.
-def draw_persistent(c: SkiaCanvas, active_window_id, session_states: dict | None = None,
-                    herdr_map: dict | None = None, _win_cache: dict | None = None):
+def draw_persistent(
+    c: SkiaCanvas,
+    active_window_id,
+    session_states: dict | None = None,
+    herdr_map: dict | None = None,
+    _win_cache: dict | None = None,
+):
     """Main draw routine for persistent pills. Returns pill hit rects.
 
     _win_cache is an optional id->window snapshot (see snapshot_windows_by_id).
@@ -165,6 +180,7 @@ def draw_persistent(c: SkiaCanvas, active_window_id, session_states: dict | None
     if _win_cache is None:
         try:
             from .recall_commands import snapshot_windows_by_id
+
             _win_cache = snapshot_windows_by_id()
         except Exception:
             _win_cache = {}
@@ -203,16 +219,20 @@ def draw_persistent(c: SkiaCanvas, active_window_id, session_states: dict | None
         screen_w = _screen_w
 
         pill_rect = _resolve_collisions(
-            pill_rect, pill_w, pill_h, pill_y, placed, screen_w, base_x)
+            pill_rect, pill_w, pill_h, pill_y, placed, screen_w, base_x
+        )
         placed.append(pill_rect)
         entries.append((window, name, info["id"], pill_rect, text_w, text_h, r))
 
     hit_rects = [(name, pill_rect) for _, name, _, pill_rect, _, _, _ in entries]
 
     for window, name, wid, pill_rect, text_w, text_h, r in entries:
-        is_active = (active_window_id is not None and wid == active_window_id)
-        tab_color = (PERSISTENT_COLOR_ACTIVE + PERSISTENT_ALPHA_ACTIVE if is_active
-                     else PERSISTENT_COLOR_INACTIVE + PERSISTENT_ALPHA_INACTIVE)
+        is_active = active_window_id is not None and wid == active_window_id
+        tab_color = (
+            PERSISTENT_COLOR_ACTIVE + PERSISTENT_ALPHA_ACTIVE
+            if is_active
+            else PERSISTENT_COLOR_INACTIVE + PERSISTENT_ALPHA_INACTIVE
+        )
         if is_active:
             c.paint.style = c.paint.Style.STROKE
             c.paint.stroke_width = PERSISTENT_STROKE
@@ -228,8 +248,11 @@ def draw_persistent(c: SkiaCanvas, active_window_id, session_states: dict | None
                 state = window_sessions.get(name)
                 if state:
                     from .recall_pill_colors import (
-                        status_to_color, derive_status, format_badge,
+                        derive_status,
+                        format_badge,
+                        status_to_color,
                     )
+
                     final_status = derive_status(
                         state.get("agent_count", 0),
                         state.get("monitor_count", 0),
@@ -244,9 +267,16 @@ def draw_persistent(c: SkiaCanvas, active_window_id, session_states: dict | None
                 status_color = None
                 badge_text = ""
 
-        _draw_pill(c, pill_rect, tab_color, name.title(), text_h,
-                   is_active=is_active, status_color=status_color,
-                   badge_text=badge_text)
+        _draw_pill(
+            c,
+            pill_rect,
+            tab_color,
+            name.title(),
+            text_h,
+            is_active=is_active,
+            status_color=status_color,
+            badge_text=badge_text,
+        )
         # AI Added: draw the Herdr strip under this window's pill.
         if herdr_map and name == herdr_map.get("name"):
             _draw_herdr_strip(c, pill_rect, herdr_map)

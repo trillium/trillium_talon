@@ -41,7 +41,9 @@ def _herdr_result(args: list[str]) -> dict:
     try:
         r = subprocess.run([_HERDR, *args], capture_output=True, text=True, timeout=5)
         if r.returncode != 0:
-            print(f"[herder_nav] herdr {' '.join(args)} -> rc={r.returncode} {(r.stderr or r.stdout).strip()[:200]}")
+            print(
+                f"[herder_nav] herdr {' '.join(args)} -> rc={r.returncode} {(r.stderr or r.stdout).strip()[:200]}"
+            )
         return json.loads(r.stdout).get("result", {})
     except Exception as e:
         print(f"[herder_nav] herdr {' '.join(args)} failed: {e}")
@@ -83,8 +85,14 @@ def _walk_to(current: str, target: str, rects: dict, max_hops: int = 4) -> None:
         return
     for _ in range(max_hops):
         _herdr_result(
-            ["pane", "focus", "--pane", current, "--direction",
-             _direction(rects[current], rects[target])]
+            [
+                "pane",
+                "focus",
+                "--pane",
+                current,
+                "--direction",
+                _direction(rects[current], rects[target]),
+            ]
         )
         panes = _herdr_result(["pane", "list"]).get("panes", [])
         now = next((p["pane_id"] for p in panes if p.get("focused")), None)
@@ -110,7 +118,8 @@ class Actions:
     def herder_pane_split(direction: str):
         """Split the current pane (right/down) and focus the new one."""
         actions.user.system_command_nb(
-            _ENV + f"herdr pane split --current --direction {shlex.quote(direction)} --focus"
+            _ENV
+            + f"herdr pane split --current --direction {shlex.quote(direction)} --focus"
         )
 
     def herder_pane_cycle(delta: int):
@@ -127,10 +136,14 @@ class Actions:
         layout = _herdr_result(["pane", "layout", "--pane", focused["pane_id"]]).get(
             "layout", {}
         )
-        rects = {c["pane_id"]: c["rect"] for c in layout.get("panes", []) if c.get("rect")}
+        rects = {
+            c["pane_id"]: c["rect"] for c in layout.get("panes", []) if c.get("rect")
+        }
         order = _screen_order(list(tab_panes), rects)
         target = order[(order.index(focused["pane_id"]) + delta) % len(order)]
-        print(f"[herder_nav] pane_cycle {delta:+d}: {focused['pane_id']} -> {target} (order {order})")
+        print(
+            f"[herder_nav] pane_cycle {delta:+d}: {focused['pane_id']} -> {target} (order {order})"
+        )
         if "agent" in tab_panes[target]:
             _herdr_result(["agent", "focus", target])
             return
@@ -138,7 +151,12 @@ class Actions:
 
     def herder_tab_cycle(delta: int):
         """Focus the next (+1) / previous (-1) tab."""
-        _cycle(_herdr_result(["tab", "list"]).get("tabs", []), "tab_id", ["tab", "focus"], delta)
+        _cycle(
+            _herdr_result(["tab", "list"]).get("tabs", []),
+            "tab_id",
+            ["tab", "focus"],
+            delta,
+        )
 
     def herder_tab_new():
         """Create and focus a new tab."""

@@ -153,10 +153,7 @@ def _verdict(modes: set[str], tags: set[str]) -> dict:
                                 not tag:user.mouse_clock_showing
                                 not tag:user.clock_ring_showing
     """
-    blocked = (
-        "user.mouse_clock_showing" in tags
-        or "user.clock_ring_showing" in tags
-    )
+    blocked = "user.mouse_clock_showing" in tags or "user.clock_ring_showing" in tags
 
     cursorless_mode_ok = (
         "command" in modes or "user.cursorless_spoken_form_test" in modes
@@ -187,7 +184,9 @@ def _verdict(modes: set[str], tags: set[str]) -> dict:
         "prose_overlay_matches": prose_matches,
         "winner": winner,
         "blocked_by": [
-            t for t in ("user.mouse_clock_showing", "user.clock_ring_showing") if t in tags
+            t
+            for t in ("user.mouse_clock_showing", "user.clock_ring_showing")
+            if t in tags
         ],
     }
 
@@ -360,9 +359,9 @@ def _raw_tag_introspection() -> dict:
     # question of how Talon registers the user package.
     try:
         import sys
+
         candidate_names = [
-            name for name in sys.modules
-            if name.endswith("prose_overlay_instance")
+            name for name in sys.modules if name.endswith("prose_overlay_instance")
         ]
         out["po_module_candidates"] = candidate_names
         chosen = None
@@ -391,10 +390,20 @@ def _raw_tag_introspection() -> dict:
                 canvas = getattr(inst, "canvas", None)
                 entry["ctx_id"] = id(ctx) if ctx is not None else None
                 entry["ctx_is_none"] = ctx is None
-                entry["ctx_tags"] = list(getattr(ctx, "tags", None) or []) if ctx is not None else None
-                entry["ctx_auto_tags"] = list(getattr(ctx_auto, "tags", None) or []) if ctx_auto is not None else None
+                entry["ctx_tags"] = (
+                    list(getattr(ctx, "tags", None) or []) if ctx is not None else None
+                )
+                entry["ctx_auto_tags"] = (
+                    list(getattr(ctx_auto, "tags", None) or [])
+                    if ctx_auto is not None
+                    else None
+                )
                 entry["canvas_id"] = id(canvas) if canvas is not None else None
-                entry["canvas_is_showing"] = bool(getattr(canvas, "is_showing", False)) if canvas is not None else None
+                entry["canvas_is_showing"] = (
+                    bool(getattr(canvas, "is_showing", False))
+                    if canvas is not None
+                    else None
+                )
                 entry["auto_dictation"] = bool(getattr(inst, "auto_dictation", False))
             per_module.append(entry)
         out["po_per_module"] = per_module
@@ -406,9 +415,19 @@ def _raw_tag_introspection() -> dict:
             ctx = getattr(inst, "ctx", None)
             ctx_auto = getattr(inst, "ctx_auto", None)
             canvas = getattr(inst, "canvas", None)
-            out["po_ctx_tags"] = list(getattr(ctx, "tags", None) or []) if ctx is not None else None
-            out["po_ctx_auto_tags"] = list(getattr(ctx_auto, "tags", None) or []) if ctx_auto is not None else None
-            out["po_canvas_is_showing"] = bool(getattr(canvas, "is_showing", False)) if canvas is not None else None
+            out["po_ctx_tags"] = (
+                list(getattr(ctx, "tags", None) or []) if ctx is not None else None
+            )
+            out["po_ctx_auto_tags"] = (
+                list(getattr(ctx_auto, "tags", None) or [])
+                if ctx_auto is not None
+                else None
+            )
+            out["po_canvas_is_showing"] = (
+                bool(getattr(canvas, "is_showing", False))
+                if canvas is not None
+                else None
+            )
             out["po_auto_dictation"] = bool(getattr(inst, "auto_dictation", False))
             out["po_ctx_is_none"] = ctx is None
     except Exception as e:

@@ -4,11 +4,14 @@ Reads ~/.claude/PAI/MEMORY/STATE/session-pills.jsonl (JSONL, one event
 per line); latest event per session_id wins. 50ms TTL cache.
 Pure Python, no third-party imports. All errors -> None / {}.
 """
+
 import json
 import time
 from pathlib import Path
 
-_STATE_FILE = Path.home() / ".claude" / "PAI" / "MEMORY" / "STATE" / "session-pills.jsonl"
+_STATE_FILE = (
+    Path.home() / ".claude" / "PAI" / "MEMORY" / "STATE" / "session-pills.jsonl"
+)
 # Was 0.05s: every overlay draw (multiple/sec) re-read a 70k-line JSONL via
 # readlines(), dominating the draw callback. The overlay model now refreshes
 # at ~2s cadence, so a 2s TTL keeps colors fresh without per-draw disk IO.
@@ -21,6 +24,7 @@ _MAX_LINES = 1000
 _TAIL_BYTES = 262144
 _cache: dict = {}
 _cache_time: float = 0.0
+
 
 def _refresh() -> None:
     """Re-read the JSONL tail and rebuild the cache. Silent on any error."""
@@ -51,9 +55,11 @@ def _refresh() -> None:
             new_cache[sid] = event
     _cache = new_cache
 
+
 def _ensure_fresh() -> None:
     if (time.monotonic() - _cache_time) >= _TTL_SECONDS:
         _refresh()
+
 
 def get_session_status(session_id: str) -> dict | None:
     """Return latest state for a session_id, or None if unknown."""
@@ -63,6 +69,7 @@ def get_session_status(session_id: str) -> dict | None:
     except Exception:
         return None
 
+
 def get_all_session_states() -> dict[str, dict]:
     """Return all known session states, keyed by session_id."""
     try:
@@ -70,6 +77,7 @@ def get_all_session_states() -> dict[str, dict]:
         return dict(_cache)
     except Exception:
         return {}
+
 
 def get_most_active_session() -> dict | None:
     """Return the most recently active non-idle session, or None if all idle."""
@@ -82,6 +90,7 @@ def get_most_active_session() -> dict | None:
     except Exception:
         return None
 
+
 def get_session_for_path(path: str) -> dict | None:
     """Return the most recent session whose cwd matches path, or None.
 
@@ -93,10 +102,9 @@ def get_session_for_path(path: str) -> dict | None:
             return None
         states = get_all_session_states()
         matches = [
-            s for s in states.values()
-            if s.get("cwd") and (
-                s["cwd"] == path or path.startswith(s["cwd"])
-            )
+            s
+            for s in states.values()
+            if s.get("cwd") and (s["cwd"] == path or path.startswith(s["cwd"]))
         ]
         if not matches:
             return None
@@ -107,8 +115,10 @@ def get_session_for_path(path: str) -> dict | None:
     except Exception:
         return None
 
+
 def _strip_dev(t: str) -> str:
     return t[5:] if t.startswith("/dev/") else t
+
 
 def get_session_by_tty(tty: str) -> dict | None:
     """Return the most recent session whose tty matches, or None.
@@ -121,7 +131,11 @@ def get_session_by_tty(tty: str) -> dict | None:
             return None
         needle = _strip_dev(tty)
         states = get_all_session_states()
-        matches = [s for s in states.values() if s.get("tty") and _strip_dev(s["tty"]) == needle]
+        matches = [
+            s
+            for s in states.values()
+            if s.get("tty") and _strip_dev(s["tty"]) == needle
+        ]
         if not matches:
             return None
         active = [s for s in matches if s.get("status") != "idle"]

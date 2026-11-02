@@ -12,6 +12,7 @@ Two files drive the editor:
 - **editor.talon** — binds `cmd-ctrl-alt-shift-w` to `user.toggle_editor()`
 
 The UI is a horizontal `div` containing:
+
 1. **Line numbers column** — a `div` with per-line `text` elements, clipped at `height=400` with `overflow_y=hidden`. Displays only the lines currently visible in the textarea viewport.
 2. **Textarea** — a `talon-ui-elements` `textarea` element with `id="editor"`, Menlo 14pt, `autofocus=True`, `show_hints=False`.
 
@@ -19,12 +20,12 @@ Scroll sync is achieved by a 100ms cron job (`_sync_scroll`) that reads `scroll_
 
 ## Files
 
-| File | Role |
-|------|------|
-| `editor.py` | UI definition, scroll sync cron, toggle action |
-| `editor.talon` | Keybinding: `cmd-ctrl-alt-shift-w` → `user.toggle_editor()` |
-| `editor_test.py` | Scratch file for bare textarea isolation testing — can be deleted |
-| `~/.talon/user/talon-ui-elements/` | Forked UI kit (see below) |
+| File                               | Role                                                              |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| `editor.py`                        | UI definition, scroll sync cron, toggle action                    |
+| `editor.talon`                     | Keybinding: `cmd-ctrl-alt-shift-w` → `user.toggle_editor()`       |
+| `editor_test.py`                   | Scratch file for bare textarea isolation testing — can be deleted |
+| `~/.talon/user/talon-ui-elements/` | Forked UI kit (see below)                                         |
 
 ## External Dependencies
 
@@ -33,10 +34,10 @@ Scroll sync is achieved by a 100ms cron job (`_sync_scroll`) that reads `scroll_
 
 ## Fork Patches (talon-ui-elements)
 
-| File | Change |
-|------|--------|
-| `src/platform/custom_input.py` | Tab in multiline inputs inserts 4 spaces instead of passing through for focus navigation |
-| `ui_elements.py` | Added `ui_elements_get_input_scroll_offset(id) -> float` action to expose `InputState.scroll_offset` |
+| File                           | Change                                                                                               |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `src/platform/custom_input.py` | Tab in multiline inputs inserts 4 spaces instead of passing through for focus navigation             |
+| `ui_elements.py`               | Added `ui_elements_get_input_scroll_offset(id) -> float` action to expose `InputState.scroll_offset` |
 
 ## Gotchas
 

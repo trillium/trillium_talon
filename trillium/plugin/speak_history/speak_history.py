@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 
 from talon import Context, Module, actions, cron
 
+from ...utils.overlay_selector import letter_to_index, shape_to_index
 from . import speak_history_overlay as overlay
-from ...utils.overlay_selector import shape_to_index, letter_to_index
 
 _SPEAK_LIB = os.path.expanduser("~/code/speak/lib")
 if _SPEAK_LIB not in _sys.path:
@@ -56,7 +56,9 @@ _playing_clause_idx: int | None = None
 _poll_job = None
 _selected_shape: str | None = None
 _selected_shape_idx: int | None = None
-_last_refresh_key: tuple = ()  # (entries_ids_tuple, total, playing_history_id, clause_idx) — skip freeze when unchanged
+_last_refresh_key: (
+    tuple
+) = ()  # (entries_ids_tuple, total, playing_history_id, clause_idx) — skip freeze when unchanged
 POLL_INTERVAL = "3s"
 
 
@@ -84,7 +86,14 @@ def _relative_time(iso_str: str) -> str:
 def _fetch_entries(count: int, offset: int) -> tuple[list[dict], int]:
     """Call the speak CLI and return (entries, total). Enriches entries with relative_time."""
     if _caller_filter:
-        args = [SPEAK, "--caller-history", _caller_filter, str(count), "--offset", str(offset)]
+        args = [
+            SPEAK,
+            "--caller-history",
+            _caller_filter,
+            str(count),
+            "--offset",
+            str(offset),
+        ]
     else:
         args = [SPEAK, "--history", str(count), "--offset", str(offset)]
     result = subprocess.run(args, capture_output=True, text=True, timeout=2, env=_env)
@@ -106,7 +115,10 @@ def _fetch_playing_id() -> tuple[int | None, int | None]:
     try:
         result = subprocess.run(
             [SPEAK, "--queue"],
-            capture_output=True, text=True, timeout=0.5, env=_env,
+            capture_output=True,
+            text=True,
+            timeout=0.5,
+            env=_env,
         )
         data = json.loads(result.stdout)
         playing = data.get("playing", {})
@@ -130,11 +142,25 @@ def _refresh():
     with ThreadPoolExecutor(max_workers=2) as ex:
         f_entries = ex.submit(_query_entries)
         f_playing = ex.submit(_fetch_playing_id)
-        (entries, total), (playing_id, clause_idx) = f_entries.result(), f_playing.result()
-    refresh_key = (tuple(e["id"] for e in entries), total, playing_id, clause_idx, _selected_shape)
+        (entries, total), (playing_id, clause_idx) = (
+            f_entries.result(),
+            f_playing.result(),
+        )
+    refresh_key = (
+        tuple(e["id"] for e in entries),
+        total,
+        playing_id,
+        clause_idx,
+        _selected_shape,
+    )
     if refresh_key == _last_refresh_key:
         return
-    _entries, _total_count, _playing_history_id, _playing_clause_idx = entries, total, playing_id, clause_idx
+    _entries, _total_count, _playing_history_id, _playing_clause_idx = (
+        entries,
+        total,
+        playing_id,
+        clause_idx,
+    )
     _last_refresh_key = refresh_key
     total_pages = max(1, (_total_count + PAGE_SIZE - 1) // PAGE_SIZE)
     overlay.update(

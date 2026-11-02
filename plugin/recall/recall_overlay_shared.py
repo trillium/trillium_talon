@@ -45,6 +45,7 @@ def set_overlay_active(name: str, active: bool):
 def _update_overlay_tag():
     """Set or clear the overlay_visible tag based on active overlays."""
     from .recall_state import overlay_ctx
+
     if _active_overlays:
         overlay_ctx.tags = ["user.recall_overlay_visible"]
     else:
@@ -76,8 +77,9 @@ def _draw_rounded_rect(c: SkiaCanvas, rect: Rect, radius: float):
 
 def _get_saved_windows():
     """Import saved_windows lazily to avoid circular imports."""
-    from .recall_state import saved_windows
     from .recall_commands import find_window_by_id
+    from .recall_state import saved_windows
+
     return saved_windows, find_window_by_id
 
 
@@ -85,6 +87,7 @@ def _resolve_command_display(stored: str) -> str:
     """Resolve a stored command to its spoken name for display.
     If stored as a shell command, reverse-lookup the spoken name."""
     from .recall_state import ctx
+
     commands = ctx.lists.get("user.recall_commands", {})
     if stored in commands:
         return stored
@@ -97,6 +100,7 @@ def _resolve_command_display(stored: str) -> str:
 def _resolve_command_shell(stored: str) -> str | None:
     """Resolve a stored command to the actual shell command it will run."""
     from .recall_state import ctx
+
     commands = ctx.lists.get("user.recall_commands", {})
     if stored in commands:
         return commands[stored]
@@ -108,8 +112,12 @@ def _resolve_command_shell(stored: str) -> str | None:
 
 def _pills_overlap(a: Rect, b: Rect) -> bool:
     """Check if two pill rects overlap."""
-    return (a.x < b.x + b.width and a.x + a.width > b.x and
-            a.y < b.y + b.height and a.y + a.height > b.y)
+    return (
+        a.x < b.x + b.width
+        and a.x + a.width > b.x
+        and a.y < b.y + b.height
+        and a.y + a.height > b.y
+    )
 
 
 def _draw_panel_frame(c: SkiaCanvas, rect: Rect):

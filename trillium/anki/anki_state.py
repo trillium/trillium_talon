@@ -1,10 +1,10 @@
 """Anki session state — no Talon imports."""
+
 import html.parser
 import re
 
-
 _SUPPRESS_TAGS = {"style", "script"}
-_BLOCK_TAGS    = {"br", "div", "p", "li", "tr"}
+_BLOCK_TAGS = {"br", "div", "p", "li", "tr"}
 
 
 class _TextExtractor(html.parser.HTMLParser):
@@ -103,7 +103,9 @@ class AnkiSession:
             return ""
         answer = card.get("answer", "")
         # Anki embeds front+back separated by <hr id=answer>
-        split = re.split(r'<hr[^>]*id=["\']?answer["\']?[^>]*/?\s*>', answer, maxsplit=1)
+        split = re.split(
+            r'<hr[^>]*id=["\']?answer["\']?[^>]*/?\s*>', answer, maxsplit=1
+        )
         return strip_html(split[1]) if len(split) > 1 else strip_html(answer)
 
     # ── Mutations ─────────────────────────────────────────────────

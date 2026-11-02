@@ -3,11 +3,12 @@
 Rendering is fully delegated to whatever renderer is registered in
 anki_renderer. anki_ui_elements.py self-registers at load time.
 """
+
 from talon import Context, Module, actions
 
+from trillium.anki import anki_renderer as _renderer
 from trillium.anki.anki_connect import answer_card, cards_info, due_cards, undo_last
 from trillium.anki.anki_state import AnkiSession
-from trillium.anki import anki_renderer as _renderer
 
 mod = Module()
 mod.tag("anki_active", desc="Anki review overlay is open")
@@ -15,8 +16,9 @@ mod.tag("anki_answer_shown", desc="Anki answer side is visible")
 
 _session = AnkiSession()
 _ctx = Context()
-_selected_ease: int = 0  # mirrors ui_elements "anki_selected" state, readable without get_state
-
+_selected_ease: int = (
+    0  # mirrors ui_elements "anki_selected" state, readable without get_state
+)
 
 
 def _sync_tags() -> None:
@@ -34,7 +36,6 @@ def _push(session: AnkiSession) -> None:
     if r:
         r.update(session)
     _sync_tags()
-
 
 
 @mod.action_class

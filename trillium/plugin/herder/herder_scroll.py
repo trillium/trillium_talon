@@ -74,7 +74,11 @@ def _focused_pane_id() -> str | None:
     reports focused: true (the active pane of the active workspace)."""
     try:
         result = subprocess.run(
-            ["herdr", "pane", "list"], capture_output=True, text=True, timeout=2, check=False
+            ["herdr", "pane", "list"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
         )
         panes = json.loads(result.stdout)["result"]["panes"]
     except Exception:
@@ -95,7 +99,10 @@ def _pane_dimensions(pane_id: str) -> tuple[int, int] | None:
     try:
         result = subprocess.run(
             ["herdr", "pane", "layout", "--pane", pane_id],
-            capture_output=True, text=True, timeout=2, check=False,
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
         )
         layout = json.loads(result.stdout)["result"]["layout"]
     except Exception:
@@ -126,7 +133,11 @@ def _scroll_burst(pane_id: str, direction: str, ticks: int):
     try:
         for _ in range(ticks):
             line = json.dumps(
-                {"type": "terminal.scroll", "direction": direction, "lines": _LINES_PER_TICK}
+                {
+                    "type": "terminal.scroll",
+                    "direction": direction,
+                    "lines": _LINES_PER_TICK,
+                }
             )
             proc.stdin.write(line + "\n")
             proc.stdin.flush()
@@ -143,7 +154,8 @@ def _scroll_burst(pane_id: str, direction: str, ticks: int):
 class Actions:
     def herder_scroll_burst(direction: str, count: int = 1):
         """Rapid multi-tick scroll of the herdr pane (up/down) via herdr's own terminal session control channel.
-        *count* multiplies the base tick count, same convention as Rango's "upper two"/"upper three"."""
+        *count* multiplies the base tick count, same convention as Rango's "upper two"/"upper three".
+        """
         pane_id = _focused_pane_id()
         if pane_id is None:
             return

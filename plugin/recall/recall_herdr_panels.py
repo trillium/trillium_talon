@@ -57,12 +57,16 @@ def _run_snapshot(host=None):
         if host:
             out = subprocess.run(
                 ["ssh", host, "herdr", "api", "snapshot"],
-                capture_output=True, text=True, timeout=_SNAPSHOT_TIMEOUT,
+                capture_output=True,
+                text=True,
+                timeout=_SNAPSHOT_TIMEOUT,
             ).stdout
         else:
             out = subprocess.run(
                 [HERDR, "api", "snapshot"],
-                capture_output=True, text=True, timeout=_SNAPSHOT_TIMEOUT,
+                capture_output=True,
+                text=True,
+                timeout=_SNAPSHOT_TIMEOUT,
             ).stdout
         result = json.loads(out).get("result", {})
         snap = result.get("snapshot") if isinstance(result, dict) else None
@@ -108,7 +112,9 @@ def resolve_for_window(info, name=""):
     if not snap:
         return None
     agents = snap.get("agents", []) or []
-    layouts = {l.get("tab_id"): l for l in (snap.get("layouts", []) or []) if l.get("tab_id")}
+    layouts = {
+        l.get("tab_id"): l for l in (snap.get("layouts", []) or []) if l.get("tab_id")
+    }
     path = info.get("path") or ""
     scored = [(_match_score(path, a), a) for a in agents]
     top = max([s for s, _ in scored] or [0])
@@ -119,8 +125,10 @@ def resolve_for_window(info, name=""):
     if len(tabs) != 1:
         # Ambiguous across tabs (e.g. a broad saved path matching every pane
         # under ~/code): render nothing rather than the wrong tab.
-        print(f"[recall_herdr_panels] ambiguous match for {name or 'window'}: "
-              f"{len(winners)} panes across {len(tabs)} tabs, declining")
+        print(
+            f"[recall_herdr_panels] ambiguous match for {name or 'window'}: "
+            f"{len(winners)} panes across {len(tabs)} tabs, declining"
+        )
         return None
     match = winners[0]
     tab_id = match.get("tab_id")
@@ -130,20 +138,26 @@ def resolve_for_window(info, name=""):
     for cell in layout.get("panes", []) or []:
         pid = cell.get("pane_id")
         agent = by_pane.get(pid, {})
-        panes.append({
-            "pane_id": pid,
-            "host": host,
-            "label": _pane_label(agent, pid),
-            "focused": bool(cell.get("focused")),
-            "status": agent.get("agent_status") or "",
-        })
+        panes.append(
+            {
+                "pane_id": pid,
+                "host": host,
+                "label": _pane_label(agent, pid),
+                "focused": bool(cell.get("focused")),
+                "status": agent.get("agent_status") or "",
+            }
+        )
     if not panes:
         pid = match.get("pane_id")
-        panes = [{
-            "pane_id": pid, "host": host,
-            "label": _pane_label(match, pid),
-            "focused": True, "status": match.get("agent_status") or "",
-        }]
+        panes = [
+            {
+                "pane_id": pid,
+                "host": host,
+                "label": _pane_label(match, pid),
+                "focused": True,
+                "status": match.get("agent_status") or "",
+            }
+        ]
     return {"name": name, "host": host, "tab_id": tab_id, "panes": panes}
 
 
@@ -155,7 +169,11 @@ def _pane_label(agent, pane_id):
         value = tokens.get(key)
         if value:
             return str(value).strip()[:16]
-    title = (agent or {}).get("terminal_title_stripped") or (agent or {}).get("terminal_title") or ""
+    title = (
+        (agent or {}).get("terminal_title_stripped")
+        or (agent or {}).get("terminal_title")
+        or ""
+    )
     if title.strip():
         return str(title).strip()[:16]
     return str(pane_id or "?")
@@ -165,7 +183,9 @@ def _focus_live_pane(panel_map):
     """Ensure Herdr displays the tab's live pane + foreground the host app.
     Best-effort only; every failure is silent by design."""
     try:
-        live = next((p for p in panel_map["panes"] if p["focused"]), panel_map["panes"][0])
+        live = next(
+            (p for p in panel_map["panes"] if p["focused"]), panel_map["panes"][0]
+        )
     except Exception:
         return
     focus_arg = live.get("pane_id") or panel_map.get("tab_id")
@@ -174,16 +194,24 @@ def _focus_live_pane(panel_map):
     host = panel_map.get("host")
     try:
         if host:
-            subprocess.run(["ssh", host, HERDR, "agent", "focus", focus_arg],
-                           check=False, timeout=_SNAPSHOT_TIMEOUT)
+            subprocess.run(
+                ["ssh", host, HERDR, "agent", "focus", focus_arg],
+                check=False,
+                timeout=_SNAPSHOT_TIMEOUT,
+            )
         else:
-            subprocess.run([HERDR, "agent", "focus", focus_arg],
-                           check=False, timeout=_SNAPSHOT_TIMEOUT)
+            subprocess.run(
+                [HERDR, "agent", "focus", focus_arg],
+                check=False,
+                timeout=_SNAPSHOT_TIMEOUT,
+            )
     except Exception as e:
         print(f"[recall_herdr_panels] focus failed: {e}")
         return
     try:
-        subprocess.run(["open", "-a", HERDR_HOST_APP], check=False, timeout=_SNAPSHOT_TIMEOUT)
+        subprocess.run(
+            ["open", "-a", HERDR_HOST_APP], check=False, timeout=_SNAPSHOT_TIMEOUT
+        )
     except Exception as e:
         print(f"[recall_herdr_panels] foreground failed: {e}")
 

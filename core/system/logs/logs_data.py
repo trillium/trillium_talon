@@ -99,13 +99,15 @@ def parse_talon_log(path: str, max_lines: int = 1000) -> list[LogEntry]:
                 category = cm.group(1)
                 rest = cm.group(2).strip()
 
-            entries.append(LogEntry(
-                timestamp=timestamp,
-                level=level,
-                category=category,
-                message=rest,
-                raw=line,
-            ))
+            entries.append(
+                LogEntry(
+                    timestamp=timestamp,
+                    level=level,
+                    category=category,
+                    message=rest,
+                    raw=line,
+                )
+            )
         else:
             # Continuation line — append to previous entry
             if entries:
@@ -153,8 +155,7 @@ def filter_entries(
     if ignore_patterns:
         lower_patterns = [p.lower() for p in ignore_patterns]
         result = [
-            e for e in result
-            if not any(p in e.message.lower() for p in lower_patterns)
+            e for e in result if not any(p in e.message.lower() for p in lower_patterns)
         ]
 
     return result

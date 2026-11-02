@@ -36,7 +36,7 @@ _hints: list[str] = []
 _preview_text: str = ""
 
 # Visual constants
-STRIP_Y_OFFSET = 28          # pixels from top — below mode indicator bar
+STRIP_Y_OFFSET = 28  # pixels from top — below mode indicator bar
 PILL_RADIUS = 8
 FONT_SIZE = 22
 PILL_H_PAD = 10
@@ -44,7 +44,7 @@ PILL_V_PAD = 3
 ITEM_GAP = 6
 STRIP_H_PAD = 12
 LINE_HEIGHT = 38
-LINE_GAP = 4                  # gap between wrapped lines
+LINE_GAP = 4  # gap between wrapped lines
 
 AUTO_HIDE_DURATION = "6s"
 
@@ -114,7 +114,14 @@ def _on_draw(c: SkiaCanvas):
         # Available width for preview text: screen width minus left content, padding, gaps
         right_margin = STRIP_H_PAD
         preview_gap = ITEM_GAP * 3  # gap between pills and preview
-        available_w = rect.width - STRIP_H_PAD * 2 - left_content_w - preview_gap - preview_label_w - right_margin
+        available_w = (
+            rect.width
+            - STRIP_H_PAD * 2
+            - left_content_w
+            - preview_gap
+            - preview_label_w
+            - right_margin
+        )
         if available_w > 50:
             preview_lines = _wrap_text(_preview_text, available_w, c.paint)
 

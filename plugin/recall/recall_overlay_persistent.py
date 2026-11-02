@@ -77,8 +77,11 @@ def _set_focus_lock():
 
 def _make_click_handler(entry_name: str):
     """Create a mouse handler for a specific pill."""
+
     def _handler(e):
-        print(f"[recall-diag] click handler fired for '{entry_name}': event={e.event} button={e.button}")
+        print(
+            f"[recall-diag] click handler fired for '{entry_name}': event={e.event} button={e.button}"
+        )
         if e.event != "mousedown" or e.button != 0:
             return
         saved_windows, find_window_by_id = _get_saved_windows()
@@ -92,6 +95,7 @@ def _make_click_handler(entry_name: str):
                     w.focus()
                 except Exception:
                     pass
+
     return _handler
 
 
@@ -125,6 +129,7 @@ def _take_herdr_map():
     draw bit-identical to before."""
     try:
         from .recall_herdr_panels import take_active_map
+
         return take_active_map()
     except Exception:
         return None
@@ -146,31 +151,37 @@ def _refresh_model():
     global _cached_win_snapshot, _cached_sessions, _model_time
     try:
         from .recall_commands import snapshot_windows_by_id
+
         _cached_win_snapshot = snapshot_windows_by_id()
     except Exception:
         _cached_win_snapshot = {}
     try:
-        from .recall_session_state import (
-            get_session_status, get_session_by_tty, get_session_for_path,
-        )
         from . import recall_state as _rs
+        from .recall_session_state import (
+            get_session_by_tty,
+            get_session_for_path,
+            get_session_status,
+        )
+
         window_sessions = {}
         for name, info in list(_rs.saved_windows.items()):
             session = None
-            stored_id = info.get('claude_session_id')
+            stored_id = info.get("claude_session_id")
             if stored_id:
                 session = get_session_status(stored_id)
             if session is None:
-                tty = info.get('claude_tty')
+                tty = info.get("claude_tty")
                 if tty:
                     session = get_session_by_tty(tty)
             if session is None:
-                path = info.get('path')
+                path = info.get("path")
                 if path:
                     session = get_session_for_path(path)
             if session:
                 window_sessions[name] = session
-        _cached_sessions = {"window_sessions": window_sessions} if window_sessions else None
+        _cached_sessions = (
+            {"window_sessions": window_sessions} if window_sessions else None
+        )
     except Exception:
         _cached_sessions = None
     _model_time = time.monotonic()
@@ -179,7 +190,10 @@ def _refresh_model():
 def _ensure_model_fresh():
     """Refresh the model if stale. Never raises into the draw callback."""
     try:
-        if _cached_win_snapshot is None or (time.monotonic() - _model_time) >= _MODEL_TTL_S:
+        if (
+            _cached_win_snapshot is None
+            or (time.monotonic() - _model_time) >= _MODEL_TTL_S
+        ):
             _refresh_model()
     except Exception:
         pass
@@ -202,9 +216,13 @@ def on_draw_persistent(c: SkiaCanvas):
     _ensure_model_fresh()
     active_id = _persistent_window.id if _persistent_window else None
     # AI Added: feed the armed Herdr map into the pill draw.
-    _pill_hit_rects = draw_persistent(c, active_id, session_states=_cached_sessions,
-                                   herdr_map=_take_herdr_map(),
-                                   _win_cache=_cached_win_snapshot)
+    _pill_hit_rects = draw_persistent(
+        c,
+        active_id,
+        session_states=_cached_sessions,
+        herdr_map=_take_herdr_map(),
+        _win_cache=_cached_win_snapshot,
+    )
     if DEBUG_SHOW_CLICK_AREAS:
         c.paint.color = "00ff0059"  # green 35% opacity
         c.paint.style = c.paint.Style.FILL
@@ -249,6 +267,7 @@ def refresh_click_canvases():
 # default to OFF. Voice: "recall border switch" / "recall borders switch" flips it;
 # the marker file survives Talon reloads (present = borders allowed).
 from pathlib import Path as _Path
+
 _BORDERS_ALLOWED_FLAG = _Path(__file__).parent / ".borders_allowed"
 DISABLE_PERSISTENT_BORDERS = not _BORDERS_ALLOWED_FLAG.exists()
 
@@ -269,6 +288,7 @@ def show_persistent_highlight(window, name: str):
     # _on_focus_change in recall.py actively maintains the overlay while
     # it's showing, and so hot-reload restores it from JSON.
     from . import recall_state as _rs
+
     _rs._persistent_highlight_enabled = True
     _rs.save_to_disk()
     _schedule_redraw()
@@ -289,6 +309,7 @@ def hide_persistent_highlight():
     # Clear the flag + persist so _on_focus_change stops maintaining the
     # overlay and hot-reload doesn't try to restore it.
     from . import recall_state as _rs
+
     _rs._persistent_highlight_enabled = False
     _rs.save_to_disk()
 
@@ -332,6 +353,7 @@ def _hot_reload_recovery():
         return  # nothing to show
     try:
         from .recall_state import find_name_for_window_id
+
         window = ui.active_window()
         name = find_name_for_window_id(window.id)
         show_persistent_highlight(window, name or "")

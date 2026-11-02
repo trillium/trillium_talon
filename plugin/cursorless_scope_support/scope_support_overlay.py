@@ -207,7 +207,10 @@ def _fetch_scope_support() -> tuple[list[dict], str | None]:
     try:
         getter = actions.user.cursorless_get_scope_support
     except (AttributeError, KeyError):
-        return [], "Talon action user.cursorless_get_scope_support is not declared. Check that cursorless-talon is loaded."
+        return (
+            [],
+            "Talon action user.cursorless_get_scope_support is not declared. Check that cursorless-talon is loaded.",
+        )
     try:
         data = getter()
         if isinstance(data, list):
@@ -284,7 +287,17 @@ def _measure_pill(c: SkiaCanvas, text: str) -> tuple[float, float]:
     return tr.width + PILL_PAD_X * 2, tr.height + PILL_PAD_Y * 2
 
 
-def _draw_pill(c: SkiaCanvas, x: float, y: float, w: float, h: float, text: str, bg: str, fg: str, is_error: bool):
+def _draw_pill(
+    c: SkiaCanvas,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    text: str,
+    bg: str,
+    fg: str,
+    is_error: bool,
+):
     rect = Rect(x, y, w, h)
     c.paint.style = c.paint.Style.FILL
     c.paint.color = bg
@@ -390,7 +403,12 @@ def _on_draw(c: SkiaCanvas):
                 continue
             probe_y += SECTION_HEADER_SIZE + 8
             probe_y = _flow_layout(
-                c, section_entries, content_x, probe_y, content_w, draw=False,
+                c,
+                section_entries,
+                content_x,
+                probe_y,
+                content_w,
+                draw=False,
             )
             probe_y += PILL_GAP_Y * 2
         body_h = max(probe_y, PILL_FONT_SIZE)
@@ -413,12 +431,15 @@ def _on_draw(c: SkiaCanvas):
     # Everything else (present-but-not-at-cursor) is suppressed so the
     # row exactly answers "what can I target at my cursor?".
     at_cursor_pills = [
-        e for e in _at_cursor_entries
-        if e.get("atCursor") and not _is_obvious(e)
+        e for e in _at_cursor_entries if e.get("atCursor") and not _is_obvious(e)
     ]
     if at_cursor_pills:
         _flow_layout(
-            c, at_cursor_pills, content_x, cy, content_w,
+            c,
+            at_cursor_pills,
+            content_x,
+            cy,
+            content_w,
             at_cursor_types=at_cursor_types,
         )
 

@@ -181,6 +181,7 @@ def _wrap_text(c: SkiaCanvas, text: str, max_w: float) -> list[str]:
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def show(scope: str):
     """Show the friction overlay with the given scope label."""
     global _canvas, _scope_label, _lines
