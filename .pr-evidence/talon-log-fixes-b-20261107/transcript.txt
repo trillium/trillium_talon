@@ -1,0 +1,8 @@
+$ talon-log-errors --since 2026-11-07   (before; 909x top error)
+  909x  [635846bb]  2026-11-07 22:42:04.682 .. 2026-11-07 23:22:56.671
+       KeyError: "Action 'user.smooth_scroll_sound' is not declared."
+       ours: user/trillium_talon/trillium/plugin/parrot/parrot_clips.py:519, user/trillium_talon/plugin/recall/herdr_tab_voice.py:55, user/trillium_talon/plugin
+       seen as: Failed to type check script: ~/.talon/user/trillium_talon/pl; N: talon/scripting/talon_script.py:N|
+
+$ python -m pytest .tests -q   (after)
+1395 passed, 1 skipped in 6.67s
