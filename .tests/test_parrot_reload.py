@@ -6,7 +6,9 @@ from pathlib import Path
 
 import pytest
 
-_PATH = Path(__file__).resolve().parent.parent / "trillium/plugin/parrot/parrot_reload.py"
+_PATH = (
+    Path(__file__).resolve().parent.parent / "trillium/plugin/parrot/parrot_reload.py"
+)
 
 
 class FakeStream:
