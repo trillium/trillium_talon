@@ -13,7 +13,7 @@ from talon import Module, actions, events, resource
 from talon.debug import log_exception
 from talon.experimental.parrot import ParrotDelegate, ParrotFrame, ParrotSystem
 
-from . import parrot_clips
+from . import parrot_clips, parrot_reload
 from .parrot_clips import service as clips
 
 PARROT_HOME = Path(os.path.dirname(os.path.realpath(__file__)))
@@ -466,8 +466,10 @@ class Delegate(ParrotDelegate):
 last_parrot_confidence: float = 0.0
 
 parrot_delegate = Delegate(debug=True)
+parrot_reload.retire_previous_system()
 logging.info(f"[parrot] Creating ParrotSystem with model: {model_path}")
 system = ParrotSystem(model_path, parrot_delegate)
+parrot_reload.remember_system(system)
 logging.info(f"[parrot] ParrotSystem created: {system}")
 
 # Copy raw frames into a RAM ring for parrot clips (no IO on this path)

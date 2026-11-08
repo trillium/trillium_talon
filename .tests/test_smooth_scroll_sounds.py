@@ -117,3 +117,16 @@ def test_sounds_do_not_extend_the_window(sounds):
         sounds.UserActions.noise_hiss()
     assert len(sounds.calls) == 3  # t=5,10,15 scroll; t=20 and 25 are expired
     assert len(sounds.fell_through) == 2
+
+
+def test_smooth_scroll_talon_files_only_call_declared_actions():
+    """A .talon line calling an undeclared user action fails type-check on every sound
+    (user.smooth_scroll_sound did, 909 log errors)."""
+    import re
+
+    folder = _FILE.parent
+    py_text = "\n".join(p.read_text() for p in folder.glob("*.py"))
+    declared = set(re.findall(r"^\s{4}def (\w+)\(", py_text, re.M))
+    for talon_file in folder.glob("*.talon"):
+        for name in re.findall(r"user\.(\w+)\(", talon_file.read_text()):
+            assert name in declared, f"{talon_file.name} calls undeclared user.{name}"
