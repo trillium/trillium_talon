@@ -17,6 +17,18 @@ REVERSE_SPECIAL_KEYS = {
     "end": "home",
 }
 
+# Line-ender commands (bravely / gravely / slap / lap — see
+# core/modes/dictation_ender.talon-list, plus the command-mode `lap`). They
+# submit a line and have NO natural opposite, so the reverse-sound double-click
+# chain would go dead after one. Their "reverse" instead RE-ARMS the automated
+# SuperWhisper reverse-sound / pondering listening queue (re-enter pondering), so
+# the reverse double-click still has something to fire. Extend this set as new
+# enders are added (keep it in sync with dictation_ender.talon-list).
+LINE_ENDER_TRIGGERS = {"lap", "slap", "bravely", "gravely"}
+# The reverse action for a line-ender: (namespace, action_name, args) — re-enter
+# the pondering / SuperWhisper reverse-listen state.
+LINE_ENDER_REVERSE_ACTION = ("user", "pondering_enable", ())
+
 # Combined mapping with trigger, opposite, and action
 OPPOSITES = {
     "upper": {
