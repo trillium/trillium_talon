@@ -8,10 +8,11 @@ Canvas callbacks receive a skia Canvas object for drawing.
 class MouseEvent:
     """Mouse event passed to canvas event handlers."""
 
-    def __init__(self, x=0, y=0, button=0):
+    def __init__(self, x=0, y=0, button=0, event="mousedown"):
         self.x = x
         self.y = y
         self.button = button
+        self.event = event
         self.gpos = type("gpos", (), {"x": x, "y": y})()
 
 
