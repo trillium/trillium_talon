@@ -1,0 +1,19 @@
+Live checkout ~/.talon/user/trillium_talon, 2026-11-09 after leveling to this PR branch
+
+$ git status -sb   (live)
+## fm/task-talon-live-checkout-commit-useful-dirt-r-b7...origin/fm/task-talon-live-checkout-commit-useful-dirt-r-b7
+ M trillium/settings.talon                                  (per-host palette open_reads/open_execute, local only)
+?? plugin/smooth_scroll/smooth_scroll_sounds.talon.disabled (main removed it in #61; kept, not deleted)
+?? test/test_dictation_ender_bravely.py                     (stale, left visible)
+?? trillium/editor_test.py                                  (scratch, left visible)
+
+$ talon.log after the switch: 0 new ERROR lines except the cursorless csv "Unknown identifier"
+  lines and herdr ssh tab-list noise, both present before the switch.
+  Two real errors found on first reload and fixed in c5d46f88 / by re-touching the module:
+  - command_logger/schema.py: No module named 'typing_extensions'  -> import TypedDict from typing
+  - repeater.py: stale opposite_mappings import (module not reloaded in order) -> clean after reload
+
+$ ~/.talon/bin/repl: speech_system._sim("demo up") / ("demo down")
+'demo up'   -> rule: "demo up"   path: user/trillium_talon/plugin/smooth_scroll/smooth_scroll.talon
+'demo down' -> rule: "demo down" path: user/trillium_talon/plugin/smooth_scroll/smooth_scroll.talon
+actions.user.smooth_scroll_demo(direction: str) is registered; live smooth_scroll.py has the #62 gesture queue.
