@@ -1,0 +1,16 @@
+$ python -m pytest .tests -q
+........................................................................ [ 99%]
+.........                                                                [100%]
+1445 passed, 1 skipped, 3 xfailed in 6.57s
+
+$ git log --oneline c487ce3f..HEAD
+43c04845 misc live fixes: wav fallback, mic switch, mode indicator, friction off, hostnames
+971890be repeater: sleep-mode repeat/opposite, debounce and pondering click-to-finish
+f61a8bbf recall: split the overlay and the action module into focused files
+1442224f test stubs: add w2l engine, VMCapture and window stubs used by the live-only tests
+
+$ git diff --stat c487ce3f HEAD (summary)
+ 54 files changed, 3496 insertions(+), 1891 deletions(-)
+
+$ git diff --stat c487ce3f HEAD -- plugin/smooth_scroll   # demo up/down fix from #62 untouched
+       0
