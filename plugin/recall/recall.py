@@ -17,24 +17,23 @@ Features:
 """
 
 from talon import actions, app, ui
-from . import recall_overlay
-from . import recall_state
+
+# Import split action modules so Talon picks up their @mod.action_class registrations
+from . import recall_alias  # noqa: F401
+from . import recall_meta  # noqa: F401
+from . import recall_revive  # noqa: F401
+from . import recall_save  # noqa: F401
+from . import recall_overlay, recall_state
+from .recall_commands import find_window_by_id, rematch_window
+from .recall_save import archive_window, cleanup_closed_windows  # noqa: F401
 from .recall_state import (
-    mod,
-    saved_windows,
     _cancel_pending,
     find_name_for_window_id,
     load_saved_windows,
+    mod,
+    saved_windows,
 )
-from .recall_terminal import is_terminal, _parse_title_path
-from .recall_commands import find_window_by_id, rematch_window
-from .recall_save import archive_window, cleanup_closed_windows  # noqa: F401
-
-# Import split action modules so Talon picks up their @mod.action_class registrations
-from . import recall_save  # noqa: F401
-from . import recall_revive  # noqa: F401
-from . import recall_alias  # noqa: F401
-from . import recall_meta  # noqa: F401
+from .recall_terminal import _parse_title_path, is_terminal
 
 
 def _try_auto_assign(window: ui.Window):

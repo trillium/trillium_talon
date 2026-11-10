@@ -1,10 +1,11 @@
 """Tests for Phase 2 (recall_session_state) and Phase 3 (recall_pill_colors)."""
 
 import json
+
 import pytest
+
 from plugin.recall import recall_pill_colors as rpc
 from plugin.recall import recall_session_state as rss
-
 
 # ── Phase 3: pill colors ──────────────────────────────────────────────
 

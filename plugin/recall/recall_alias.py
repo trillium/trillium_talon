@@ -3,16 +3,16 @@ Recall Alias - Combine, rename, alias, promote, and pending-finish actions.
 """
 
 from talon import actions
-from . import recall_overlay
-from . import recall_state
+
+from . import recall_overlay, recall_state
 from .recall_state import (
-    mod,
-    saved_windows,
-    pending_ctx,
-    is_forbidden,
-    save_to_disk,
-    update_window_list,
     _cancel_pending,
+    is_forbidden,
+    mod,
+    pending_ctx,
+    save_to_disk,
+    saved_windows,
+    update_window_list,
 )
 
 

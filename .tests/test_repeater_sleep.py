@@ -17,8 +17,8 @@ if hasattr(talon, "test_mode"):
 
     import pytest
 
-    from trillium.plugin.repeater import repeater
     from trillium._boolean_print import boolean_print
+    from trillium.plugin.repeater import repeater
 
     @pytest.fixture(autouse=True)
     def _clean_overrides(talon_actions):

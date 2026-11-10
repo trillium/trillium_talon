@@ -7,12 +7,12 @@ Modified by GitHub user Jcaw.
 
 """
 
+import functools
 import logging
 import struct
 import subprocess
 import threading
 import wave
-import functools
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +34,7 @@ class _WavSource:
                 raise Exception("only 16-bit signed PCM supported")
             nframes = self.params.nframes
             frames = wav_file.readframes(nframes)
-            self.samples = struct.unpack(
-                "<{}h".format(nframes * self.params.nchannels), frames
-            )
+            self.samples = struct.unpack(f"<{nframes * self.params.nchannels}h", frames)
             self.samplerate = self.params.framerate
             self.channels = self.params.nchannels
             if self.channels == 2:

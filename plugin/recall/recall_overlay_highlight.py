@@ -7,6 +7,7 @@ from talon.canvas import Canvas
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
+
 from .recall_overlay_shared import _draw_rounded_rect
 
 HIGHLIGHT_DURATION = "800ms"

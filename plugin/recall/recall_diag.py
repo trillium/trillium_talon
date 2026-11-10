@@ -43,10 +43,10 @@ class Actions:
     def recall_diag():
         """Full diagnostic: alignment, blocks_mouse, handler chain, focus target."""
         from .recall_overlay_persistent import (
-            _pill_hit_rects,
             _click_canvases,
             _persistent_canvas,
             _persistent_window,
+            _pill_hit_rects,
         )
 
         print("\n=== RECALL PILL DIAGNOSTICS ===")

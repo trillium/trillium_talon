@@ -28,8 +28,7 @@ LOCAL_TZ = ZoneInfo("America/Los_Angeles")
 
 # Matches "Your subscription will be canceled on Jun 14, 2026."
 CANCEL_RE = re.compile(
-    r"Your subscription will be canceled on "
-    r"([A-Z][a-z]+) (\d{1,2}), (\d{4})"
+    r"Your subscription will be canceled on " r"([A-Z][a-z]+) (\d{1,2}), (\d{4})"
 )
 
 MONTHS = {

@@ -3,15 +3,19 @@
 ## 2026-11-06 — session 4910052e
 
 Files: trillium/plugin/mode_indicator/mode_indicator.py, trillium/core/click_to_finish.py
+
 ## 2026-10-25 — session cd9a8e7b
 
 Files: plugin/recall/herdr_tabs.py, plugin/recall/reentry_card.py
+
 ## 2026-10-15 — session 08033439
 
 Files: trillium/mode_indicator/mode_indicator.talon
+
 ## 2026-08-12 — session f8dbfde2
 
 Files: trillium/plugin/repeater/sleep_clear_commands.talon, trillium/plugin/repeater/sleep_passthrough_commands.py
+
 ## 2026-08-08 — reverse sound reserved for re-launching pondering
 
 Files: trillium/plugin/repeater/repeater.py, trillium/plugin/repeater/repeater_sleep.talon, .tests/test_repeater_sleep.py
@@ -34,7 +38,7 @@ Full suite: 107 passed; 3 pre-existing recall failures unchanged.
 
 ## 2026-08-08
 
-Files: trillium/plugin/repeater/repeater_sleep.talon (new), trillium/plugin/repeater/sleep_clear_commands.talon (new), trillium/plugin/repeater/repeater.py, trillium/core/click_to_finish.py, .tests/test_repeater_sleep.py (new), .tests/test_click_to_finish.py (new), .tests/stubs/talon/grammar.py, .tests/stubs/talon/__init__.py, .tests/stubs/talon/scripting/types.py, .tests/stubs/talon/engines/w2l.py (new), .tests/stubs/talon_init.py (new)
+Files: trillium/plugin/repeater/repeater_sleep.talon (new), trillium/plugin/repeater/sleep_clear_commands.talon (new), trillium/plugin/repeater/repeater.py, trillium/core/click_to_finish.py, .tests/test_repeater_sleep.py (new), .tests/test_click_to_finish.py (new), .tests/stubs/talon/grammar.py, .tests/stubs/talon/**init**.py, .tests/stubs/talon/scripting/types.py, .tests/stubs/talon/engines/w2l.py (new), .tests/stubs/talon_init.py (new)
 
 New `sleep_clear_commands.talon` authorizes exactly two voice commands —
 `destroy` (→ `user.clear_last_dictation()`) and `nuke left` (→
@@ -80,12 +84,15 @@ change, recall files are mid-work).
 ## 2026-08-03 — session 573726b5
 
 Files: trillium/plugin/mode_indicator/poll_usage.py
+
 ## 2026-07-30 — session d29b1466
 
 Files: trillium/plugin/herder/herder_nav.talon
+
 ## 2026-07-30 — session d0ad18fe
 
 Files: plugin/recall/herdr_tab_alias.talon-list, trillium/plugin/media/media.talon, trillium/microphone/change_mic.py
+
 ## 2026-07-23 — Edgar (task-ya0t, P1 regression)
 
 Files: trillium/plugin/herder/herder_nav.talon
@@ -105,7 +112,6 @@ tab/space commands are active ONLY when the herdr terminal is focused; in VSCode
 they go inactive and stop shadowing. Verified via registry: herder_nav
 _active_scores tag_count=1, active only under WezTerm.
 
-
 ## 2026-07-22 — Edgar (task-z7bn)
 
 Files: trillium/plugin/mode_indicator/poll_usage.py, trillium/plugin/mode_indicator/accounts.json
@@ -115,6 +121,7 @@ flowing into the mode indicator again. It was dead — mode_indicator_state.json
 had week_percent/five_hour_percent = null and accounts = [].
 
 Root causes + fixes:
+
 - `update_state` only wrote the legacy top-level keys the indicator reads when
   `account_name == "primary"`, but accounts.json named them "acc1"/"acc2" → those
   keys were NEVER written. Fixed: primary is now the FIRST account by position
@@ -130,7 +137,7 @@ Root causes + fixes:
   sub) and uses the live 7-day window; the primary account uses the file-based
   override path.
 - VERIFIED live: restarted com.trillium.poll-usage; state now writes
-  week_percent≈30 (4d21h), five_hour≈9%, static "62%  23c", subscription active.
+  week_percent≈30 (4d21h), five_hour≈9%, static "62% 23c", subscription active.
 
 ## 2026-07-22 — Edgar (task-stke)
 
@@ -226,124 +233,149 @@ NATIVE "line up the next action" API (`set_next_repeat_action` /
 ## 2026-07-14 — session a5b266ee
 
 Files: trillium/core/click_to_finish.py, trillium/core/pondering_hotkey.talon
+
 ## 2026-07-13 — session bfd4ac10
 
 Files: trillium/core/click_to_finish.py
+
 ## 2026-06-29 — session d9615840
 
 Files: plugin/cursorless_scope_support/scope_support_overlay.py, trillium/plugin/mode_indicator/mode_indicator_state.py, trillium/plugin/mode_indicator/rowing_pacer.py, plugin/recall/recall.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-29 — session 41ab6ec1
 
 Files: trillium/plugin/repeater/gaze_ocr_choice.py, trillium/plugin/repeater/repeater.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-22 — session 3bd7bfef
 
 Files: trillium/plugin/mode_indicator/poll_usage.py, trillium/plugin/mode_indicator/ccjuggler.py, trillium/plugin/mode_indicator/accounts.json, trillium/plugin/mode_indicator/scrape_usage.ts, trillium/plugin/mode_indicator/poll_interceptor.ts
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-21 — session 63fec7b8
 
 Files: trillium/anki/anki.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-14 — session 0b84ff3e
 
-Files: core/overlay_kit/primitives.py, core/overlay_kit/styling.py, core/overlay_kit/lifecycle.py, core/overlay_kit/__init__.py, plugin/recall/recall_overlay_shared.py, plugin/cursorless_scope_support/__init__.py, plugin/cursorless_scope_support/scope_support_overlay.py, plugin/cursorless_scope_support/scope_support.talon, plugin/cursorless_scope_support/scope_support_hide.talon
+Files: core/overlay_kit/primitives.py, core/overlay_kit/styling.py, core/overlay_kit/lifecycle.py, core/overlay_kit/**init**.py, plugin/recall/recall_overlay_shared.py, plugin/cursorless_scope_support/**init**.py, plugin/cursorless_scope_support/scope_support_overlay.py, plugin/cursorless_scope_support/scope_support.talon, plugin/cursorless_scope_support/scope_support_hide.talon
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-14 — session e4003b37
 
 Files: plugin/recall/recall_overlay_persistent.py, plugin/recall/recall_session_state.py, plugin/recall/recall_save.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-14 — session b8d5a009
 
 Files: core/vocabulary/vocabulary.talon-list
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-14 — session b9a5ad55
 
 Files: trillium/plugin/mode_indicator/sysmon_graph.py, trillium/plugin/mode_indicator/poll_usage.py, trillium/plugin/mode_indicator/mode_indicator.py, trillium/plugin/mode_indicator/check_subscription_end.py, trillium/plugin/mode_indicator/mode_indicator_state.py, trillium/plugin/mode_indicator/subscription_override.json
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-13 — session b15d7d25
 
 Files: trillium/anki/anki_connect.py, trillium/anki/anki_state.py, trillium/anki/anki_draw.py, trillium/anki/anki.py, trillium/anki/anki.talon, trillium/anki/anki_review.talon, trillium/anki/anki_renderer.py, trillium/anki/anki_ui_elements.py, trillium/anki/anki_parrot.talon
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-11 — session af677811
 
 Files: plugin/recall/recall_overlay_persistent.py, plugin/recall/recall_state.py, plugin/recall/recall_pill_colors.py, plugin/recall/recall_session_state.py, plugin/recall/recall_overlay_draw.py, test/test_claude_pills.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-08 — session 5847490d
 
 Files: settings/words_to_replace.csv
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-06-03 — session d3895255
 
 Files: trillium/mode_indicator/mode_indicator-macbookpro.lan.talon, trillium/plugin/mode_indicator/poll_usage.py, trillium/plugin/mode_indicator/mode_indicator.py, plugin/recall/recall_meta.py, trillium/plugin/speak_history/speak_history.py, trillium/plugin/speak_history/speak_history_overlay.py, trillium/plugin/speak_history/speak_history_all.talon, trillium/plugin/speak_history/speak_history_active.talon, trillium/plugin/mode_indicator/mode_indicator_state.py, core/app_switcher/app_switcher.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-27 — session d3895255
 
 Files: trillium/mode_indicator/mode_indicator-macbookpro.lan.talon, trillium/plugin/mode_indicator/poll_usage.py, trillium/plugin/mode_indicator/mode_indicator.py, plugin/recall/recall_meta.py, trillium/plugin/speak_history/speak_history.py, trillium/plugin/speak_history/speak_history_overlay.py, trillium/plugin/speak_history/speak_history_all.talon, trillium/plugin/speak_history/speak_history_active.talon, trillium/plugin/mode_indicator/mode_indicator_state.py, core/app_switcher/app_switcher.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-25 — session 11199fc5
 
 Files: core/system/logs/logs_data.py, core/system/logs/logs_overlay.py, core/system/logs/logs_draw.py, core/system/logs/logs.py, core/system/logs/logs.talon, core/system/logs/logs_active.talon, core/system/logs/logs_entry_active.talon, core/system/logs/logs_ignore_active.talon, trillium/plugin/mode_indicator/mode_indicator_state.py, trillium/mode_indicator/mode_indicator_commands.talon
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-25 — session b77c3149
 
 Files: plugin/recall/recall_save.py, plugin/recall/recall.py, plugin/recall/recall_meta.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-25 — session 26fe074f
 
 Files: trillium/plugin/mode_indicator/mode_indicator.py, trillium/plugin/mode_indicator/mode_indicator_state.py, trillium/plugin/mode_indicator/sysmon_graph.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-23 — session 953f2d22
 
 Files: trillium/plugin/prose_overlay/prose_overlay.talon, trillium/plugin/prose_overlay/prose_overlay_cursorless.talon
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-23 — session 0f53b1ea
 
 Files: trillium/editor.py, trillium/editor.talon, trillium/editor_test.py, trillium/SPEC.md, trillium/CHANGELOG.md
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-22 — session c77720d6
 
 Files: trillium/plugin/prose_overlay/prose_overlay_actions_js.py, trillium/plugin/prose_overlay/prose_overlay.py, trillium/plugin/prose_overlay/prose_overlay.talon, trillium/plugin/prose_overlay/prose_overlay_state.py, trillium/plugin/prose_overlay/prose_overlay_draw.py, trillium/plugin/prose_overlay/prose_overlay_canvas.py, trillium/plugin/prose_overlay/prose_overlay_cursorless.talon, trillium/plugin/prose_overlay/prose_overlay_hats_js.py, trillium/plugin/prose_overlay/HAT_ALLOC_OVERFLOW_ANALYSIS.md, trillium/plugin/prose_overlay/prose_overlay_start.talon
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-22 — session 0bd6fa08
 
 Files: trillium/plugin/prose_overlay/prose_overlay_draw.py, trillium/plugin/prose_overlay/prose_overlay.py, trillium/plugin/prose_overlay/prose_overlay_canvas.py, trillium/plugin/prose_overlay/prose_overlay.talon, trillium/plugin/prose_overlay/prose_overlay_state.py, trillium/plugin/prose_overlay/prose_overlay_pre_post.talon, trillium/plugin/prose_overlay/prose_overlay_head_tail.talon, trillium/plugin/prose_overlay/prose_overlay_bring_move.talon
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-22 — session 82c7ba45
 
 Files: trillium/plugin/prose_overlay/prose_overlay_hats_js.py, trillium/plugin/prose_overlay/prose_overlay.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-21 — session a5ab8dd3
 
 Files: plugin/recall/recall.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-20 — session 084bbd8f
 
 Files: plugin/recall/recall_save.py, plugin/recall/recall.py, plugin/recall/recall_overlay_persistent.py, plugin/recall/recall_overlay_draw.py, plugin/recall/recall_diag.py
 
 > AI summary pending — check ProjectDocs Handover in next session.
+
 ## 2026-05-19 — session 8c37d892
 
 Files: plugin/recall/recall_overlay.py, plugin/recall/recall_overlay_persistent.py, test/stubs/talon/ui.py, test/test_recall_overlay_persistent.py, test/stubs/talon/canvas.py

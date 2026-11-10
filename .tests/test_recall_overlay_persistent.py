@@ -4,11 +4,11 @@ import pytest
 import talon
 
 if hasattr(talon, "test_mode"):
-    from talon.ui import Rect
     from talon.canvas import MouseEvent
+    from talon.ui import Rect
 
-    from plugin.recall.recall_overlay_shared import _pills_overlap
     from plugin.recall import recall_overlay_persistent as rop
+    from plugin.recall.recall_overlay_shared import _pills_overlap
 
     # ── _pills_overlap ────────────────────────────────────────────────
 

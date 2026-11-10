@@ -7,15 +7,16 @@ from talon.canvas import Canvas
 from talon.screen import Screen
 from talon.skia.canvas import Canvas as SkiaCanvas
 from talon.ui import Rect
+
 from .recall_overlay_shared import (
     HELP_BG_COLOR,
-    HELP_HEADER_SIZE,
     HELP_CMD_SIZE,
-    HELP_TEXT_COLOR,
     HELP_DIM_COLOR,
+    HELP_HEADER_SIZE,
     HELP_PANEL_PAD,
-    _draw_panel_frame,
+    HELP_TEXT_COLOR,
     _draw_close_hint,
+    _draw_panel_frame,
     set_overlay_active,
 )
 
