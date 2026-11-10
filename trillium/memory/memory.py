@@ -70,7 +70,7 @@ def _show_filtered(entries: list[dict], page: str):
 def _refresh_if_visible(entries: list[dict]):
     """Update the overlay if it's currently showing."""
     _update_page_list(entries)
-    if overlay._canvas:
+    if overlay._overlay.is_showing:
         _show_filtered(entries, _current_page)
 
 
@@ -78,7 +78,7 @@ def _on_file_change(path: str, flags):
     """Called by fs.watch when memory.json changes on disk."""
     entries = _load()
     _update_page_list(entries)
-    if overlay._canvas:
+    if overlay._overlay.is_showing:
         _show_filtered(entries, _current_page)
 
 

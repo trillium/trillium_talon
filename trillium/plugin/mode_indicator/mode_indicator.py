@@ -1,6 +1,10 @@
 import json
 from pathlib import Path
 
+try:
+    import skia as _skia_raw  # PathBuilder is not re-exported by talon.skia
+except ImportError:  # test stubs / older Talon: fall back to talon.skia.Path
+    _skia_raw = None
 from talon import Module, app, registry, settings, skia, ui
 from talon.canvas import Canvas
 from talon.screen import Screen
@@ -318,24 +322,27 @@ def on_draw(c: SkiaCanvas):
 
     rad = 8
     bx, by, bw, bh = bar_left, rect.top, bar_right - bar_left, bar_height
-    path = skia.Path()
+    # Newer Talon builds only have skia.PathBuilder; older ones have skia.Path.
+    path = _skia_raw.PathBuilder() if _skia_raw else skia.Path()
+    arc_to = path.arc_to if _skia_raw else path.arc_to_with_oval
     path.move_to(bx, by)
     path.line_to(bx + bw, by)
     path.line_to(bx + bw, by + bh - rad)
-    path.arc_to_with_oval(
+    arc_to(
         Rect(bx + bw - rad * 2, by + bh - rad * 2, rad * 2, rad * 2),
         0,
         90,
         False,
     )
     path.line_to(bx + rad, by + bh)
-    path.arc_to_with_oval(
+    arc_to(
         Rect(bx, by + bh - rad * 2, rad * 2, rad * 2),
         90,
         90,
         False,
     )
     path.close()
+    path = path.detach() if _skia_raw else path
     c.draw_path(path)
 
     # Draw purple border around bar when OBS is streaming/recording

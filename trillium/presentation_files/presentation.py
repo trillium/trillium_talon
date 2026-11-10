@@ -39,10 +39,16 @@ class Actions:
         """Utility for changing slides in presentations"""
         app_name = "beta"
         key_press = "down"
-        actions.user.press_key_after_switch(app_name, key_press)
+        try:
+            actions.user.press_key_after_switch(app_name, key_press)
+        except RuntimeError:
+            actions.user.mode_indicator_flash_failure("Slide deck app not running")
 
     def slide_previous():
         """Utility for changing slides in presentations"""
         app_name = "beta"
         key_press = "up"
-        actions.user.press_key_after_switch(app_name, key_press)
+        try:
+            actions.user.press_key_after_switch(app_name, key_press)
+        except RuntimeError:
+            actions.user.mode_indicator_flash_failure("Slide deck app not running")
