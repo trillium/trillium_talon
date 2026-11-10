@@ -146,6 +146,7 @@ def draw_panel(
     sort_mode: str,
     killed_index: int | None,
     kill_message: str | None,
+    labels: list[str] | None = None,
 ):
     """Draw the full activity monitor panel."""
     screen = ui.main_screen()
@@ -194,7 +195,7 @@ def draw_panel(
     c.paint.textsize = SUBTITLE_SIZE
     c.paint.color = DIM_COLOR
     c.draw_text(
-        f'{row_count} processes  \u00b7  sort: {sort_label}  \u00b7  "kill <n>" to SIGTERM',
+        f'{row_count} processes  \u00b7  sort: {sort_label}  \u00b7  "kill <letter>" to SIGTERM',
         cx,
         cy + SUBTITLE_SIZE,
     )
@@ -223,7 +224,8 @@ def draw_panel(
         c.draw_text("No processes found.", cx, cy + FONT_SIZE)
     else:
         content_w = panel_w - PANEL_PAD * 2
-        labels = overlay_labels(len(rows))
+        if labels is None:
+            labels = overlay_labels(len(rows), mode="letter")
         for i, row in enumerate(rows):
             draw_row(c, row, i, labels[i], cx, cy, content_w, killed_index, sort_mode)
             cy += ROW_HEIGHT
