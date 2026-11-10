@@ -68,6 +68,8 @@ _hold_dir = None
 _proc = None  # the most recent mimic helper, so a newer call can replace it
 _park_proc = None  # the live helper that moved the pointer, if any
 _park_origin = None  # where the pointer was before the first parked helper moved it
+_queue: list = []  # directions of mimic gestures waiting for the one still playing
+_queue_job = None
 _OVERRIDES_FILE = Path(__file__).with_name("overrides.json")
 
 
@@ -330,10 +332,38 @@ def _spawn(args: list):
 
 
 def _mimic(direction: str, park: bool):
-    global _poll_job, _proc, _park_proc
+    global _queue_job
+    if direction not in ("up", "down"):
+        app.notify(f"smooth scroll: direction must be up or down, not {direction}")
+        return
     if not HELPER.exists() or not PROFILE_FILE.exists():
         app.notify("smooth scroll: need the helper and profile.jsonl")
         return
+    if not park and (_queue or (_proc is not None and _proc.poll() is None)):
+        # Chained commands ("demo down demo up") arrive while the first is still
+        # playing. Cutting it off would leave the pair unequal, so wait for it.
+        _queue.append(direction)
+        if _queue_job is None:
+            _queue_job = cron.interval("10ms", _drain_queue)
+        return
+    _queue.clear()  # a parked call replaces whatever was waiting
+    _play(direction, park)
+
+
+def _drain_queue():
+    """Cron tick: start the next waiting gesture once the playing one has finished."""
+    global _queue_job
+    if _queue and _proc is not None and _proc.poll() is None:
+        return
+    if _queue:
+        _play(_queue.pop(0), False)
+    if not _queue:
+        cron.cancel(_queue_job)
+        _queue_job = None
+
+
+def _play(direction: str, park: bool):
+    global _poll_job, _proc, _park_proc
     scale = (
         _get("pixels") / 11
     )  # 11 px/frame is the default, so 1.0 plays the recording as-is
@@ -373,6 +403,7 @@ def _hold(direction: str, park: bool):
     if not HELPER.exists():
         app.notify("smooth scroll: build the helper")
         return
+    _queue.clear()
     HOLD_CONTROL.touch()
     same = (
         _hold_proc is not None and _hold_proc.poll() is None and _hold_dir == direction

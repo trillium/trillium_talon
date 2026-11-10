@@ -131,6 +131,37 @@ fn field(line: &str, key: &str) -> f64 {
     rest[..end].trim().parse().expect("number")
 }
 
+/// +1 plays the recording as captured (it was recorded scrolling "up"); -1 is its exact mirror.
+/// Anything else is refused: a misspelt direction must not quietly scroll the other way.
+fn direction_sign(direction: &str) -> Option<i32> {
+    match direction {
+        "up" => Some(1),
+        "down" => Some(-1),
+        _ => None,
+    }
+}
+
+/// Turns recorded deltas into whole-pixel events. The remainder of the scaling is
+/// carried forward so the gesture's total is exact, and the direction is applied last,
+/// so "down" is the negation of "up" event for event.
+struct Stepper {
+    want: f64,
+    sent: i64,
+}
+
+impl Stepper {
+    fn new() -> Self {
+        Stepper { want: 0.0, sent: 0 }
+    }
+
+    fn next(&mut self, dy: i32, scale: f64, sign: i32) -> i32 {
+        self.want += dy as f64 * scale;
+        let step = (self.want.round() as i64 - self.sent) as i32;
+        self.sent += step as i64;
+        sign * step
+    }
+}
+
 /// Replay one recorded gesture (events split on >300 ms gaps) with original timing.
 fn replay(a: &[String]) {
     let text = fs::read_to_string(&a[2]).expect("recording");
@@ -156,7 +187,13 @@ fn replay(a: &[String]) {
         CFRelease(warm);
     }
     // optional: direction (recording's own direction is "up") and distance scale
-    let flip: i32 = if a.get(5).map(|d| d == "down").unwrap_or(false) { -1 } else { 1 };
+    let flip: i32 = match a.get(5) {
+        None => 1,
+        Some(d) => direction_sign(d).unwrap_or_else(|| {
+            eprintln!("direction must be up or down, got {:?}", d);
+            std::process::exit(2);
+        }),
+    };
     let scale: f64 = a.get(6).map(|v| v.parse().expect("scale")).unwrap_or(1.0);
     let stretch: f64 = a.get(7).map(|v| v.parse().expect("stretch")).unwrap_or(1.0);
     // A newer call cut off a gesture that was still playing: close that one out first.
@@ -165,16 +202,13 @@ fn replay(a: &[String]) {
     }
     let t0 = g[0].0;
     let start = Instant::now();
-    let (mut want, mut sent) = (0.0f64, 0i64);
+    let mut stepper = Stepper::new();
     let mut events: Vec<(u64, i32, char)> = Vec::new();
     for (t, dy, phase, momentum) in g {
         wait_until(start + Duration::from_secs_f64((t - t0) * stretch / 1000.0));
-        // scale with a carried remainder so the total distance is exact
-        want += *dy as f64 * scale;
-        let step = (want.round() as i64 - sent) as i32;
-        sent += step as i64;
-        post(flip * step, *phase, *momentum);
-        events.push((start.elapsed().as_millis() as u64, flip * step, if *momentum != 0 { 'm' } else { 'f' }));
+        let step = stepper.next(*dy, scale, flip);
+        post(step, *phase, *momentum);
+        events.push((start.elapsed().as_millis() as u64, step, if *momentum != 0 { 'm' } else { 'f' }));
     }
     if g.last().map(|e| e.2 != PHASE_ENDED && e.3 == 0).unwrap_or(false) {
         post(0, PHASE_ENDED, 0);
@@ -387,4 +421,41 @@ fn run(a: &[String]) {
     }
 
     write_result(result_path, &events);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn play(dys: &[i32], scale: f64, sign: i32) -> Vec<i32> {
+        let mut s = Stepper::new();
+        dys.iter().map(|d| s.next(*d, scale, sign)).collect()
+    }
+
+    #[test]
+    fn down_is_the_exact_negation_of_up() {
+        let dys = [1, 4, 3, 2, 3, 2, 4, 2, 5, 3, 6, 3, 8, 4, 7, 3, 10, 2, 1, 1];
+        for scale in [0.3, 0.5, 1.0, 1.0 / 3.0, 1.7, 2.5, 4.0] {
+            let (up, down) = (play(&dys, scale, 1), play(&dys, scale, -1));
+            assert!(up.iter().zip(&down).all(|(u, d)| *u == -*d), "scale {}", scale);
+            assert_eq!(up.iter().sum::<i32>() + down.iter().sum::<i32>(), 0);
+        }
+    }
+
+    #[test]
+    fn scaling_keeps_the_total_exact() {
+        let dys = [1, 4, 3, 2, 3, 2, 4, 2, 5, 3];
+        let total: i32 = dys.iter().sum();
+        for scale in [0.3, 1.0, 1.7] {
+            assert_eq!(play(&dys, scale, 1).iter().sum::<i32>(), (total as f64 * scale).round() as i32);
+        }
+    }
+
+    #[test]
+    fn only_up_and_down_are_directions() {
+        assert_eq!(direction_sign("up"), Some(1));
+        assert_eq!(direction_sign("down"), Some(-1));
+        assert_eq!(direction_sign("sideways"), None);
+        assert_eq!(direction_sign(""), None);
+    }
 }
