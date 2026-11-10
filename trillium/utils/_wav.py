@@ -8,11 +8,20 @@ Modified by GitHub user Jcaw.
 """
 
 import functools
+import logging
 import struct
+import subprocess
 import threading
 import wave
 
-from talon.lib import cubeb
+LOGGER = logging.getLogger(__name__)
+
+try:
+    from talon.lib import cubeb
+except ImportError:
+    # talon.lib.cubeb was removed in newer Talon builds; fall back to the
+    # macOS system player so this module still imports and sounds still play.
+    cubeb = None
 
 
 class _WavSource:
@@ -72,8 +81,24 @@ def load_wav(path):
 _players = {}
 
 
+def _play_with_system_player(path):
+    """Play a wav via macOS afplay (used when cubeb is unavailable)."""
+    try:
+        subprocess.Popen(
+            ["afplay", path],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        LOGGER.exception(f"system audio fallback failed for {path}")
+
+
 def play_wav(path):
     global _players
+    if cubeb is None:
+        _play_with_system_player(path)
+        return None
     wav = load_wav(path)
     # Player seems to leak. Creating many players eventually causes audio to
     # corrupt. We can re-use old players to prevent it.

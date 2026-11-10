@@ -7,9 +7,7 @@ Usage (Python):
     from trillium.core.on_phrase.command_logger.schema import CommandHistoryEntry
 """
 
-from typing import Optional
-
-from typing_extensions import TypedDict
+from typing import Optional, TypedDict
 
 
 class WordEntry(TypedDict):

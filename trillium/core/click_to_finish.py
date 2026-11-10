@@ -1,139 +1,118 @@
-"""Pondering mode: extended speech listening with click-to-finish.
+"""Pondering mode: block Talon command recognition, defer to SuperWhisper.
 
-When enabled, speech.timeout is extended so the listening window
-stays open longer. A single tongue-click forces the phrase to end
-by momentarily dropping the VAD timeout to near-zero, then restoring it.
+When enabled, fully disables Talon speech (speech.disable → mode:sleep) so Talon
+takes NO action on anything spoken; SuperWhisper becomes the sole listener.
 
-Toggle with voice command: "pondering"
-Visual indicator: purple bar header when active.
+Entry:  voice "pondering" (Talon opens SuperWhisper for you), or physically
+        pressing the SuperWhisper hotkey — observed *passively* so it falls
+        through to SuperWhisper while Talon just syncs pondering state.
+Exit:   the tongue-click parrot sound (finish), pressing the SuperWhisper hotkey
+        again, "stop pondering" (only if speech is on), or Escape. NOTE: cmere no
+        longer exits — it is the re-enter sound and is inert while pondering.
+Visual indicator: purple bar header + timer while active.
 
-Pondering never touches parrot on/off or command/dictation mode —
-it only rescopes the tongue-click action and adjusts VAD timeout.
+Sound-only submit / re-enter (task-rg2q + task-1rxa) — built on repeater.py's
+NATIVE "line up the next action" facility, not a custom state machine:
+
+    (pondering) tongue-click -> finish pondering + write text
+    On finish we LINE UP the next repeat/opposite actions via repeater:
+        next tongue-click (repeat)  -> submit (default: key Enter)
+        next cmere       (opposite) -> re-enter pondering
+    So click-click submits and leaves pondering; the opposite sound (cmere)
+    drops you back into pondering. repeater executes the lined-up action with
+    its own handler, so there is no competing context to lose — the earlier
+    tag-gated override kept losing the tongue-click to repeater's repeat.
 """
 
 import re
+import time
 
-from talon import Context, Module, actions, clip, cron, settings, speech_system, ui
+from talon import Context, Module, actions, cron, scope, ui
 
 mod = Module()
 
-mod.tag("pondering", desc="Pondering mode — extended speech listening active")
 mod.tag(
-    "pondering_listening",
-    desc="Pondering is listening — tongue-click routes to pondering exit",
+    "sleep_cmere_relaunches_pondering",
+    desc="OPT-IN (off by default): while asleep, kitty-cmere consumes the armed opposite action / re-launches pondering (opens SuperWhisper). Enable with tag(): in a .talon file.",
 )
 
-mod.setting(
-    "pondering_timeout",
-    type=float,
-    default=59.0,
-    desc="Speech timeout when pondering mode is active (seconds).",
-)
-
-mod.setting(
-    "default_speech_timeout",
-    type=float,
-    default=0.5,
-    desc="Default speech timeout to restore after pondering ends (seconds).",
+mod.tag(
+    "pondering",
+    desc="Pondering mode — command recognition blocked, SuperWhisper active",
 )
 
 # Pondering mode indicator color (deep purple)
 PONDERING_COLOR = "7b2fff"
 
+# SuperWhisper activation/submit hotkey — pressing it again submits the dictation.
+SUPERWHISPER_TOGGLE_KEY = "ctrl-alt-cmd-shift-space"
+
+# What the lined-up "submit" (next tongue-click after a finish) presses. Defaults
+# to Enter; a voice command can SET/REPEAT it (Talon-repeat style).
+DEFAULT_SUBMIT_KEY = "enter"
+_submit_key = DEFAULT_SUBMIT_KEY
+
+# Debounce so an accidental fast double tongue-click can't double-submit.
+SUBMIT_DEBOUNCE_S = 1.0
+
 # State
 enabled = False
-exiting = False  # True when tongue click initiated exit, prevents double-exit
-restore_job = None
-timer_job = None
-safety_job = None  # Fallback to force-clear tags if post:phrase never fires
-pondering_seconds = 0
 toggle_ctx = Context()
-listening_ctx = Context()
 
-# Override dictation_insert in pondering context to use clipboard paste (faster)
-pondering_dictation_ctx = Context()
-pondering_dictation_ctx.matches = r"""
-tag: user.pondering
-"""
+# Whether pondering was entered while Talon was asleep. On exit we restore the
+# pre-entry state — sleep stays sleep, command mode stays command mode — instead
+# of always bouncing back to command mode.
+_entered_from_sleep = False
 
+# When WE synthesize the SuperWhisper key (voice/sound/toggle paths), the passive
+# hotkey observer is ignored until this monotonic deadline so our own key event
+# isn't mistaken for a physical press and doesn't re-toggle pondering. A time
+# window (not a cron-cleared flag) so back-to-back synthesized keys just extend it.
+SUPPRESS_HOTKEY_S = 0.8
+_suppress_until = 0.0
 
-@pondering_dictation_ctx.action_class("user")
-class PonderingDictationActions:
-    def insert_between(before: str, after: str):
-        """Paste text via clipboard instead of typing keystrokes."""
-        text = f"{before}{after}"
-        if text:
-            with clip.revert():
-                clip.set_text(text)
-                actions.edit.paste()
-                actions.sleep("150ms")
-            for _ in after:
-                actions.edit.left()
-        print(f"[pondering] pasted {len(text)} chars via clipboard")
+# Noise events can arrive twice a few ms apart (see task-umnrph). Ignore a repeat
+# of the same handler inside this window so one sound = one action.
+NOISE_DEBOUNCE_S = 0.4
+_last_fired: dict = {}
 
-
-# Override noise_tongue_click when pondering is listening (more specific than parrot_on alone)
-pondering_ctx = Context()
-pondering_ctx.matches = r"""
-tag: user.pondering_listening
-tag: user.parrot_on
-mode: command
-mode: dictation
-"""
+# Lined-up follow-ups (click->Enter, cmere->pondering) expire after this long and
+# are cleared as soon as one is used, so a stale arm can't hijack a later sound.
+FOLLOWUP_TTL = "9s"
+_followup_job = None
 
 
-@pondering_ctx.action_class("user")
-class PonderingUserActions:
-    def noise_tongue_click():
-        """Tongue click exits pondering — slam timeout low to flush speech, then restore normal"""
-        global timer_job, exiting, safety_job
-        if exiting:
-            print("[pondering] click — passing through to repeater")
-            actions.next()
-            return
-        print("[pondering] click — exiting pondering mode")
-        exiting = True
-        # Immediately release tongue-click back to repeater
-        listening_ctx.tags = []
-        speech_system.vad.set_timeout(0.01)
-        if timer_job:
-            cron.cancel(timer_job)
-            timer_job = None
-        actions.user.mode_indicator_clear_pondering()
-        actions.user.mode_indicator_clear_color()
-        # Safety net: if post:phrase doesn't fire within 2s, force-clear everything
-        if safety_job:
-            cron.cancel(safety_job)
-        safety_job = cron.after("2s", _safety_cleanup)
+def _debounced(key: str) -> bool:
+    """True if `key` already fired within NOISE_DEBOUNCE_S (caller should skip)."""
+    now = time.monotonic()
+    if now - _last_fired.get(key, -1e9) < NOISE_DEBOUNCE_S:
+        print(f"[pondering] {key} ignored — duplicate within {NOISE_DEBOUNCE_S}s")
+        return True
+    _last_fired[key] = now
+    return False
 
 
-def _safety_cleanup(_=None):
-    """Fallback: force-clear all pondering state if post:phrase never fired.
+def _submit_superwhisper():
+    """Synthesize the SuperWhisper toggle key (paths with no physical press).
 
-    Only clears tags and VAD — never touches parrot or mode.
+    Guards the passive hotkey observer so this synthesized event doesn't get
+    read back as a user press and flip pondering the wrong way. The guard is
+    armed before the key and held for SUPPRESS_HOTKEY_S after it.
     """
-    global enabled, exiting, safety_job
-    safety_job = None
-    if not enabled and not exiting:
-        return
-    print("[pondering] safety net — post:phrase never fired, force-clearing")
-    try:
-        speech_system.unregister("post:phrase", _on_post_phrase)
-    except Exception:
-        pass
-    toggle_ctx.tags = []
-    listening_ctx.tags = []
-    enabled = False
-    exiting = False
-    speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
-    actions.user.mixed_mode()
+    global _suppress_until
+    _suppress_until = time.monotonic() + SUPPRESS_HOTKEY_S
+    actions.key(SUPERWHISPER_TOGGLE_KEY)
+    _suppress_until = time.monotonic() + SUPPRESS_HOTKEY_S
 
 
-def _tick_timer(_=None):
-    global pondering_seconds
-    if enabled:
-        pondering_seconds += 1
-        actions.user.mode_indicator_set_pondering(pondering_seconds)
+# Context for pondering-scoped noise overrides. Two match clauses so it beats
+# parrot.py's single-tag base handler; repeater.py's repeat/reverse overrides
+# require mode:command/dictation and can't match here (pondering == mode:sleep).
+noise_ctx = Context()
+noise_ctx.matches = r"""
+mode: sleep
+and tag: user.pondering
+"""
 
 
 # Submit method used by the click-to-finish Enter, only when focused app is Pi.
@@ -177,132 +156,64 @@ def _submit():
         actions.key("enter")
 
 
-_skip_next_post_phrase = False
-
-
-def _on_post_phrase(d):
-    """Handle phrase end during pondering — either from tongue click or natural timeout."""
-    global enabled, exiting, _skip_next_post_phrase, safety_job
-    if _skip_next_post_phrase:
-        _skip_next_post_phrase = False
-        print("[pondering] post:phrase — skipped (activation phrase)")
-        return
-    if not enabled and not exiting:
-        return
-    speech_system.unregister("post:phrase", _on_post_phrase)
-    toggle_ctx.tags = []
-    listening_ctx.tags = []
-    enabled = False
-    if safety_job:
-        cron.cancel(safety_job)
-        safety_job = None
-    speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
-    actions.user.mixed_mode()
-    # Check if any text was actually captured
-    phrase_words = d.get("phrase", [])
-    has_text = bool(phrase_words)
-    setting = _setting_word(phrase_words)
-    if setting:
-        # "follow"/"steer" alone are settings: swallow, don't submit.
-        _set_submit_method(setting)
-        has_text = False
-    if exiting:
-        exiting = False
-        if has_text:
-            _submit()
-            print(f"[pondering] post:phrase (click) — pasted, sent enter")
-        else:
-            print("[pondering] post:phrase (click) — no text captured, skipping enter")
-    else:
-        # Natural timeout — just exit the mode
-        actions.user.mode_indicator_clear_pondering()
-        actions.user.mode_indicator_clear_color()
-        if timer_job:
-            cron.cancel(timer_job)
-        if has_text:
-            _submit()
-            print(f"[pondering] post:phrase (timeout) — sent enter")
-        else:
-            print(
-                "[pondering] post:phrase (timeout) — no text captured, skipping enter"
-            )
-
-
 def enable():
-    global enabled, exiting, timer_job, pondering_seconds, _skip_next_post_phrase
+    """Enter pondering — pure state, NO SuperWhisper key.
+
+    The voice path relays the key via _submit_superwhisper(); the passive
+    hotkey path relies on the physical press falling through to SuperWhisper.
+    """
+    global enabled, _entered_from_sleep
+    if enabled:
+        return  # already pondering — a repeat must not re-capture the (now sleep) mode
+    # Capture the mode BEFORE speech.disable() drops us into mode:sleep — on
+    # exit we restore whichever state we came from (sleep vs command mode).
+    _entered_from_sleep = "sleep" in scope.get("mode", set())
     enabled = True
-    exiting = False
-    _skip_next_post_phrase = True
-    pondering_seconds = 0
     toggle_ctx.tags = ["user.pondering"]
-    listening_ctx.tags = ["user.pondering_listening"]
-    timeout = settings.get("user.pondering_timeout", 59.0)
-    speech_system.vad.set_timeout(timeout)
+    actions.speech.disable()
     actions.user.mode_indicator_set_color(PONDERING_COLOR)
     actions.user.mode_indicator_set_pondering(0)
-    timer_job = cron.interval("1s", _tick_timer)
-    speech_system.register("post:phrase", _on_post_phrase)
+    print("[pondering] enabled — Talon speech disabled")
 
 
 def disable():
-    global enabled, exiting, restore_job, timer_job, safety_job
+    """Exit pondering — pure state, NO SuperWhisper key."""
+    global enabled, _entered_from_sleep
+    if not enabled:
+        return  # already out of pondering
     enabled = False
-    exiting = False
     toggle_ctx.tags = []
-    listening_ctx.tags = []
-    if safety_job:
-        cron.cancel(safety_job)
-        safety_job = None
-    if restore_job:
-        cron.cancel(restore_job)
-        restore_job = None
-    if timer_job:
-        cron.cancel(timer_job)
-        timer_job = None
-    try:
-        speech_system.unregister("post:phrase", _on_post_phrase)
-    except Exception:
-        pass
-    speech_system.vad.set_timeout(settings.get("user.default_speech_timeout", 0.5))
-    actions.user.mixed_mode()
+    actions.speech.enable()
+    if _entered_from_sleep:
+        # Started asleep (e.g. via repeater's sleep sound) — return to sleep,
+        # not command mode.
+        actions.speech.disable()
+    else:
+        actions.user.command_mode()
+    _entered_from_sleep = False
     actions.user.mode_indicator_clear_pondering()
     actions.user.mode_indicator_clear_color()
-
-
-def end_phrase():
-    """Single click — force phrase end."""
-    global restore_job
-
-    print("[pondering] click — forcing phrase end")
-
-    speech_system.vad.set_timeout(0.01)
-
-    if restore_job:
-        cron.cancel(restore_job)
-
-    def restore(_=None):
-        global restore_job
-        restore_job = None
-        if enabled:
-            timeout = settings.get("user.pondering_timeout", 5.0)
-            speech_system.vad.set_timeout(timeout)
-            print(f"[pondering] timeout restored to {timeout}s")
-
-    restore_job = cron.after("300ms", restore)
+    print("[pondering] disabled — Talon speech restored")
 
 
 @mod.action_class
 class Actions:
     def pondering_toggle():
-        """Toggle pondering mode"""
+        """Toggle pondering (voice/programmatic — drives SuperWhisper via key)"""
         if enabled:
+            _submit_superwhisper()
             disable()
         else:
             enable()
+            _submit_superwhisper()
 
     def pondering_enable():
-        """Enable pondering mode"""
+        """Enable pondering (voice) — Talon opens SuperWhisper for you"""
+        _clear_followups()
+        if enabled:
+            return  # already pondering: don't send the toggle key again (it would close it)
         enable()
+        _submit_superwhisper()
 
     def pondering_disable():
         """Disable pondering mode"""
@@ -313,6 +224,113 @@ class Actions:
         if method in SUBMIT_METHODS:
             _set_submit_method(method)
 
-    def pondering_end_phrase():
-        """Force end the current phrase"""
-        end_phrase()
+    def click_submit_now():
+        """Press the lined-up submit key (default Enter). This is the action a
+        follow-up tongue-click fires via repeater's repeat override."""
+        _clear_followups()  # one-shot: used up
+        if _submit_key == DEFAULT_SUBMIT_KEY:
+            _submit()  # Enter, or the chosen follow/steer key in a Pi terminal
+            print("[click] submit -> default submit")
+        elif _submit_key:
+            actions.key(_submit_key)
+            print(f"[click] submit -> key({_submit_key})")
+
+    def click_submit_key_set(keys: str):
+        """Set what the follow-up click submits (Talon key sequence, e.g. 'enter')"""
+        global _submit_key
+        _submit_key = keys
+        print(f"[click] submit key set to key({keys})")
+
+    def click_submit_key_reset():
+        """Reset the follow-up-click submit key to the default (Enter)"""
+        global _submit_key
+        _submit_key = DEFAULT_SUBMIT_KEY
+        print(f"[click] submit key reset to key({DEFAULT_SUBMIT_KEY})")
+
+    def pondering_hotkey():
+        """Physical SuperWhisper hotkey observed passively — sync pondering only.
+
+        The key is bound with `:passive`, so it falls through to SuperWhisper on
+        its own; Talon does NOT relay a key here. We ignore the event if we just
+        synthesized it ourselves (voice/sound paths).
+        """
+        if time.monotonic() < _suppress_until:
+            return
+        if enabled:
+            disable()
+        else:
+            enable()
+
+
+def _clear_followups():
+    """Drop the lined-up follow-ups and their expiry timer."""
+    global _followup_job
+    if _followup_job is not None:
+        cron.cancel(_followup_job)
+        _followup_job = None
+    actions.user.clear_repeat_overrides()
+
+
+def _expire_followups():
+    global _followup_job
+    _followup_job = None
+    actions.user.clear_repeat_overrides()
+    print("[click] follow-ups expired")
+
+
+def _arm_followups():
+    """Arm the lined-up follow-up sounds via repeater's native override facility:
+      • repeat sound (next tongue-click) -> user.click_submit_now (press Enter)
+      • opposite sound (next cmere)      -> user.pondering_enable (re-dictate)
+    repeater runs the lined-up action with its own handler, so no competing
+    context can steal the sound.
+
+    They are time-limited: cleared after FOLLOWUP_TTL, and as soon as either is
+    used (click_submit_now / pondering_enable). Left armed indefinitely, a later
+    stray cmere or click in any app re-opened SuperWhisper / sent a stray Enter.
+    A real spoken command still clears them too (repeater.on_post_phrase).
+    """
+    global _followup_job
+    if _followup_job is not None:
+        cron.cancel(_followup_job)
+    actions.user.set_next_repeat_action("user", "click_submit_now", [])
+    print("[click] armed repeat -> user.click_submit_now")
+    actions.user.set_next_opposite_action("user", "pondering_enable", [])
+    print("[click] armed opposite -> user.pondering_enable")
+    _followup_job = cron.after(FOLLOWUP_TTL, _expire_followups)
+
+
+def _submit_and_exit():
+    """Finish: submit the in-progress SuperWhisper dictation, leave pondering, then
+    arm the follow-up sounds (submit / re-enter) — synchronously, since the
+    dictation `<phrase>` that used to clear them is now excluded from tracking.
+
+    The dictated text is now in the input box (SuperWhisper submit lands text but
+    does NOT submit the form).
+    """
+    if _debounced("submit_and_exit"):
+        return
+    _submit_superwhisper()
+    disable()
+    _arm_followups()
+
+
+@noise_ctx.action_class("user")
+class PonderingNoiseActions:
+    # While pondering, the tongue-click is the hands-free finish: submit
+    # SuperWhisper + end pondering, then line up the follow-up submit / re-enter
+    # actions (see _submit_and_exit).
+    def noise_tongue_click():
+        if _debounced("noise_tongue_click"):
+            return
+        print("[pondering] tongue-click — submit SuperWhisper + exit pondering")
+        _submit_and_exit()
+
+    # cmere is the RE-ENTER sound (fired via repeater's opposite override when NOT
+    # pondering). While pondering it must be inert — otherwise repeating cmere
+    # toggles pondering off, which Trillium depends on staying on. So we swallow
+    # it here (no exit) instead of finishing.
+    def noise_cmere():
+        if _debounced("noise_cmere"):
+            return
+        print("[pondering] cmere — ignored (re-enter sound; does not end pondering)")

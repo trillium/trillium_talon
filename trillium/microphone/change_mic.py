@@ -1,4 +1,5 @@
 import math
+import subprocess
 import threading
 import time
 from typing import Optional
@@ -40,6 +41,24 @@ def announce_microphone(mic: str):
     microphone_name = mic
     actions.sound.set_microphone(microphone_name)
     # cron.after("3s", gui.hide)
+
+
+# Hook the built-in action itself rather than duplicating the OpenSuperWhisper
+# sync at every call site (change_mic.py's own commands, plus
+# microphone_selection_overlay.py's "microphone pick <N>" picker) — this way
+# ANY caller of actions.sound.set_microphone, present or future, stays in
+# sync with OpenSuperWhisper. Previously only announce_microphone() above did
+# this, so switching mics via the overlay picker silently skipped it.
+@ctx.action_class("sound")
+class SoundActions:
+    def set_microphone(name: str):
+        actions.next(name)
+        if name and name.lower() != "none":
+            subprocess.Popen(
+                ["/Users/trilliumsmith/.local/bin/osw", "mic", name],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
 
 
 @mod.action_class

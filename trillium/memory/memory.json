@@ -31,14 +31,26 @@
         "command": "pacer start [number]",
         "description": "start rowing pacer dot at given strokes per minute (default 18)"
     },
-    { "command": "pacer stop", "description": "stop rowing pacer" },
-    { "command": "pacer toggle", "description": "toggle rowing pacer on/off" },
+    {
+        "command": "pacer stop",
+        "description": "stop rowing pacer"
+    },
+    {
+        "command": "pacer toggle",
+        "description": "toggle rowing pacer on/off"
+    },
     {
         "command": "pacer set <number>",
         "description": "set pacer rate in strokes per minute (10-120)"
     },
-    { "command": "pacer faster", "description": "set pacer to 24 SPM" },
-    { "command": "pacer slower", "description": "set pacer to 16 SPM" },
+    {
+        "command": "pacer faster",
+        "description": "set pacer to 24 SPM"
+    },
+    {
+        "command": "pacer slower",
+        "description": "set pacer to 16 SPM"
+    },
     {
         "command": "scroll up",
         "description": "scroll up 5 lines (mouse wheel style)",
@@ -60,8 +72,16 @@
         "description": "scroll down N lines",
         "page": "tmux"
     },
-    { "command": "tab open", "description": "new window", "page": "tmux" },
-    { "command": "tab next", "description": "next window", "page": "tmux" },
+    {
+        "command": "tab open",
+        "description": "new window",
+        "page": "tmux"
+    },
+    {
+        "command": "tab next",
+        "description": "next window",
+        "page": "tmux"
+    },
     {
         "command": "tab previous",
         "description": "previous window",
@@ -117,7 +137,11 @@
         "description": "toggle pane zoom",
         "page": "tmux"
     },
-    { "command": "split flip", "description": "cycle layouts", "page": "tmux" },
+    {
+        "command": "split flip",
+        "description": "cycle layouts",
+        "page": "tmux"
+    },
     {
         "command": "split clear",
         "description": "kill pane (with confirmation)",
@@ -402,5 +426,125 @@
         "command": "sort combined",
         "description": "sort activity monitor by combined CPU + memory score (also: 'sort hogs')",
         "page": "activity"
+    },
+    {
+        "command": "restore nuke",
+        "description": "re-type the text deleted by the last 'nuke left' (terminal-safe, uses phrase history buffer)",
+        "page": "editing"
+    },
+    {
+        "command": "nuke undo",
+        "description": "alias for 'restore nuke' — re-type text deleted by last nuke left",
+        "page": "editing"
+    },
+    {
+        "command": "show_follow_on_hints",
+        "description": "show transient hint strip with follow-on commands after a primary command (auto-hides after 6s)",
+        "page": "ui"
+    },
+    {
+        "command": "herder <agent>",
+        "description": "focus that agent's herdr pane (e.g. \"herder muse\")",
+        "page": "muse"
+    },
+    {
+        "command": "<agent>",
+        "description": "bare agent name focuses that agent — herdr terminal only (e.g. just \"muse\")",
+        "page": "muse"
+    },
+    {
+        "command": "herder <agent> say <text> [bravely]",
+        "description": "send text to an agent; end with \"bravely\"/\"lap\" to press Enter",
+        "page": "muse"
+    },
+    {
+        "command": "herder next [working | idle | blocked]",
+        "description": "cycle focus through agents, optionally by status",
+        "page": "muse"
+    },
+    {
+        "command": "herder refresh",
+        "description": "re-pull the live agent list from herdr",
+        "page": "muse"
+    },
+    {
+        "command": "prefix",
+        "description": "send herdr's ctrl-b prefix key — herdr terminal only",
+        "page": "muse"
+    },
+    {
+        "command": "prefix <letter>",
+        "description": "ctrl-b then that letter (e.g. \"prefix bat\" → ctrl-b, b) — herdr terminal only",
+        "page": "muse"
+    },
+    {
+        "command": "pane left | right | up | down",
+        "description": "focus the herdr pane in that direction",
+        "page": "muse"
+    },
+    {
+        "command": "pane zoom",
+        "description": "toggle the current pane full-screen",
+        "page": "muse"
+    },
+    {
+        "command": "split right | down",
+        "description": "split the current pane and jump into the new one",
+        "page": "muse"
+    },
+    {
+        "command": "tab next | back | new",
+        "description": "cycle to the next/previous tab, or create one",
+        "page": "muse"
+    },
+    {
+        "command": "space next | back | new",
+        "description": "cycle to the next/previous workspace, or create one",
+        "page": "muse"
+    },
+    {
+        "command": "stow <store> <text>",
+        "description": "capture a thought to a brain store (ideas, robots, decisions, questions...) — never say \"bd\"",
+        "page": "muse"
+    },
+    {
+        "command": "fetch <store> <text>",
+        "description": "type a store search into the focused terminal so results show",
+        "page": "muse"
+    },
+    {
+        "command": "snag <fragment>",
+        "description": "type the on-screen token matching the fragment into the focused pane",
+        "page": "muse"
+    },
+    {
+        "command": "snag copy <fragment>",
+        "description": "copy the matching on-screen token to the clipboard",
+        "page": "muse"
+    },
+    {
+        "command": "snag open <fragment>",
+        "description": "open the matching token if it's a URL or an existing path",
+        "page": "muse"
+    },
+    {
+        "command": "snag from <agent> <fragment>",
+        "description": "cross-pane: pull a token off another agent's pane into yours",
+        "page": "muse"
+    },
+    {
+        "command": "go to <agent>",
+        "description": "focus the herdr pane AND the Parlay tab for that agent",
+        "page": "muse"
+    },
+    {
+        "command": "what can I say",
+        "description": "show the dismissible HUD listing every voice command",
+        "page": "muse"
+    },
+    {
+        "command": "hide keys",
+        "description": "dismiss the command HUD",
+        "page": "muse"
     }
 ]

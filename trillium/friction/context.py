@@ -31,10 +31,18 @@ def get_recent_commands(limit: int = 10) -> list[dict]:
         for line in reversed(lines[-limit:]):
             try:
                 data = json.loads(line)
+                # Extract trigger from v2.x commands array or v1.x command object
+                trigger = ""
+                cmds = data.get("commands")
+                if cmds and isinstance(cmds, list) and len(cmds) > 0:
+                    trigger = cmds[0].get("rule", "") or cmds[0].get("phrase", "")
+                elif "command" in data:
+                    trigger = data["command"].get("trigger", "")
                 commands.append(
                     {
                         "timestamp": data.get("timestamp", ""),
-                        "trigger": data.get("trigger", ""),
+                        "trigger": trigger,
+                        "phrase": data.get("phrase", ""),
                     }
                 )
             except Exception:

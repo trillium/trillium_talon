@@ -22,8 +22,11 @@ TERMINAL_APPS = {
     "xfce4-terminal",
     "Terminator",
     "Tilix",
+    # AI Added: WezTerm + Ghostty (the captain's Herdr hosts).
     "Terminal",
     "iTerm2",
+    "WezTerm",
+    "Ghostty",
 }
 
 

@@ -10,7 +10,7 @@ import subprocess
 
 from talon import Context, Module, actions, cron, ui
 
-from . import herdr_tabs, recall_state
+from . import herdr_tabs, recall_state, reentry_card
 
 mod = Module()
 ctx = Context()
@@ -78,6 +78,12 @@ class Actions:
         # The client's selected machine is UI-only state, so a CLI focus on the
         # wrong machine is invisible. Use the Goto picker whenever the target is
         # remote OR the client is currently viewing a remote machine.
+        target = herdr_tabs.resolve_any(label)
+        # Re-entry card: async, silent, never delays the switch (inbox-8ckg).
+        reentry_card.on_switch(
+            herdr_tabs.clean_label(label),
+            target[2] if target and not target[0] else None,
+        )
         if herdr_tabs.remote_target(label) or _viewing_remote():
             subprocess.run(
                 ["open", "-a", herdr_tabs.HOST_APP],
