@@ -50,10 +50,20 @@ def ss(monkeypatch, tmp_path):
     monkeypatch.setattr(mod, "PROFILE_FILE", profile)
     overrides = {}
     monkeypatch.setattr(mod, "_overrides", overrides)
-    defaults = {"pixels": 11, "frames": 30, "frame_ms": 16, "decay": 0.92, "min_pixels": 0.5}
-    monkeypatch.setattr(mod, "_get", lambda name: overrides.get(name, defaults.get(name)))
+    defaults = {
+        "pixels": 11,
+        "frames": 30,
+        "frame_ms": 16,
+        "decay": 0.92,
+        "min_pixels": 0.5,
+    }
+    monkeypatch.setattr(
+        mod, "_get", lambda name: overrides.get(name, defaults.get(name))
+    )
     spawned, jobs, notes = [], {}, []
-    monkeypatch.setattr(mod, "_spawn", lambda args: spawned.append(FakeProc(args)) or spawned[-1])
+    monkeypatch.setattr(
+        mod, "_spawn", lambda args: spawned.append(FakeProc(args)) or spawned[-1]
+    )
     ids = iter(range(1, 1000))
 
     def interval(_period, fn):
