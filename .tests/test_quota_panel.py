@@ -459,6 +459,7 @@ def test_draw_five_cells_with_labels_values_bars_and_dot(
     panel, mock_canvas, talon_settings
 ):
     talon_settings.set("user.mode_indicator_bar_height", 35)
+    talon_settings.set("user.quota_panel_sort_by_spend", False)
     panel._rows = qd.parse(fixture(), qd.parse_providers(""))
     panel._last_ok = time.time()
     panel.on_draw(mock_canvas)
@@ -488,3 +489,93 @@ def test_apply_result_updates_rows_and_failure_keeps_old_rows(panel):
     kept = panel._rows
     panel._apply(qr.Result(error="quota-axi timed out after 25s"))
     assert panel._failed is True and panel._rows is kept
+
+
+# ── Melanie's account (MEL) and spendPriority ordering ──
+
+
+def _claude(priority, pct=50, generated="2026-10-26T18:59:00Z"):
+    return {
+        "generatedAt": generated,
+        "providers": [
+            {
+                "provider": "claude",
+                "windows": [],
+                "state": {"status": "fresh", "stale": False},
+                "quotaSemantics": {
+                    "effectiveAvailability": [
+                        {
+                            "scope": "all_models",
+                            "effectivePercentRemaining": pct,
+                            "limitingWindowIds": [],
+                            "selection": {"status": "known", "spendPriority": priority},
+                        }
+                    ]
+                },
+            }
+        ],
+    }
+
+
+def test_parse_remote_labels_mel_and_reads_priority():
+    row = qd.parse_remote(_claude(-1.1, pct=0), NOW)
+    assert (row.label, row.provider, row.percent, row.priority) == (
+        "MEL",
+        "claude@melanie",
+        0,
+        -1.1,
+    )
+    assert row.stale is False and row.age == 60
+
+
+def test_parse_remote_old_report_is_stale_with_age():
+    row = qd.parse_remote(_claude(0.5, generated="2026-10-26T15:00:00Z"), NOW)
+    assert row.stale is True
+    (cell,) = qd.build_cells([row], ["claude@melanie"], NOW.timestamp(), NOW.timestamp(), 120)
+    assert cell.sub == "stale 4h" and cell.dim is True
+
+
+@pytest.mark.parametrize("junk", [None, [], {}, {"providers": [{"provider": "codex"}]}])
+def test_parse_remote_junk_is_gray_na_mel(junk):
+    row = qd.parse_remote(junk, NOW)
+    assert (row.label, row.percent, row.note) == ("MEL", None, "n/a")
+
+
+def test_sort_puts_highest_spend_priority_leftmost_and_unknown_last():
+    rows = [qd.Row("a"), qd.Row("b"), qd.Row("c"), qd.Row("d")]
+    rows[0].priority, rows[2].priority, rows[3].priority = -1.0, 2.5, 0.0
+    assert [r.provider for r in qd.sort_by_spend_priority(rows)] == ["c", "d", "a", "b"]
+
+
+def test_remote_argv_is_a_plain_read_only_get():
+    argv = qr.remote_argv("/usr/bin/curl", "http://h:8794/fm_quota/melanie")
+    assert argv[0] == "/usr/bin/curl" and argv[-1].endswith("/fm_quota/melanie")
+    assert "-X" not in argv and "--data" not in argv and "-d" not in argv
+
+
+def test_panel_adds_mel_cell_sorted_by_priority(panel, talon_settings, mock_canvas):
+    talon_settings.set("user.quota_panel_melanie_url", "http://x/fm_quota/melanie")
+    panel._rows = qd.parse(fixture(), qd.parse_providers(""))
+    for r in panel._rows:
+        r.priority = None
+    panel._rows[2].priority = 0.5  # GPT
+    panel._last_ok = time.time()
+    panel._remote_row = qd.parse_remote(_claude(3.0, pct=40))
+    labels = [c.label for c in panel._cells()]
+    assert labels[:2] == ["MEL", "GPT"] and len(labels) == 6
+
+
+def test_panel_without_melanie_url_has_no_mel(panel, talon_settings):
+    talon_settings.set("user.quota_panel_melanie_url", "")
+    panel._rows = qd.parse(fixture(), qd.parse_providers(""))
+    assert "MEL" not in [c.label for c in panel._cells()]
+
+
+def test_remote_failure_dims_mel_and_keeps_last_reading(panel, talon_settings):
+    talon_settings.set("user.quota_panel_melanie_url", "http://x/fm_quota/melanie")
+    panel._rows = qd.parse(fixture(), qd.parse_providers(""))
+    panel._last_ok = time.time()
+    panel._apply_remote(qr.Result(data=_claude(1.0, pct=40)))
+    panel._apply_remote(qr.Result(error="timed out"))
+    mel = next(c for c in panel._cells() if c.label == "MEL")
+    assert mel.value == "40%" and mel.dim is True

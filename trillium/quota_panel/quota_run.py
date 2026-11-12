@@ -18,6 +18,7 @@ import time
 from ..herdr_links.links_scan import find_tool, scan_env
 
 QUOTA_TIMEOUT = 25.0  # uncached worst case seen: 5.5s
+REMOTE_TIMEOUT = 10  # curl --max-time for the receiver read
 MAX_AGE = "60s"  # quota-axi reuses a reading younger than this
 
 
@@ -31,6 +32,12 @@ def quota_argv(tool, providers, max_age=MAX_AGE):
         "--max-age",
         max_age,
     ]
+
+
+def remote_argv(tool, url, timeout=REMOTE_TIMEOUT):
+    """argv to GET Melanie's latest report from the mini0 fm_quota receiver.
+    Read-only: the receiver only serves what her reporter already posted."""
+    return [tool, "-sS", "-f", "--max-time", str(int(timeout)), url]
 
 
 class Result:
@@ -48,8 +55,12 @@ class QuotaRunner:
         clock=time.monotonic,
         timeout=QUOTA_TIMEOUT,
         tmp_dir=None,
+        argv_fn=None,
+        name="quota-axi",
     ):
-        self.tool = tool or find_tool("quota-axi")
+        self.name = name
+        self._argv_fn = argv_fn or quota_argv
+        self.tool = tool or find_tool(name if argv_fn is None else "curl")
         self._popen = popen
         self._clock = clock
         self.timeout = timeout
@@ -72,7 +83,7 @@ class QuotaRunner:
         try:
             with open(out_path, "w") as out:
                 proc = self._popen(
-                    quota_argv(self.tool, providers),
+                    self._argv_fn(self.tool, providers),
                     stdout=out,
                     stderr=subprocess.DEVNULL,
                     stdin=subprocess.DEVNULL,
@@ -80,7 +91,7 @@ class QuotaRunner:
                 )
         except Exception as e:
             _unlink(out_path)
-            return Result(error=f"could not start quota-axi: {e}")
+            return Result(error=f"could not start {self.name}: {e}")
         self.current = (proc, out_path, self._clock())
         return None
 
@@ -97,9 +108,9 @@ class QuotaRunner:
         try:
             data = json.loads(raw)
         except ValueError:
-            return Result(error=f"quota-axi exited {proc.returncode} with no JSON")
+            return Result(error=f"{self.name} exited {proc.returncode} with no JSON")
         if not isinstance(data, dict) or not isinstance(data.get("providers"), list):
-            return Result(error="quota-axi JSON has no providers")
+            return Result(error=f"{self.name} JSON has no providers")
         return Result(data=data)
 
     def _kill(self):
@@ -111,7 +122,7 @@ class QuotaRunner:
         except Exception:
             pass
         _unlink(out_path)
-        return Result(error=f"quota-axi timed out after {self.timeout:.0f}s")
+        return Result(error=f"{self.name} timed out after {self.timeout:.0f}s")
 
     def tick(self):
         """Poll the running read. Returns a Result when one finished, else None.

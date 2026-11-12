@@ -17,7 +17,7 @@ from talon.canvas import Canvas
 from talon.ui import Rect
 
 from . import quota_data
-from .quota_run import QuotaRunner
+from .quota_run import QuotaRunner, remote_argv
 
 mod = Module()
 mod.setting(
@@ -51,6 +51,19 @@ mod.setting(
     desc="Left edge of the panel (0-1 fraction of screen width). 0 = just right of the mode indicator bar",
 )
 
+mod.setting(
+    "quota_panel_melanie_url",
+    type=str,
+    default="http://100.84.99.99:8794/fm_quota/melanie",
+    desc="mini0 fm_quota receiver URL for Melanie's Claude account (read only); empty hides her cell",
+)
+mod.setting(
+    "quota_panel_sort_by_spend",
+    type=bool,
+    default=True,
+    desc="If true the cells are ordered by quota-axi spendPriority, highest (spend first) leftmost",
+)
+
 MIN_INTERVAL = 30
 FIRST_POLL_DELAY = 3  # seconds after load before the first read
 PAD = 4
@@ -59,6 +72,9 @@ PANEL_BORDER = "4a4a6acc"
 TEXT = "ffffff"
 
 _runner = QuotaRunner()
+_remote_runner = QuotaRunner(argv_fn=remote_argv, name="fm_quota receiver")
+_remote_row = None  # quota_data.Row for Melanie after the first good read
+_remote_failed = False
 _loaded_at = time.time()
 _last_start = 0.0
 _force = False
@@ -84,9 +100,31 @@ def _interval():
     return max(MIN_INTERVAL, int(_get("user.quota_panel_interval", 120)))
 
 
+def _remote_url():
+    return str(_get("user.quota_panel_melanie_url", "") or "").strip()
+
+
+def _display_rows():
+    """Local rows plus Melanie's, ordered by spendPriority when that is on."""
+    rows = list(_rows or [])
+    if _remote_url():
+        row = _remote_row
+        if row is None:
+            row = quota_data.Row(quota_data.REMOTE_PROVIDER)
+            row.note = "err" if _remote_failed else "…"
+        elif _remote_failed:
+            row.stale = True
+        rows.append(row)
+    if _get("user.quota_panel_sort_by_spend", True):
+        rows = quota_data.sort_by_spend_priority(rows)
+    return rows
+
+
 def _cells(now=None):
+    wanted = _providers() + ([quota_data.REMOTE_PROVIDER] if _remote_url() else [])
+    rows = _display_rows() if _rows is not None else None
     return quota_data.build_cells(
-        _rows, _providers(), now or time.time(), _last_ok, _interval(), _failed
+        rows, wanted, now or time.time(), _last_ok, _interval(), _failed
     )
 
 
@@ -224,6 +262,17 @@ def _apply(result):
     _redraw()
 
 
+def _apply_remote(result):
+    global _remote_row, _remote_failed
+    if result.error:
+        _remote_failed = True
+        print(f"[quota_panel] {result.error}")
+    else:
+        _remote_row = quota_data.parse_remote(result.data)
+        _remote_failed = False
+    _redraw()
+
+
 def _tick():
     """Cron (1s): poll the runner, schedule reads, keep the canvas in sync.
     Never blocks."""
@@ -233,16 +282,25 @@ def _tick():
         result = _runner.tick()
         if result is not None:
             _apply(result)
-        if not canvas or _runner.busy:
+        remote = _remote_runner.tick()
+        if remote is not None:
+            _apply_remote(remote)
+        if not canvas:
             return
         now = time.time()
         due = now - _last_start >= _interval()
         if _force or (due and now - _loaded_at >= FIRST_POLL_DELAY):
             _force = False
             _last_start = now
-            failed = _runner.start(_providers())
-            if failed is not None:
-                _apply(failed)
+            if not _runner.busy:
+                failed = _runner.start(_providers())
+                if failed is not None:
+                    _apply(failed)
+            url = _remote_url()
+            if url and not _remote_runner.busy:
+                failed = _remote_runner.start(url)
+                if failed is not None:
+                    _apply_remote(failed)
     except Exception as e:
         print(f"[quota_panel] tick failed: {e}")
 

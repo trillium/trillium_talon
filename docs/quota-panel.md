@@ -21,6 +21,22 @@ It replaces the Claude-only usage text in the bar. That text came from
   Fable week) is at 0.
 - Redraw on every result and every 30s (countdowns).
 
+## Melanie's Claude account (`MEL`) and ordering
+
+- A sixth cell, `MEL`, is Melanie's Claude account. It is read only from the
+  mini0 fm_quota receiver (`user.quota_panel_melanie_url`, a plain GET of the
+  latest report her reporter already posted; same JSON shape as quota-axi).
+  Nothing probes her plan. A second child process (`curl`, same cron-polled
+  runner as quota-axi) fetches it on every read.
+- A report older than 15 minutes (by its `generatedAt`) is dimmed and says
+  `stale 3h`. Her reporter lapses when `claude` is off its job PATH
+  (task-gje1f). A failed fetch dims the last reading; set the URL empty to
+  hide the cell.
+- Cells are ordered by quota-axi `selection.spendPriority` of each headline
+  scope, highest (spend this account first) leftmost. A cell with no priority
+  (login, setup, n/a) goes last in its usual order. `quota_panel_sort_by_spend =
+  false` restores the fixed `CC OC GPT GRK AGY MEL` order.
+
 ## Colors (percent left)
 
 | Left       | Color                               |
@@ -44,7 +60,7 @@ Runway bumps: `projected_exhaustion` is at least orange, `exhausted_now` red.
 
 `user.quota_panel_show` (on in `trillium/mode_indicator/mode_indicator.talon`),
 `quota_panel_interval` (120s, min 30), `quota_panel_providers`,
-`quota_panel_cell_w` (66px), `quota_panel_left_x` (0 = auto, right of the bar).
+`quota_panel_melanie_url`, `quota_panel_sort_by_spend`, `quota_panel_cell_w` (66px), `quota_panel_left_x` (0 = auto, right of the bar).
 `user.mode_indicator_show_usage = false` hides the old usage text. Voice:
 `quota refresh`.
 
