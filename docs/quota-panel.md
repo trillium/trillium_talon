@@ -35,7 +35,7 @@ It replaces the Claude-only usage text in the bar. That text came from
 - Cells are ordered by quota-axi `selection.spendPriority` of each headline
   scope, highest (spend this account first) leftmost. A cell with no priority
   (login, setup, n/a) goes last in its usual order. `quota_panel_sort_by_spend =
-  false` restores the fixed `CC OC GPT GRK AGY MEL` order.
+false` restores the fixed `CC OC GPT GRK AGY MEL` order.
 
 ## Colors (percent left)
 

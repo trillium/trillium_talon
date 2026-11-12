@@ -531,7 +531,9 @@ def test_parse_remote_labels_mel_and_reads_priority():
 def test_parse_remote_old_report_is_stale_with_age():
     row = qd.parse_remote(_claude(0.5, generated="2026-10-26T15:00:00Z"), NOW)
     assert row.stale is True
-    (cell,) = qd.build_cells([row], ["claude@melanie"], NOW.timestamp(), NOW.timestamp(), 120)
+    (cell,) = qd.build_cells(
+        [row], ["claude@melanie"], NOW.timestamp(), NOW.timestamp(), 120
+    )
     assert cell.sub == "stale 4h" and cell.dim is True
 
 
