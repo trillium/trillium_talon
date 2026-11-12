@@ -21,6 +21,11 @@ LABELS = {
     "grok": "GRK",
     "agy": "AGY",
 }
+# Melanie's Claude account, read from the mini0 fm_quota receiver (never probed).
+REMOTE_PROVIDER = "claude@melanie"
+REMOTE_LABEL = "MEL"
+# Her reporter posts every few minutes; older than this the reading is stale.
+REMOTE_STALE_AFTER = 15 * 60
 DEFAULT_PROVIDERS = ",".join(LABELS)
 
 # Percent LEFT thresholds (>=): green 50, yellow 25, orange 10, else red.
@@ -44,6 +49,8 @@ class Row:
         "resets_at",
         "dot",
         "stale",
+        "priority",
+        "age",
     )
 
     def __init__(self, provider, percent=None, color=GRAY, note="", resets_at=None):
@@ -55,6 +62,8 @@ class Row:
         self.resets_at = resets_at
         self.dot = False  # another scope (e.g. one model) is at 0
         self.stale = False
+        self.priority = None  # quota-axi spendPriority: higher = spend first
+        self.age = None  # seconds since a remote reading was made, else None
 
 
 class Cell:
@@ -68,6 +77,8 @@ class Cell:
 
 
 def label_for(provider: str) -> str:
+    if provider == REMOTE_PROVIDER:
+        return REMOTE_LABEL
     return LABELS.get(provider) or str(provider)[:3].upper()
 
 
@@ -170,6 +181,15 @@ def _limiting_reset(provider, entry):
     return parse_iso(tight.get("resetsAt"))
 
 
+def _priority(entry):
+    """quota-axi `selection.spendPriority` (higher = spend this account first), or None."""
+    sel = entry.get("selection") if isinstance(entry, dict) else None
+    value = sel.get("spendPriority") if isinstance(sel, dict) else None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
 def _note(provider: dict) -> str:
     """Short reason a provider has no usable reading ('' when it is fine)."""
     state = provider.get("state") if isinstance(provider.get("state"), dict) else {}
@@ -206,6 +226,7 @@ def parse_provider(provider: dict) -> Row:
         row.percent = _pct(head["effectivePercentRemaining"])
         row.color = color_for(row.percent, _runway(head))
         row.resets_at = _limiting_reset(provider, head)
+        row.priority = _priority(head)
         row.dot = any(
             e is not head and _pct(e["effectivePercentRemaining"]) == 0 for e in entries
         )
@@ -245,6 +266,41 @@ def parse(raw, providers=None) -> list[Row]:
     return rows
 
 
+def parse_remote(raw, now=None) -> Row:
+    """Melanie's Claude report (the receiver returns quota-axi's JSON shape)
+    -> one Row labeled MEL. Older than REMOTE_STALE_AFTER by `generatedAt` marks
+    it stale with its age. Junk or no claude entry gives a gray 'n/a' row."""
+    items = raw.get("providers") if isinstance(raw, dict) else None
+    claude = next(
+        (
+            p
+            for p in (items if isinstance(items, list) else [])
+            if isinstance(p, dict) and p.get("provider") == "claude"
+        ),
+        None,
+    )
+    row = parse_provider(claude) if claude else Row("claude")
+    if not claude:
+        row.note = "n/a"
+    row.provider = REMOTE_PROVIDER
+    row.label = REMOTE_LABEL
+    made = parse_iso(raw.get("generatedAt")) if isinstance(raw, dict) else None
+    if made is not None:
+        now = now or datetime.now(timezone.utc)
+        row.age = max(0.0, (now - made).total_seconds())
+        if row.age > REMOTE_STALE_AFTER:
+            row.stale = True
+    return row
+
+
+def sort_by_spend_priority(rows) -> list[Row]:
+    """Account likely to be used first leftmost: spendPriority descending.
+    Rows with no priority keep their order, after every row that has one."""
+    ranked = [r for r in rows if r.priority is not None]
+    rest = [r for r in rows if r.priority is None]
+    return sorted(ranked, key=lambda r: -r.priority) + rest
+
+
 STALE_AFTER_INTERVALS = 3
 
 
@@ -272,7 +328,11 @@ def build_cells(rows, wanted, now, last_ok, interval, failed=False) -> list[Cell
         elif failed:
             sub = f"! {sub}".strip()
         elif row.stale:
-            sub = f"stale {sub}".strip()
+            sub = (
+                f"stale {format_age(row.age)}"
+                if row.age is not None
+                else f"stale {sub}".strip()
+            )
         cells.append(
             Cell(
                 row.label,
