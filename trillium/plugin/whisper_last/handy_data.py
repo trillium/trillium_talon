@@ -39,9 +39,7 @@ def get_latest(db_path: Path | None = None) -> tuple[float, str] | None:
     return float(row[0]), row[1]
 
 
-def get_since(
-    cursor: float, db_path: Path | None = None
-) -> list[tuple[float, str]]:
+def get_since(cursor: float, db_path: Path | None = None) -> list[tuple[float, str]]:
     """Return [(unix_seconds, text)] of non-empty rows strictly newer than cursor, oldest first."""
     path = db_path or DB_PATH
     if not path.exists():

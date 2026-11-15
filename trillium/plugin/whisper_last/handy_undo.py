@@ -42,7 +42,9 @@ def on_ready():
     _last_consumed_ts = latest[0] if latest else 0.0
     if WATCH_DIR.is_dir():
         fs.watch(str(WATCH_DIR), _on_db_change)
-        print(f"[handy_undo] Ready - watching {WATCH_DIR} (baseline {_last_consumed_ts})")
+        print(
+            f"[handy_undo] Ready - watching {WATCH_DIR} (baseline {_last_consumed_ts})"
+        )
     else:
         print(f"[handy_undo] Handy db dir not found ({WATCH_DIR}); Handy undo inactive")
 

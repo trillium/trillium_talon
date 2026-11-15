@@ -41,7 +41,6 @@ import logging
 from talon import actions, app, fs
 
 from . import whisper_data
-
 from .trailing_insert import resolve_trailing_insert as _resolve_trailing_insert
 
 # Watch the DB's PARENT directory, not the file itself: SQLite WAL commits land

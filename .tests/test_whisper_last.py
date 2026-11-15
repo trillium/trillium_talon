@@ -91,7 +91,9 @@ def test_whisper_timestamp_parse():
 def test_handy_get_since(tmp_path):
     db = tmp_path / "h.db"
     c = sqlite3.connect(db)
-    c.execute("CREATE TABLE transcription_history (timestamp INTEGER, transcription_text TEXT)")
+    c.execute(
+        "CREATE TABLE transcription_history (timestamp INTEGER, transcription_text TEXT)"
+    )
     c.executemany(
         "INSERT INTO transcription_history VALUES (?, ?)",
         [(10, "old"), (30, "newest"), (20, "mid"), (40, "")],
