@@ -51,8 +51,6 @@ HOSTS = _machine_labels(SSH_HOSTS)
 # of these; EXTRA_ALLOWED re-admits specific labels (e.g. "fm-advisor").
 FM_PREFIXES = ("fm-",)
 EXTRA_ALLOWED = []
-# Never let a dead host stall a refresh; BatchMode forbids password prompts.
-SSH_OPTS = ["-o", "ConnectTimeout=3", "-o", "BatchMode=yes"]
 # Consecutive failed refreshes before a host's stale cache is dropped.
 MAX_MISSES = 3
 
@@ -61,9 +59,9 @@ _misses = {}  # host-key -> consecutive failed refreshes
 
 
 def herdr_cmd(args, host=None):
-    """argv for a herdr call, local or `ssh <host> herdr ...` for a remote leg."""
-    argv = [HERDR, *args]
-    return ["ssh", *SSH_OPTS, host, *argv] if host else argv
+    """argv for a herdr call, local or `herdr --machine <label> ...` for a
+    remote leg (`host` is a herdr machine label, not an ssh alias)."""
+    return [HERDR, "--machine", host, *args] if host else [HERDR, *args]
 
 
 def fetch_tabs(host=None):

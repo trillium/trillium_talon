@@ -1,0 +1,3 @@
+$ herdr --machine mini0-zephyr tab list (labels only)
+💎0️⃣ zephyr
+💎0️⃣ Porter
