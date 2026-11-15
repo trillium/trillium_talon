@@ -347,7 +347,9 @@ def test_machine_labels_enabled_only(monkeypatch):
     monkeypatch.setattr(
         ht.subprocess,
         "run",
-        lambda argv, **kw: subprocess.CompletedProcess(argv, 0, stdout=MACHINE_LIST, stderr=""),
+        lambda argv, **kw: subprocess.CompletedProcess(
+            argv, 0, stdout=MACHINE_LIST, stderr=""
+        ),
     )
     assert ht._machine_labels() == ["mini0-zephyr", "m1studio1", "m2mini0"]
 

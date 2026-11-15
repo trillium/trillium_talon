@@ -24,6 +24,7 @@ HOST_APP = "WezTerm"
 CACHE_TTL = 10.0
 TIMEOUT = 5
 
+
 def _machine_labels():
     """Labels (column 2) of every machine marked enabled in `herdr machine
     list` (tab-separated: id, label, target, session, state). `--machine`

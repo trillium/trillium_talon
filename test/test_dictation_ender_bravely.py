@@ -91,9 +91,9 @@ def test_recall_dictate_plus_ender_presses_enter():
     assert "user.dictate_to_window_and_enter(saved_window_names, raw_prose)" in rule
 
     # The prose-only rule must not be the one that handles an ender phrase.
-    swallow = body.split(
-        "^<user.saved_window_names> <user.raw_prose>$:", 1
-    )[1].split("\n^", 1)[0]
+    swallow = body.split("^<user.saved_window_names> <user.raw_prose>$:", 1)[1].split(
+        "\n^", 1
+    )[0]
     assert "dictate_to_window_and_enter" not in swallow
     assert "key(enter)" not in swallow
 
