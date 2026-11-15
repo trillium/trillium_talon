@@ -37,3 +37,27 @@ def get_latest(db_path: Path | None = None) -> tuple[float, str] | None:
     if not row:
         return None
     return float(row[0]), row[1]
+
+
+def get_since(
+    cursor: float, db_path: Path | None = None
+) -> list[tuple[float, str]]:
+    """Return [(unix_seconds, text)] of non-empty rows strictly newer than cursor, oldest first."""
+    path = db_path or DB_PATH
+    if not path.exists():
+        return []
+    conn = None
+    try:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        rows = conn.execute(
+            "SELECT timestamp, transcription_text FROM transcription_history "
+            "WHERE transcription_text IS NOT NULL AND transcription_text != '' "
+            "AND timestamp > ? ORDER BY timestamp ASC",
+            (cursor,),
+        ).fetchall()
+    except sqlite3.Error:
+        return []
+    finally:
+        if conn is not None:
+            conn.close()
+    return [(float(ts), text) for ts, text in rows]

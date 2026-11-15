@@ -86,3 +86,18 @@ def test_corrupt_handy_db_is_none(tmp_path):
 def test_whisper_timestamp_parse():
     assert ld._whisper_timestamp_to_unix("1970-01-01 00:01:00.500") == 60.5
     assert ld._whisper_timestamp_to_unix("garbage") is None
+
+
+def test_handy_get_since(tmp_path):
+    db = tmp_path / "h.db"
+    c = sqlite3.connect(db)
+    c.execute("CREATE TABLE transcription_history (timestamp INTEGER, transcription_text TEXT)")
+    c.executemany(
+        "INSERT INTO transcription_history VALUES (?, ?)",
+        [(10, "old"), (30, "newest"), (20, "mid"), (40, "")],
+    )
+    c.commit()
+    c.close()
+    assert handy_data.get_since(10, db) == [(20.0, "mid"), (30.0, "newest")]
+    assert handy_data.get_since(30, db) == []
+    assert handy_data.get_since(0, tmp_path / "nope.db") == []
