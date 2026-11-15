@@ -328,3 +328,43 @@ def test_step_local_tab_noop_runs_no_focus(fresh):
     fresh.tabs = [_t("wA", 1, focused=True)]
     assert ht.step_local_tab(-1) is False
     assert fresh.calls == [["herdr", "tab", "list"]]
+
+
+# --- host list built from `herdr machine list` ---
+
+MACHINE_LIST = "\n".join(
+    [
+        "a1\tmini0-zephyr\tmini0\tdefault\tenabled",
+        "b2\tm1studio1\tm1studio1@host.ts.net\tdefault\tenabled",
+        "c3\tm2mini0\tm2mini0@host2.ts.net\tdefault\tenabled",
+        "d4\told-box\told-box\tdefault\tdisabled",
+        "garbage line",
+    ]
+)
+
+
+def test_machine_labels_enabled_only(monkeypatch):
+    monkeypatch.setattr(
+        ht.subprocess,
+        "run",
+        lambda argv, **kw: subprocess.CompletedProcess(argv, 0, stdout=MACHINE_LIST, stderr=""),
+    )
+    assert ht._machine_labels() == ["mini0-zephyr", "m1studio1", "m2mini0"]
+
+
+def test_machine_labels_never_raises(monkeypatch):
+    def boom(argv, **kw):
+        raise FileNotFoundError("herdr")
+
+    monkeypatch.setattr(ht.subprocess, "run", boom)
+    assert ht._machine_labels() == []
+
+
+def test_stutter_and_dozer_resolve(monkeypatch):
+    stutter = [{"label": "💎🎛️ Stutter", "tab_id": "wS:t1", "workspace_id": "wS"}]
+    dozer = [{"label": "💎🚜 Dozer", "tab_id": "wD:t1", "workspace_id": "wD"}]
+    _multi(monkeypatch, {None: TABS, "m1studio1": stutter, "m2mini0": dozer})
+    hosts = ["m1studio1", "m2mini0"]
+    ht.refresh_all(hosts)
+    assert ht.resolve_any("Stutter", hosts) == ("m1studio1", "wS", "wS:t1")
+    assert ht.resolve_any("Dozer", hosts) == ("m2mini0", "wD", "wD:t1")
