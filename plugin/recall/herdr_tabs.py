@@ -24,11 +24,15 @@ HOST_APP = "WezTerm"
 CACHE_TTL = 10.0
 TIMEOUT = 5
 
+# Used when `herdr machine list` fails or lists nothing enabled.
+FALLBACK_HOSTS = ["mini0", "mini1"]
+
 
 def _machine_labels():
     """Labels (column 2) of every machine marked enabled in `herdr machine
     list` (tab-separated: id, label, target, session, state). `--machine`
-    takes the label. Never raises; returns [] on failure."""
+    takes the label. Never raises; falls back to FALLBACK_HOSTS on failure or
+    when no machine is enabled."""
     try:
         out = subprocess.run(
             [HERDR, "machine", "list"], capture_output=True, text=True, timeout=TIMEOUT
@@ -38,9 +42,9 @@ def _machine_labels():
             cols = line.split("\t")
             if len(cols) >= 5 and cols[4].strip() == "enabled" and cols[1].strip():
                 labels.append(cols[1].strip())
-        return labels
+        return labels or list(FALLBACK_HOSTS)
     except Exception:
-        return []
+        return list(FALLBACK_HOSTS)
 
 
 # Remote hosts whose tabs join the spoken list: every enabled herdr machine,

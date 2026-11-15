@@ -359,7 +359,16 @@ def test_machine_labels_never_raises(monkeypatch):
         raise FileNotFoundError("herdr")
 
     monkeypatch.setattr(ht.subprocess, "run", boom)
-    assert ht._machine_labels() == []
+    assert ht._machine_labels() == ["mini0", "mini1"]
+
+
+def test_machine_labels_empty_list_falls_back(monkeypatch):
+    monkeypatch.setattr(
+        ht.subprocess,
+        "run",
+        lambda argv, **kw: subprocess.CompletedProcess(argv, 0, stdout="", stderr=""),
+    )
+    assert ht._machine_labels() == ["mini0", "mini1"]
 
 
 def test_stutter_and_dozer_resolve(monkeypatch):
