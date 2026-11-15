@@ -95,8 +95,8 @@ settings():
     # TALON_PALETTE_OPEN_EXECUTE win over these.
     # Details, the full matrix and the warnings: docs/palette-feed.md.
     user.palette_feed_bind = "127.0.0.1"
-    user.palette_feed_open_reads = false
-    # user.palette_feed_open_execute = true
+    user.palette_feed_open_reads = true
+    user.palette_feed_open_execute = true
 
 # Uncomment to enable the curse yes/curse no commands (show/hide mouse cursor).
 # See issue #688 for more detail: https://github.com/talonhub/community/issues/688
