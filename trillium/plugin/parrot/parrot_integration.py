@@ -438,10 +438,8 @@ class Delegate(ParrotDelegate):
             if pattern.detect(frame):
                 active.add(pattern.name)
                 winner_label, winner_prob = next(iter(frame.classes.items()))
-                confidence_msg = f"\n{winner_prob * 100:.1f}%"
                 # Store the confidence score globally so it can be accessed by other modules
                 last_parrot_confidence = winner_prob * 100
-                actions.user.notify(confidence_msg, 1)
                 self.throttle_patterns(pattern.get_throttles(), frame.ts)
 
         clips.frame(frame, active, self.probe_patterns)
