@@ -98,27 +98,25 @@ def test_no_fetch_mode_never_runs_subprocess(fresh):
     assert fresh.calls == []
 
 
-def test_ssh_command_construction():
+def test_machine_command_construction():
     assert ht.herdr_cmd(["tab", "list"]) == ["herdr", "tab", "list"]
     assert ht.herdr_cmd(["tab", "list"], "box") == [
-        "ssh",
-        *ht.SSH_OPTS,
-        "box",
         "herdr",
+        "--machine",
+        "box",
         "tab",
         "list",
     ]
     assert ht.focus_commands("w1", "w1:t2", "box") == [
-        ["ssh", *ht.SSH_OPTS, "box", "herdr", "workspace", "focus", "w1"],
-        ["ssh", *ht.SSH_OPTS, "box", "herdr", "tab", "focus", "w1:t2"],
+        ["herdr", "--machine", "box", "workspace", "focus", "w1"],
+        ["herdr", "--machine", "box", "tab", "focus", "w1:t2"],
         ["open", "-a", "WezTerm"],
     ]
 
 
-def test_remote_fetch_uses_ssh_and_separate_cache(fresh):
+def test_remote_fetch_uses_machine_and_separate_cache(fresh):
     assert ht.resolve("mayor", host="box") == ("wY7", "wY7:t5Q")
-    assert fresh.calls[0][:2] == ["ssh", "-o"]
-    assert "box" in fresh.calls[0]
+    assert fresh.calls[0][:3] == ["herdr", "--machine", "box"]
     ht.resolve("mayor")
     assert len(fresh.calls) == 2
 
@@ -189,7 +187,7 @@ class MultiRun:
 
     def __call__(self, argv, **kw):
         self.calls.append(argv)
-        host = argv[argv.index("herdr") - 1] if argv[0] == "ssh" else None
+        host = argv[2] if argv[1:2] == ["--machine"] else None
         val = self.by_host.get(host)
         if isinstance(val, Exception):
             raise val
@@ -203,15 +201,15 @@ def _multi(monkeypatch, by_host):
     return run
 
 
-def test_remote_tab_resolves_and_focuses_with_ssh_argv(monkeypatch):
+def test_remote_tab_resolves_and_focuses_with_machine_argv(monkeypatch):
     run = _multi(monkeypatch, {None: TABS, "mini0": ZEPHYR})
     ht.refresh_all(["mini0"])
     assert ht.resolve_any("zephyr", ["mini0"]) == ("mini0", "wK", "wK:t2")
     run.calls.clear()
     assert ht.focus_any("Zephyr", ["mini0"]) is True
     assert run.calls == [
-        ["ssh", *ht.SSH_OPTS, "mini0", "herdr", "workspace", "focus", "wK"],
-        ["ssh", *ht.SSH_OPTS, "mini0", "herdr", "tab", "focus", "wK:t2"],
+        ["herdr", "--machine", "mini0", "workspace", "focus", "wK"],
+        ["herdr", "--machine", "mini0", "tab", "focus", "wK:t2"],
         ["open", "-a", "WezTerm"],
     ]
 
