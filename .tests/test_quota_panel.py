@@ -427,6 +427,10 @@ def panel(monkeypatch, talon_settings):
     monkeypatch.setattr(qp, "_rows", None)
     monkeypatch.setattr(qp, "_last_ok", 0.0)
     monkeypatch.setattr(qp, "_failed", False)
+    monkeypatch.setattr(qp, "_remote_row", None)
+    monkeypatch.setattr(qp, "_remote_good", None)
+    monkeypatch.setattr(qp, "_remote_good_loaded", True)
+    monkeypatch.setattr(qp, "LAST_GOOD_PATH", "/nonexistent-dir-qp/none.json")
     monkeypatch.setattr(qp, "_draw_frame", lambda *a, **k: None)
     monkeypatch.setattr(qp.ui, "main_screen", lambda: _Screen(), raising=False)
     return qp
@@ -581,3 +585,55 @@ def test_remote_failure_dims_mel_and_keeps_last_reading(panel, talon_settings):
     panel._apply_remote(qr.Result(error="timed out"))
     mel = next(c for c in panel._cells() if c.label == "MEL")
     assert mel.value == "40%" and mel.dim is True
+
+
+def _expired():
+    return {
+        "generatedAt": "2026-11-18T19:40:00Z",
+        "providers": [
+            {
+                "provider": "claude",
+                "windows": [],
+                "state": {
+                    "status": "unavailable",
+                    "stale": False,
+                    "authStatus": "expired_refreshable",
+                },
+                "quotaSemantics": {"status": "unknown", "effectiveAvailability": []},
+            }
+        ],
+    }
+
+
+def test_no_number_report_falls_back_to_last_good_marked_stale():
+    good = _claude(1.0, pct=40, generated="2026-11-18T10:00:00Z")
+    row, kept = qd.parse_remote_with_fallback(
+        _expired(), good, qd.parse_iso("2026-11-18T13:00:00Z")
+    )
+    assert (row.percent, row.stale, row.age) == (40, True, 3 * 3600)
+    assert kept is good
+
+
+def test_no_number_report_with_no_last_good_stays_login():
+    row, kept = qd.parse_remote_with_fallback(_expired(), None, NOW)
+    assert (row.percent, row.note, kept) == (None, "login", None)
+
+
+def test_fresh_numbers_replace_last_good():
+    new = _claude(1.0, pct=70)
+    row, kept = qd.parse_remote_with_fallback(new, _claude(1.0, pct=40), NOW)
+    assert row.percent == 70 and kept is new
+
+
+def test_panel_shows_stale_last_good_when_login_expired(panel, talon_settings, tmp_path, monkeypatch):
+    talon_settings.set("user.quota_panel_melanie_url", "http://x/fm_quota/melanie")
+    path = str(tmp_path / "good.json")
+    monkeypatch.setattr(panel, "LAST_GOOD_PATH", path)
+    panel._rows = qd.parse(fixture(), qd.parse_providers(""))
+    panel._last_ok = time.time()
+    panel._apply_remote(qr.Result(data=_claude(1.0, pct=40)))  # saved to disk
+    monkeypatch.setattr(panel, "_remote_good", None)  # as after a Talon restart
+    monkeypatch.setattr(panel, "_remote_good_loaded", False)
+    panel._apply_remote(qr.Result(data=_expired()))
+    mel = next(c for c in panel._cells() if c.label == "MEL")
+    assert mel.value == "40%" and mel.dim is True and mel.sub.startswith("stale")
