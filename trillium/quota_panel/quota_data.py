@@ -293,6 +293,21 @@ def parse_remote(raw, now=None) -> Row:
     return row
 
 
+def parse_remote_with_fallback(raw, last_good, now=None):
+    """parse_remote, but a report with no number (expired login, no windows) shows
+    `last_good` (the newest earlier raw report that had one) instead, marked stale
+    with the age of THAT reading. Returns (row, raw_to_remember_as_last_good)."""
+    row = parse_remote(raw, now)
+    if row.percent is not None:
+        return row, raw
+    if last_good is not None:
+        old = parse_remote(last_good, now)
+        if old.percent is not None:
+            old.stale = True
+            return old, last_good
+    return row, last_good
+
+
 def sort_by_spend_priority(rows) -> list[Row]:
     """Account likely to be used first leftmost: spendPriority descending.
     Rows with no priority keep their order, after every row that has one."""

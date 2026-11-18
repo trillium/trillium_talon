@@ -10,6 +10,8 @@ Claude-only usage text in the bar (user.mode_indicator_show_usage = false).
 See docs/quota-panel.md.
 """
 
+import json
+import os
 import time
 
 from talon import Module, app, cron, settings, skia, ui
@@ -75,6 +77,13 @@ _runner = QuotaRunner()
 _remote_runner = QuotaRunner(argv_fn=remote_argv, name="fm_quota receiver")
 _remote_row = None  # quota_data.Row for Melanie after the first good read
 _remote_failed = False
+_remote_good = None  # newest raw report of hers that had a number (kept on disk)
+_remote_good_loaded = False
+# Her reporter's login can expire, and the receiver then serves a report with no
+# numbers; this is the last one that had some, shown stale with its age.
+LAST_GOOD_PATH = os.path.expanduser(
+    "~/.config/talon-quota-panel/melanie-last-good.json"
+)
 _loaded_at = time.time()
 _last_start = 0.0
 _force = False
@@ -262,13 +271,41 @@ def _apply(result):
     _redraw()
 
 
+def _load_good():
+    global _remote_good, _remote_good_loaded
+    if not _remote_good_loaded:
+        _remote_good_loaded = True
+        try:
+            with open(LAST_GOOD_PATH) as fh:
+                _remote_good = json.load(fh)
+        except (OSError, ValueError):
+            pass
+
+
+def _save_good(raw):
+    try:
+        os.makedirs(os.path.dirname(LAST_GOOD_PATH), exist_ok=True)
+        tmp = LAST_GOOD_PATH + ".tmp"
+        with open(tmp, "w") as fh:
+            json.dump(raw, fh)
+        os.replace(tmp, LAST_GOOD_PATH)
+    except OSError as e:
+        print(f"[quota_panel] could not save last-good reading: {e}")
+
+
 def _apply_remote(result):
-    global _remote_row, _remote_failed
+    global _remote_row, _remote_failed, _remote_good
     if result.error:
         _remote_failed = True
         print(f"[quota_panel] {result.error}")
     else:
-        _remote_row = quota_data.parse_remote(result.data)
+        _load_good()
+        _remote_row, good = quota_data.parse_remote_with_fallback(
+            result.data, _remote_good
+        )
+        if good is not _remote_good:
+            _remote_good = good
+            _save_good(good)
         _remote_failed = False
     _redraw()
 
