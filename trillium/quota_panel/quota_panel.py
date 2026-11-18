@@ -81,7 +81,9 @@ _remote_good = None  # newest raw report of hers that had a number (kept on disk
 _remote_good_loaded = False
 # Her reporter's login can expire, and the receiver then serves a report with no
 # numbers; this is the last one that had some, shown stale with its age.
-LAST_GOOD_PATH = os.path.expanduser("~/.config/talon-quota-panel/melanie-last-good.json")
+LAST_GOOD_PATH = os.path.expanduser(
+    "~/.config/talon-quota-panel/melanie-last-good.json"
+)
 _loaded_at = time.time()
 _last_start = 0.0
 _force = False

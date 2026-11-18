@@ -625,7 +625,9 @@ def test_fresh_numbers_replace_last_good():
     assert row.percent == 70 and kept is new
 
 
-def test_panel_shows_stale_last_good_when_login_expired(panel, talon_settings, tmp_path, monkeypatch):
+def test_panel_shows_stale_last_good_when_login_expired(
+    panel, talon_settings, tmp_path, monkeypatch
+):
     talon_settings.set("user.quota_panel_melanie_url", "http://x/fm_quota/melanie")
     path = str(tmp_path / "good.json")
     monkeypatch.setattr(panel, "LAST_GOOD_PATH", path)
