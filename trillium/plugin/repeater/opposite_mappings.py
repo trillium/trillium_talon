@@ -169,6 +169,15 @@ OPPOSITES = {
         "trigger": "bump left",
         "action": ("user", "window_bump", ("left",)),
     },
+    # demo up/down (smooth_scroll.talon runs smooth_scroll_mimic for these phrases)
+    "demo up": {
+        "trigger": "demo down",
+        "action": ("user", "smooth_scroll_mimic", ("down",)),
+    },
+    "demo down": {
+        "trigger": "demo up",
+        "action": ("user", "smooth_scroll_mimic", ("up",)),
+    },
     "widen": {"trigger": "narrow", "action": ("user", "window_resize", ("narrow",))},
     "narrow": {"trigger": "widen", "action": ("user", "window_resize", ("widen",))},
     # reverse command - opposite is to move in original direction
