@@ -24,6 +24,7 @@ def _compat_clear(paint, attr):
     except (AttributeError, TypeError):
         pass
 
+
 canvas: Canvas = None
 mod = Module()
 
@@ -364,7 +365,15 @@ def _draw_indicator(c: SkiaCanvas, rect: Rect):
     bx, by, bw, bh = bar_left, rect.top, bar_right - bar_left, bar_height
     # Newer Talon builds only have skia.PathBuilder; older ones have skia.Path.
     path = _skia_raw.PathBuilder() if _skia_raw else skia.Path()
-    arc_to = path.arc_to if _skia_raw else (lambda oval, start, sweep, force=False: path.arc_to_with_oval(oval, start, sweep))
+    arc_to = (
+        path.arc_to
+        if _skia_raw
+        else (
+            lambda oval, start, sweep, force=False: path.arc_to_with_oval(
+                oval, start, sweep
+            )
+        )
+    )
     path.move_to(bx, by)
     path.line_to(bx + bw, by)
     path.line_to(bx + bw, by + bh - rad)

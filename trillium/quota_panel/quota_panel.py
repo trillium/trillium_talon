@@ -27,6 +27,7 @@ def _compat_clear(paint, attr):
     except (AttributeError, TypeError):
         pass
 
+
 mod = Module()
 mod.setting(
     "quota_panel_show",

@@ -1,4 +1,5 @@
 """Linux overrides for the microphone commands (operating-system-level override of change_mic.py)."""
+
 from talon import Context, actions
 
 ctx = Context()

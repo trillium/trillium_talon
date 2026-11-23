@@ -29,7 +29,9 @@ def herdr_prefix_lookup():
     fallback to herdr's documented default (ctrl+b, `herdr --default-config`)
     prints which file it read and why."""
     if tomllib is None:
-        print(f"[herdr_prefix_linux] FALLBACK to {DEFAULT_PREFIX}: no tomllib in this Python")
+        print(
+            f"[herdr_prefix_linux] FALLBACK to {DEFAULT_PREFIX}: no tomllib in this Python"
+        )
         return _talon_key(DEFAULT_PREFIX), f"fallback {DEFAULT_PREFIX}: no tomllib"
     try:
         with open(CONFIG, "rb") as f:

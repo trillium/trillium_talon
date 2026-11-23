@@ -29,7 +29,9 @@ def platform(monkeypatch):
 
 @pytest.fixture
 def state():
-    return _load("mi_state_linux_test", "trillium/plugin/mode_indicator/mode_indicator_state.py")
+    return _load(
+        "mi_state_linux_test", "trillium/plugin/mode_indicator/mode_indicator_state.py"
+    )
 
 
 def test_sysmon_path_unchanged_on_mac_even_with_env(state, platform, monkeypatch):
@@ -55,12 +57,17 @@ def test_sysmon_path_linux_default_is_local_share(state, platform, monkeypatch):
     platform("linux")
     monkeypatch.delenv("MONITOR_DATA_DIR", raising=False)
     monkeypatch.delenv("XDG_DATA_HOME", raising=False)
-    assert state._sysmon_stats_path() == Path.home() / ".local/share/system-monitor/stats.json"
+    assert (
+        state._sysmon_stats_path()
+        == Path.home() / ".local/share/system-monitor/stats.json"
+    )
 
 
 @pytest.fixture
 def prefix():
-    return _load("herdr_prefix_linux_test", "trillium/plugin/herder/herdr_prefix_linux.py")
+    return _load(
+        "herdr_prefix_linux_test", "trillium/plugin/herder/herdr_prefix_linux.py"
+    )
 
 
 def test_prefix_read_from_config(prefix, tmp_path, monkeypatch):
@@ -71,7 +78,9 @@ def test_prefix_read_from_config(prefix, tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("body", [None, "not = [valid", "[keys]\nother = 1\n"])
-def test_prefix_falls_back_to_ctrl_b_loudly(prefix, tmp_path, monkeypatch, capsys, body):
+def test_prefix_falls_back_to_ctrl_b_loudly(
+    prefix, tmp_path, monkeypatch, capsys, body
+):
     cfg = tmp_path / "config.toml"
     if body is not None:
         cfg.write_text(body)
@@ -84,7 +93,9 @@ def test_hyprland_bridge_does_not_poll_off_linux(monkeypatch):
     import talon
 
     calls = []
-    monkeypatch.setattr(talon.cron, "interval", lambda *a, **k: calls.append(a), raising=False)
+    monkeypatch.setattr(
+        talon.cron, "interval", lambda *a, **k: calls.append(a), raising=False
+    )
     _load("hypr_bridge_test", "linux/hyprland_bridge/hyprland_bridge.py")
     assert calls == []  # stub platform is "mac"
 

@@ -36,7 +36,9 @@ def pick_local_tab(tabs, label):
     want = _norm(label)
     if not want:
         return None
-    matches = [t for t in tabs or [] if _norm(t.get("label")) == want and t.get("tab_id")]
+    matches = [
+        t for t in tabs or [] if _norm(t.get("label")) == want and t.get("tab_id")
+    ]
     if not matches:
         return None
     if len(matches) == 1:
@@ -60,11 +62,15 @@ def focus_local(label):
         if tab.get("workspace_id"):
             subprocess.run(
                 herdr_tabs.herdr_cmd(["workspace", "focus", tab["workspace_id"]]),
-                check=False, timeout=herdr_tabs.TIMEOUT, capture_output=True,
+                check=False,
+                timeout=herdr_tabs.TIMEOUT,
+                capture_output=True,
             )
         subprocess.run(
             herdr_tabs.herdr_cmd(["tab", "focus", tab["tab_id"]]),
-            check=False, timeout=herdr_tabs.TIMEOUT, capture_output=True,
+            check=False,
+            timeout=herdr_tabs.TIMEOUT,
+            capture_output=True,
         )
         if _focused_tab_id(herdr_tabs.fetch_tabs()) == tab["tab_id"]:
             return True
@@ -75,7 +81,9 @@ def focus_local(label):
 def _wezterm_windows():
     out = subprocess.run(
         ["xdotool", "search", "--onlyvisible", "--class", WEZTERM_CLASS],
-        capture_output=True, text=True, timeout=3,
+        capture_output=True,
+        text=True,
+        timeout=3,
     ).stdout
     return [w for w in out.split() if w.isdigit()]
 
@@ -96,9 +104,10 @@ def raise_wezterm():
 
 def _wezterm_active():
     try:
-        return WEZTERM_CLASS in (ui.active_app().name or "").lower() or "wezterm" in (
-            ui.active_app().name or ""
-        ).lower()
+        return (
+            WEZTERM_CLASS in (ui.active_app().name or "").lower()
+            or "wezterm" in (ui.active_app().name or "").lower()
+        )
     except Exception:
         return False
 
@@ -144,11 +153,15 @@ def focus_on_host(label, host):
         if tab.get("workspace_id"):
             subprocess.run(
                 herdr_tabs.herdr_cmd(["workspace", "focus", tab["workspace_id"]], host),
-                check=False, timeout=herdr_tabs.TIMEOUT, capture_output=True,
+                check=False,
+                timeout=herdr_tabs.TIMEOUT,
+                capture_output=True,
             )
         subprocess.run(
             herdr_tabs.herdr_cmd(["tab", "focus", tab["tab_id"]], host),
-            check=False, timeout=herdr_tabs.TIMEOUT, capture_output=True,
+            check=False,
+            timeout=herdr_tabs.TIMEOUT,
+            capture_output=True,
         )
         if _focused_tab_id(herdr_tabs.fetch_tabs(host)) == tab["tab_id"]:
             return True
@@ -179,8 +192,11 @@ def _apply_names():
     try:
         name_map = _build_names()
         ctx.lists["user.herdr_tab_names"] = (
-            actions.user.create_spoken_forms_from_map(name_map, generate_subsequences=False)
-            if name_map else {}
+            actions.user.create_spoken_forms_from_map(
+                name_map, generate_subsequences=False
+            )
+            if name_map
+            else {}
         )
     except Exception as e:
         print(f"[herdr_tab_voice_linux] list rebuild failed: {e}")
@@ -205,7 +221,9 @@ class UserActions:
             print(f"[herdr_tab_voice_linux] no unique tab for {label!r}")
             return
         if not raise_wezterm():
-            print("[herdr_tab_voice_linux] WezTerm not active; not typing the picker keys")
+            print(
+                "[herdr_tab_voice_linux] WezTerm not active; not typing the picker keys"
+            )
             return
         prefix = actions.user.herdr_prefix_key_name()
         for kind, value in herdr_tabs.goto_steps(label):

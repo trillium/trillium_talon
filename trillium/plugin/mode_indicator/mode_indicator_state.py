@@ -237,6 +237,7 @@ def _sysmon_stats_path() -> Path:
     base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
     return Path(base) / "system-monitor" / "stats.json"
 
+
 # ── OBS streaming/recording status ──────────────────────────────────
 # TODO: This polls OBS websocket every 2s even when not streaming.
 #   Ideally we'd only poll when OBS is actually running, or switch to
