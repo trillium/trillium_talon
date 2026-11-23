@@ -28,6 +28,11 @@ It replaces the Claude-only usage text in the bar. That text came from
   latest report her reporter already posted; same JSON shape as quota-axi).
   Nothing probes her plan. A second child process (`curl`, same cron-polled
   runner as quota-axi) fetches it on every read.
+- When her login token has expired the receiver serves her newest report with
+  no numbers (`Claude credential expired`). The panel then keeps the last report
+  that had a number (saved at `~/.config/talon-quota-panel/melanie-last-good.json`,
+  survives a Talon restart) and shows it dimmed as `stale 3h`, aged from when
+  that reading was made. Before any good reading is seen the cell says `login`.
 - A report older than 15 minutes (by its `generatedAt`) is dimmed and says
   `stale 3h`. Her reporter lapses when `claude` is off its job PATH
   (task-gje1f). A failed fetch dims the last reading; set the URL empty to
