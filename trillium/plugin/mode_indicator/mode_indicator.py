@@ -16,6 +16,7 @@ from talon.ui import Rect
 from . import mode_indicator_state
 from .sysmon_graph import draw_graph, measure_graph_width
 
+
 def _compat_clear(paint, attr):
     """Older Talon builds (this laptop's Linux build) raise when a skia paint attribute is set to None."""
     try:
@@ -111,6 +112,12 @@ mod.setting(
     desc="Color when friction capture mode is active",
 )
 mod.setting(
+    "mode_indicator_ui_scale",
+    type=float,
+    default=1.0,
+    desc="Multiplier for every size in the indicator (text, bar, graphs). 1.0 = unchanged; set per OS in a .talon file",
+)
+mod.setting(
     "mode_indicator_bar_height",
     type=float,
     default=25,
@@ -167,6 +174,7 @@ setting_paths = {
     "user.mode_indicator_color_command",
     "user.mode_indicator_color_other",
     "user.mode_indicator_bar_height",
+    "user.mode_indicator_ui_scale",
     "user.mode_indicator_bar_left_x",
     "user.mode_indicator_bar_right_x",
     "user.mode_indicator_text_left_x",
@@ -212,8 +220,33 @@ def get_gradient_color(color: str) -> str:
 
 
 def on_draw(c: SkiaCanvas):
+    """Draw the indicator, optionally enlarged by user.mode_indicator_ui_scale.
+
+    The scale defaults to 1.0 (macOS unchanged); a Linux-only .talon file raises it.
+    """
+    ui_scale = float(settings.get("user.mode_indicator_ui_scale") or 1.0)
+    rect = ui.main_screen().rect
+    if ui_scale == 1.0:
+        _draw_indicator(c, rect)
+        return
+    c.save()
+    try:
+        c.scale(ui_scale, ui_scale)
+        _draw_indicator(
+            c,
+            Rect(
+                rect.left / ui_scale,
+                rect.top / ui_scale,
+                rect.width / ui_scale,
+                rect.height / ui_scale,
+            ),
+        )
+    finally:
+        c.restore()
+
+
+def _draw_indicator(c: SkiaCanvas, rect: Rect):
     screen: Screen = ui.main_screen()
-    rect = screen.rect
     scale = screen.scale if app.platform != "mac" else 1
 
     # --- Compute shared geometry ---

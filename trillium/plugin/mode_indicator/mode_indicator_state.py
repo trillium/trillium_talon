@@ -225,6 +225,18 @@ def _poll_week_percent():
 
 SYSMON_STATS = Path.home() / "code" / "system-monitor" / "data" / "stats.json"
 
+
+def _sysmon_stats_path() -> Path:
+    """Linux reads the collector's data dir (MONITOR_DATA_DIR, else the XDG data
+    dir); every other OS keeps SYSMON_STATS exactly as before."""
+    if app.platform != "linux":
+        return SYSMON_STATS
+    override = os.environ.get("MONITOR_DATA_DIR")
+    if override:
+        return Path(override).expanduser() / "stats.json"
+    base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+    return Path(base) / "system-monitor" / "stats.json"
+
 # ── OBS streaming/recording status ──────────────────────────────────
 # TODO: This polls OBS websocket every 2s even when not streaming.
 #   Ideally we'd only poll when OBS is actually running, or switch to
@@ -287,7 +299,7 @@ def _fetch_obs_status(python: str) -> dict:
 def _fetch_sysmon() -> dict:
     """Blocking: read system monitor stats. Worker thread only."""
     try:
-        data = json.loads(SYSMON_STATS.read_text())
+        data = json.loads(_sysmon_stats_path().read_text())
         cpu = data.get("cpu", {})
         mem = data.get("memory", {})
         return {
