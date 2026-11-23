@@ -16,6 +16,15 @@ from talon.ui import Rect
 from . import mode_indicator_state
 from .sysmon_graph import draw_graph, measure_graph_width
 
+
+def _compat_clear(paint, attr):
+    """Older Talon builds (this laptop's Linux build) raise when a skia paint attribute is set to None."""
+    try:
+        setattr(paint, attr, None)
+    except (AttributeError, TypeError):
+        pass
+
+
 canvas: Canvas = None
 mod = Module()
 
@@ -104,6 +113,12 @@ mod.setting(
     desc="Color when friction capture mode is active",
 )
 mod.setting(
+    "mode_indicator_ui_scale",
+    type=float,
+    default=1.0,
+    desc="Multiplier for every size in the indicator (text, bar, graphs). 1.0 = unchanged; set per OS in a .talon file",
+)
+mod.setting(
     "mode_indicator_bar_height",
     type=float,
     default=25,
@@ -160,6 +175,7 @@ setting_paths = {
     "user.mode_indicator_color_command",
     "user.mode_indicator_color_other",
     "user.mode_indicator_bar_height",
+    "user.mode_indicator_ui_scale",
     "user.mode_indicator_bar_left_x",
     "user.mode_indicator_bar_right_x",
     "user.mode_indicator_text_left_x",
@@ -205,8 +221,33 @@ def get_gradient_color(color: str) -> str:
 
 
 def on_draw(c: SkiaCanvas):
+    """Draw the indicator, optionally enlarged by user.mode_indicator_ui_scale.
+
+    The scale defaults to 1.0 (macOS unchanged); a Linux-only .talon file raises it.
+    """
+    ui_scale = float(settings.get("user.mode_indicator_ui_scale") or 1.0)
+    rect = ui.main_screen().rect
+    if ui_scale == 1.0:
+        _draw_indicator(c, rect)
+        return
+    c.save()
+    try:
+        c.scale(ui_scale, ui_scale)
+        _draw_indicator(
+            c,
+            Rect(
+                rect.left / ui_scale,
+                rect.top / ui_scale,
+                rect.width / ui_scale,
+                rect.height / ui_scale,
+            ),
+        )
+    finally:
+        c.restore()
+
+
+def _draw_indicator(c: SkiaCanvas, rect: Rect):
     screen: Screen = ui.main_screen()
-    rect = screen.rect
     scale = screen.scale if app.platform != "mac" else 1
 
     # --- Compute shared geometry ---
@@ -324,7 +365,15 @@ def on_draw(c: SkiaCanvas):
     bx, by, bw, bh = bar_left, rect.top, bar_right - bar_left, bar_height
     # Newer Talon builds only have skia.PathBuilder; older ones have skia.Path.
     path = _skia_raw.PathBuilder() if _skia_raw else skia.Path()
-    arc_to = path.arc_to if _skia_raw else path.arc_to_with_oval
+    arc_to = (
+        path.arc_to
+        if _skia_raw
+        else (
+            lambda oval, start, sweep, force=False: path.arc_to_with_oval(
+                oval, start, sweep
+            )
+        )
+    )
     path.move_to(bx, by)
     path.line_to(bx + bw, by)
     path.line_to(bx + bw, by + bh - rad)
@@ -351,13 +400,13 @@ def on_draw(c: SkiaCanvas):
         c.paint.style = c.paint.Style.STROKE
         c.paint.stroke_width = 3
         c.paint.color = "aa44ffff"  # Purple
-        c.paint.shader = None
-        c.paint.imagefilter = None
+        _compat_clear(c.paint, "shader")
+        _compat_clear(c.paint, "imagefilter")
         c.draw_path(path)
         c.paint.style = c.paint.Style.FILL
 
     # Draw command text on the top line (stacked, smaller text)
-    c.paint.shader = None
+    _compat_clear(c.paint, "shader")
     c.paint.style = c.paint.Style.FILL
     c.paint.color = "ffffffff"  # White
     c.paint.textsize = 10
@@ -410,8 +459,8 @@ def on_draw(c: SkiaCanvas):
     c.draw_circle(circle_x, circle_y, radius)
 
     # Draw ring around the indicator (green if parrot is on, red if off)
-    c.paint.shader = None
-    c.paint.imagefilter = None
+    _compat_clear(c.paint, "shader")
+    _compat_clear(c.paint, "imagefilter")
     c.paint.style = c.paint.Style.STROKE
     c.paint.stroke_width = 2
     if _state["parrot_on"]:
@@ -423,7 +472,7 @@ def on_draw(c: SkiaCanvas):
     # Draw circle text: pondering timer or mic name
     pondering_seconds = _state.get("pondering_seconds")
     if pondering_seconds is not None:
-        c.paint.shader = None
+        _compat_clear(c.paint, "shader")
         c.paint.style = c.paint.Style.FILL
         c.paint.color = "ffffffff"
         c.paint.textsize = 16
@@ -437,7 +486,7 @@ def on_draw(c: SkiaCanvas):
         )
         c.paint.font.embolden = False
     elif settings.get("user.mode_indicator_show_mic_name"):
-        c.paint.shader = None
+        _compat_clear(c.paint, "shader")
         c.paint.style = c.paint.Style.FILL
         c.paint.color = text_color
         mic = _state["microphone"]

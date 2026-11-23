@@ -17,6 +17,12 @@ from talon import Context, Module, actions, app, cron, imgui
 
 mod = Module()
 ctx = Context()
+# The OpenSuperWhisper sync below shells out to a Mac-only binary, so this context is macOS-only.
+# Other operating systems get Talon's own set_microphone; per-OS behaviour lives in override files
+# next to this one (for example change_mic_linux.py).
+ctx.matches = r"""
+os: mac
+"""
 
 # lock = threading.Lock()
 start_time = None
