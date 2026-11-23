@@ -19,6 +19,14 @@ from talon.ui import Rect
 from . import quota_data
 from .quota_run import QuotaRunner, remote_argv
 
+
+def _compat_clear(paint, attr):
+    """Older Talon builds (this laptop's Linux build) raise when a skia paint attribute is set to None."""
+    try:
+        setattr(paint, attr, None)
+    except (AttributeError, TypeError):
+        pass
+
 mod = Module()
 mod.setting(
     "quota_panel_show",
@@ -169,8 +177,8 @@ def panel_rect(screen_rect, n_cells):
 def draw_cells(c, panel, cells):
     cell_w = float(_get("user.quota_panel_cell_w", 66))
     text_y = float(_get("user.mode_indicator_text_y", 11))
-    c.paint.shader = None
-    c.paint.imagefilter = None
+    _compat_clear(c.paint, "shader")
+    _compat_clear(c.paint, "imagefilter")
     for i, cell in enumerate(cells):
         x = panel.x + PAD + i * cell_w
         box = Rect(x, panel.y, cell_w, panel.height)
